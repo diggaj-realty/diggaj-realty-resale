@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-page: #d2d2dc;
+  --color-ink: #1c1a16;
+  --color-panel: #171717;
+  --color-lime: #cdea6f;
+  --color-limepale: #eefed4;
+  --color-body: #6f6f6f;
+  --color-cream: #f4efe5;
+  --font-sans: var(--font-inter), Helvetica, Arial, sans-serif;
+}
+
+html.lenis {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--color-ink);
+}
+
+button {
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+}
+button:hover {
+  transform: translateY(-1px);
+}
+button:active {
+  transform: translateY(0) scale(0.98);
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 2px;
+}
+
+/* subtle idle bob for map pins */
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.bob { animation: bob 5s ease-in-out infinite; }
+
+/* slow ambient drift for hero pins and cards */
+@keyframes drift {
+  0%, 100% { transform: translateY(0) rotate(var(--drift-rot, 0deg)); }
+  50%      { transform: translateY(-8px) rotate(var(--drift-rot, 0deg)); }
+}
+.drift { animation: drift 7s ease-in-out infinite; }
+
+/* accessibility + battery: kill ambient loops for reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+  .bob,
+  .drift {
+    animation: none;
+  }
+}
