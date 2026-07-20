@@ -45,6 +45,15 @@ export default function ValueProp() {
 
   return (
     <section className="bg-white px-8 py-24 md:px-14">
+      <motion.span
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.6 }}
+        transition={{ duration: 0.5 }}
+        className="mb-8 inline-block rounded-full bg-limepale px-4 py-1.5 text-xs font-semibold text-ink"
+      >
+        Why Diggaj Realty
+      </motion.span>
       {/* scroll-scrubbed word-by-word reveal */}
       <h2
         ref={textRef}
@@ -74,7 +83,7 @@ export default function ValueProp() {
             <Image src="/img/interior-kitchen.jpg" alt="Interior" fill sizes="256px" className="object-cover" />
           </div>
           <span className="absolute -top-3 left-2 flex items-center gap-1.5 rounded-full bg-lime px-3 py-1.5 text-xs font-semibold shadow">
-            <span>⌂</span> $122,345
+            <span>⌂</span> ₹1.2 Cr
           </span>
         </motion.div>
 
@@ -90,7 +99,7 @@ export default function ValueProp() {
             <Image src="/img/house2.jpg" alt="Modern home" fill sizes="256px" className="object-cover" />
           </div>
           <span className="absolute -bottom-3 left-8 rounded-full bg-panel px-3.5 py-1.5 text-xs font-medium text-white shadow">
-            ▦ 1M properties
+            ▦ 10L+ properties
           </span>
         </motion.div>
 

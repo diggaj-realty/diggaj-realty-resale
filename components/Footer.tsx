@@ -1,17 +1,24 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-const socials = ["X", "f", "in", "ig", "yt"];
+const socials = [
+  { label: "X", href: "https://x.com" },
+  { label: "f", href: "https://facebook.com" },
+  { label: "in", href: "https://linkedin.com" },
+  { label: "ig", href: "https://instagram.com" },
+  { label: "yt", href: "https://youtube.com" },
+];
 const links = [
-  "All Services",
-  "Search",
-  "Sell",
-  "About",
-  "Privacy Policy",
-  "Terms of Service",
+  { label: "All Homes", href: "/listings" },
+  { label: "Buy", href: "/#buy-sell" },
+  { label: "Sell", href: "/#buy-sell" },
+  { label: "Contact", href: "/contact" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
 ];
 
 export default function Footer() {
@@ -53,9 +60,9 @@ export default function Footer() {
             Discover a smarter way to buy real estate with AI. Explore homes
             and experience next-gen homebuying.
           </p>
-          <button className="mt-5 rounded-full bg-panel px-5 py-2.5 text-xs text-white">
+          <Link href="/listings" className="mt-5 inline-block rounded-full bg-panel px-5 py-2.5 text-xs text-white">
             Get started
-          </button>
+          </Link>
         </motion.div>
       </div>
 
@@ -96,19 +103,23 @@ export default function Footer() {
         <div className="mt-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="flex gap-3">
             {socials.map((s) => (
-              <span
-                key={s}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/5 text-xs font-semibold text-ink/70"
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={s.label}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/5 text-xs font-semibold text-ink/70 transition-colors hover:bg-lime hover:text-ink"
               >
-                {s}
-              </span>
+                {s.label}
+              </a>
             ))}
           </div>
           <nav className="flex flex-wrap gap-x-8 gap-y-2 text-xs text-ink/70">
             {links.map((l) => (
-              <a key={l} href="#" className="hover:text-ink">
-                {l}
-              </a>
+              <Link key={l.label} href={l.href} className="hover:text-ink">
+                {l.label}
+              </Link>
             ))}
           </nav>
         </div>

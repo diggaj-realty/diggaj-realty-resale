@@ -1,45 +1,22 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { LISTINGS, price } from "@/lib/listings";
 
-const HOMES = [
-  {
-    img: "/img/villa.jpg",
-    name: "The Pinnacle at Highland Park",
-    price: "$897,000",
-    meta: "5 bed · 2 bath · 2,940 sqft",
-  },
-  {
-    img: "/img/listing-aframe.jpg",
-    name: "Birchwood A-Frame Retreat",
-    price: "$649,900",
-    meta: "3 bed · 2 bath · 1,820 sqft",
-  },
-  {
-    img: "/img/house2.jpg",
-    name: "Aurora Ridge Residence",
-    price: "$2,490,000",
-    meta: "6 bed · 4 bath · 5,120 sqft",
-  },
-  {
-    img: "/img/footer-house.jpg",
-    name: "Fernwood Valley Estate",
-    price: "$1,150,000",
-    meta: "4 bed · 3 bath · 3,300 sqft",
-  },
-  {
-    img: "/img/listing-woods.jpg",
-    name: "The Gable House",
-    price: "$785,500",
-    meta: "4 bed · 2 bath · 2,410 sqft",
-  },
-];
+const HOMES = LISTINGS.map((l) => ({
+  img: l.img,
+  name: l.title,
+  slug: l.slug,
+  price: price(l.price),
+  meta: `${l.beds} bed · ${l.baths} bath · ${l.sqft.toLocaleString("en-IN")} sqft`,
+}));
 
 function Card({ home }: { home: (typeof HOMES)[number] }) {
   return (
-    <div className="group relative h-[56vh] w-[78vw] shrink-0 overflow-hidden rounded-[24px] md:h-[62vh] md:w-[460px]">
+    <Link href={`/listings/${home.slug}`} className="group relative block h-[56vh] w-[78vw] shrink-0 overflow-hidden rounded-[24px] md:h-[62vh] md:w-[460px]">
       <Image
         src={home.img}
         alt={home.name}
@@ -57,7 +34,7 @@ function Card({ home }: { home: (typeof HOMES)[number] }) {
         <p className="text-xl font-medium tracking-[-0.01em]">{home.name}</p>
         <p className="mt-1 text-xs text-white/75">{home.meta}</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -121,9 +98,9 @@ export default function Showcase() {
 
           {/* end cap: nudge to listings */}
           <div className="flex h-[56vh] w-64 shrink-0 items-center justify-center md:h-[62vh]">
-            <button className="rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink shadow-lg">
+            <Link href="/listings" className="rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink shadow-lg">
               View all homes →
-            </button>
+            </Link>
           </div>
         </motion.div>
 

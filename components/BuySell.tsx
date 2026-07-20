@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 const CHECK = (
@@ -37,7 +38,7 @@ function Checklist({ items, dark }: { items: string[]; dark?: boolean }) {
 
 export default function BuySell() {
   return (
-    <section className="bg-white px-8 py-24 md:px-14">
+    <section id="buy-sell" className="bg-white px-8 py-24 md:px-14">
       {/* header */}
       <div className="text-center">
         <motion.h2
@@ -86,16 +87,16 @@ export default function BuySell() {
               ]}
             />
             <div className="mt-auto pt-8">
-              <button className="rounded-full bg-panel px-6 py-3 text-sm text-white">
+              <Link href="/listings" className="inline-block rounded-full bg-panel px-6 py-3 text-sm text-white">
                 Start browsing →
-              </button>
+              </Link>
             </div>
           </div>
           {/* image peeking from the corner */}
           <div className="absolute -bottom-10 -right-12 h-56 w-72 rotate-[-6deg] overflow-hidden rounded-[24px] shadow-2xl transition-transform duration-500 group-hover:rotate-[-2deg] group-hover:scale-[1.04] md:h-64 md:w-80">
             <Image src="/img/villa.jpg" alt="Home for buyers" fill sizes="320px" className="object-cover" />
             <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow">
-              ⌂ $897,000
+              ⌂ ₹8.9 Cr
             </span>
           </div>
         </motion.div>
@@ -119,14 +120,14 @@ export default function BuySell() {
               dark
               items={[
                 "AI pricing tuned to your neighborhood",
-                "Your home featured to 1M+ active buyers",
+                "Your home featured to 10L+ active buyers",
                 "One flat listing fee — no surprises",
               ]}
             />
             <div className="mt-auto pt-8">
-              <button className="rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink">
+              <Link href="/contact" className="inline-block rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink">
                 Get a free valuation →
-              </button>
+              </Link>
             </div>
           </div>
           {/* image peeking from the corner */}
