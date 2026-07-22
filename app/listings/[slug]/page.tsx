@@ -6,10 +6,12 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import LeadForm from "@/components/LeadForm";
 import ListingCard from "@/components/listings/ListingCard";
+import Gallery from "@/components/listings/Gallery";
 import { getProperties, getProperty } from "@/lib/api/properties";
 import { parsePropertyId } from "@/lib/slug";
 import { price } from "@/lib/listings";
 import { badgeFor } from "@/lib/badge";
+import { buildSpecs, sqft } from "@/lib/property";
 import { ApiError } from "@/lib/api/client";
 import type { Property } from "@/types/api";
 
@@ -69,6 +71,7 @@ export default async function ListingDetail({
   const badge = badgeFor(l);
   const photos = [...l.photos].sort((a, b) => a.order - b.order);
   const amenities = l.amenities ?? [];
+  const specs = buildSpecs(l);
 
   const cashBack = Math.round((l.askingPrice * 0.03 * 0.75) / 100) * 100;
   const perSqft = Math.round(l.askingPrice / l.areaSqft);
@@ -82,10 +85,14 @@ export default async function ListingDetail({
   const others = othersRaw.filter((x) => x.id !== l.id).slice(0, 3);
 
   const stats = [
-    { icon: <BedIcon />, label: "Bedrooms", value: l.bhk ?? "—" },
-    { icon: <BathIcon />, label: "Bathrooms", value: l.bathrooms ?? "—" },
-    { icon: <AreaIcon />, label: "Sq. ft.", value: l.areaSqft.toLocaleString("en-IN") },
-    { icon: <TagIcon />, label: "Per sq. ft.", value: price(perSqft) },
+    { icon: <BedIcon />, label: "Bedrooms", value: l.bhk != null ? `${l.bhk} BHK` : "—" },
+    {
+      icon: <BathIcon />,
+      label: "Bathrooms",
+      value: l.bathrooms != null ? `${l.bathrooms} bath` : "—",
+    },
+    { icon: <AreaIcon />, label: "Area", value: sqft(l.areaSqft) },
+    { icon: <TagIcon />, label: "Per sq. ft.", value: `${price(perSqft)}/sq ft` },
   ];
 
   return (
@@ -93,27 +100,59 @@ export default async function ListingDetail({
       <div className="bg-cream pb-8">
         <Nav />
         <div className="px-8 pt-10 md:px-14">
-          <Link href="/listings" className="text-xs font-medium text-ink/50 hover:text-ink">
-            ← All homes
-          </Link>
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-medium text-ink/40">
+            <Link href="/" className="hover:text-ink">Home</Link>
+            <span aria-hidden>/</span>
+            <Link href="/listings" className="hover:text-ink">Listings</Link>
+            <span aria-hidden>/</span>
+            <span className="max-w-[45vw] truncate text-ink/70 md:max-w-xs">{l.title}</span>
+          </nav>
           <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <span
-                className={`inline-block rounded-full px-4 py-1.5 text-xs font-medium shadow-sm ${
-                  badge === "New" ? "bg-lime text-ink" : "bg-white text-ink"
-                }`}
-              >
-                {badge}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-block rounded-full px-4 py-1.5 text-xs font-medium shadow-sm ${
+                    badge === "New" ? "bg-lime text-ink" : "bg-white text-ink"
+                  }`}
+                >
+                  {badge}
+                </span>
+                {l.verifiedAt && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-3.5 py-1.5 text-xs font-medium text-ink shadow-sm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                      <path d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3Z" /><path d="m9 12 2 2 4-4" />
+                    </svg>
+                    Verified
+                  </span>
+                )}
+              </div>
               <h1 className="mt-4 max-w-2xl text-4xl font-medium tracking-[-0.03em] text-ink md:text-6xl">
                 {l.title}
               </h1>
-              <p className="mt-3 flex items-center gap-1.5 text-sm text-ink/60">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />
-                </svg>
-                {l.location}
-              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink/60">
+                <span className="flex items-center gap-1.5">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {l.location}
+                </span>
+                {l.viewCount > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+                    </svg>
+                    {l.viewCount.toLocaleString("en-IN")} views
+                  </span>
+                )}
+                {l.unitsAvailable != null && l.unitsAvailable > 1 && (
+                  <span className="flex items-center gap-1.5">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                      <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    {l.unitsAvailable} units available
+                  </span>
+                )}
+              </div>
             </div>
             <div className="md:text-right">
               <p className="text-4xl font-medium tracking-[-0.02em] text-ink md:text-5xl">
@@ -128,27 +167,7 @@ export default async function ListingDetail({
       </div>
 
       {/* gallery */}
-      {photos.length > 0 ? (
-        <div className="grid gap-3 px-3 pt-3 md:grid-cols-[2fr_1fr]">
-          <div className="relative h-[46vh] overflow-hidden rounded-[24px] md:h-[64vh] bg-cream">
-            <Image src={photos[0].url} alt={l.title} fill priority sizes="66vw" className="object-cover" />
-            <span className="absolute bottom-4 left-4 rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur">
-              {photos.length} photos
-            </span>
-          </div>
-          <div className="grid grid-rows-2 gap-3">
-            {photos.slice(1, 3).map((photo) => (
-              <div key={photo.id} className="relative h-[22vh] overflow-hidden rounded-[24px] md:h-auto bg-cream">
-                <Image src={photo.url} alt={`${l.title} interior`} fill sizes="33vw" className="object-cover" />
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="mx-3 mt-3 flex h-[30vh] items-center justify-center rounded-[24px] bg-cream text-sm text-body">
-          No photos yet
-        </div>
-      )}
+      <Gallery photos={photos} title={l.title} />
 
       {/* video tour */}
       {l.videoUrl && (
@@ -190,6 +209,36 @@ export default async function ListingDetail({
         <div>
           <h2 className="text-2xl font-medium tracking-[-0.02em] text-ink">About this home</h2>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-body">{l.description}</p>
+
+          {specs.length > 0 && (
+            <>
+              <h2 className="mt-12 text-2xl font-medium tracking-[-0.02em] text-ink">Specifications</h2>
+              <dl className="mt-5 grid gap-px overflow-hidden rounded-[24px] bg-ink/10 sm:grid-cols-2">
+                {specs.map((s) => (
+                  <div key={s.label} className="flex items-center justify-between gap-4 bg-white px-5 py-3.5">
+                    <dt className="text-sm text-body">{s.label}</dt>
+                    <dd className="text-sm font-medium text-ink text-right">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          )}
+
+          {l.floorPlanUrl && (
+            <>
+              <h2 className="mt-12 text-2xl font-medium tracking-[-0.02em] text-ink">Floor plan</h2>
+              <div className="mt-5 overflow-hidden rounded-[24px] border border-ink/10 bg-white p-3">
+                <Image
+                  src={l.floorPlanUrl}
+                  alt={`${l.title} floor plan`}
+                  width={1200}
+                  height={900}
+                  sizes="(max-width: 768px) 100vw, 55vw"
+                  className="h-auto w-full rounded-[14px] object-contain"
+                />
+              </div>
+            </>
+          )}
 
           {amenities.length > 0 && (
             <>
@@ -234,6 +283,9 @@ export default async function ListingDetail({
               <div className="flex justify-between"><span>List price</span><span className="font-medium text-ink">{price(l.askingPrice)}</span></div>
               <div className="flex justify-between"><span>Down payment (20%)</span><span className="font-medium text-ink">{price(Math.round(l.askingPrice * 0.2))}</span></div>
               <div className="flex justify-between"><span>Est. rate</span><span className="font-medium text-ink">6.5% / 30yr</span></div>
+              {l.maintenanceMonthly != null && (
+                <div className="flex justify-between"><span>Maintenance</span><span className="font-medium text-ink">{price(l.maintenanceMonthly)}/mo</span></div>
+              )}
             </div>
             <p className="mt-4 text-[11px] leading-relaxed text-ink/40">
               Estimate only. Actual terms vary — talk to a Diggaj lender for a real quote.
@@ -257,6 +309,34 @@ export default async function ListingDetail({
           </div>
         </div>
       </div>
+
+      {/* location */}
+      {l.latitude != null && l.longitude != null && (
+        <div className="px-3 pb-4">
+          <div className="overflow-hidden rounded-[24px] border border-ink/10 bg-white">
+            <div className="flex items-center justify-between gap-4 px-6 py-4">
+              <div>
+                <h2 className="text-lg font-medium tracking-[-0.01em] text-ink">Location</h2>
+                <p className="text-xs text-body">{l.location}</p>
+              </div>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${l.latitude}%2C${l.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 rounded-full bg-ink px-4 py-2 text-xs font-medium text-white"
+              >
+                Open in Maps →
+              </a>
+            </div>
+            <iframe
+              title={`Map of ${l.title}`}
+              loading="lazy"
+              className="h-[40vh] w-full border-0"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${l.longitude - 0.012}%2C${l.latitude - 0.008}%2C${l.longitude + 0.012}%2C${l.latitude + 0.008}&layer=mapnik&marker=${l.latitude}%2C${l.longitude}`}
+            />
+          </div>
+        </div>
+      )}
 
       {/* more homes */}
       {others.length > 0 && (

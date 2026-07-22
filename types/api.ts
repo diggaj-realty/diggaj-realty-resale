@@ -34,6 +34,7 @@ export type Property = {
   areaSqft: number;
   bhk: number | null;
   askingPrice: number;
+  unitsAvailable?: number | null;
   status: PropertyStatus;
   plan: PropertyPlan;
   viewCount: number;
