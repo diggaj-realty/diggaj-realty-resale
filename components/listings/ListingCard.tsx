@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { price } from "@/lib/listings";
 import { propertyHref } from "@/lib/slug";
-import { badgeFor } from "@/lib/badge";
+import { badgeFor, isElite } from "@/lib/badge";
 import type { Property } from "@/types/api";
 
 export function BedIcon() {
@@ -48,6 +48,7 @@ const rise = {
 export default function ListingCard({ property, i = 0 }: { property: Property; i?: number }) {
   const cover = property.photos[0]?.url;
   const badge = badgeFor(property);
+  const elite = isElite(property);
 
   return (
     <motion.article
@@ -73,13 +74,20 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
               No photo yet
             </div>
           )}
-          <span
-            className={`absolute left-4 top-4 rounded-full px-4 py-1.5 text-xs font-medium shadow ${
-              badge === "New" ? "bg-lime text-ink" : "bg-white text-ink"
-            }`}
-          >
-            {badge}
-          </span>
+          <div className="absolute left-4 top-4 flex items-center gap-2">
+            {elite && (
+              <span className="flex items-center gap-1 rounded-full bg-panel px-3 py-1.5 text-xs font-semibold text-lime shadow ring-1 ring-lime/30">
+                ✦ Elite
+              </span>
+            )}
+            <span
+              className={`rounded-full px-4 py-1.5 text-xs font-medium shadow ${
+                badge === "New" ? "bg-lime text-ink" : "bg-white text-ink"
+              }`}
+            >
+              {badge}
+            </span>
+          </div>
           {property.videoUrl && (
             <span className="absolute bottom-4 left-4 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
               <PlayIcon /> Video

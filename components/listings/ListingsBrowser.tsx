@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { getProperties } from "@/lib/api/properties";
+import { CANONICAL_CITIES } from "@/lib/cities";
 import type { Property } from "@/types/api";
 import ListingCard from "@/components/listings/ListingCard";
 
@@ -34,6 +35,7 @@ export default function ListingsBrowser() {
   const [debouncedQ, setDebouncedQ] = useState(q);
   const [band, setBand] = useState(0);
   const [beds, setBeds] = useState(0);
+  const [city, setCity] = useState(params.get("city") ?? "");
 
   const [items, setItems] = useState<Property[]>([]);
   const [total, setTotal] = useState(0);
@@ -53,7 +55,7 @@ export default function ListingsBrowser() {
   // render rather than inside the effect (see react.dev "adjusting state
   // when a prop changes") — the effect below only ever calls setState from
   // inside the async fetch's own callbacks.
-  const filterKey = `${debouncedQ}|${band}|${beds}`;
+  const filterKey = `${debouncedQ}|${band}|${beds}|${city}`;
   const [lastFilterKey, setLastFilterKey] = useState(filterKey);
   if (lastFilterKey !== filterKey) {
     setLastFilterKey(filterKey);
@@ -66,6 +68,7 @@ export default function ListingsBrowser() {
     const controller = new AbortController();
     getProperties({
       q: debouncedQ.trim() || undefined,
+      city: city || undefined,
       minPrice: PRICE_BANDS[band].min,
       maxPrice: PRICE_BANDS[band].max,
       minBhk: BED_OPTIONS[beds].minBhk,
@@ -86,13 +89,14 @@ export default function ListingsBrowser() {
         setLoading(false);
       });
     return () => controller.abort();
-  }, [debouncedQ, band, beds]);
+  }, [debouncedQ, band, beds, city]);
 
   async function loadMore() {
     setLoadingMore(true);
     try {
       const res = await getProperties({
         q: debouncedQ.trim() || undefined,
+        city: city || undefined,
         minPrice: PRICE_BANDS[band].min,
         maxPrice: PRICE_BANDS[band].max,
         minBhk: BED_OPTIONS[beds].minBhk,
@@ -131,6 +135,37 @@ export default function ListingsBrowser() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              aria-label="Filter by city"
+              className={`appearance-none rounded-full py-2 pl-4 pr-9 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-lime ${
+                city ? "bg-panel text-white" : "bg-ink/5 text-ink/70 hover:bg-ink/10"
+              }`}
+            >
+              <option value="">All cities</option>
+              {/* preserve a custom ("Other") city that isn't in the canonical list */}
+              {city && !CANONICAL_CITIES.includes(city as (typeof CANONICAL_CITIES)[number]) && (
+                <option value={city}>{city}</option>
+              )}
+              {CANONICAL_CITIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <svg
+              className={`pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 ${
+                city ? "text-white/70" : "text-ink/40"
+              }`}
+              width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </div>
+          <span className="mx-2 h-5 w-px bg-ink/10" />
           {PRICE_BANDS.map((b, i) => (
             <button key={b.label} onClick={() => setBand(i)} className={chip(band === i)}>
               {b.label}
@@ -183,6 +218,7 @@ export default function ListingsBrowser() {
                 setQ("");
                 setBand(0);
                 setBeds(0);
+                setCity("");
               }}
               className="mt-6 rounded-full bg-panel px-6 py-3 text-sm text-white"
             >

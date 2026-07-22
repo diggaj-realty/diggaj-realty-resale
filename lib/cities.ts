@@ -1,5 +1,32 @@
 import type { Property } from "@/types/api";
 
+// Canonical cities the backend accepts on `?city=` (server normalizes aliases
+// like "Bengaluru" -> "Bangalore"). Mirrors the seller-side dropdown; keep in
+// sync with the admin app. Sellers may still pick "Other" (a custom name), so
+// real listings can carry a city outside this list.
+export const CANONICAL_CITIES = [
+  "Bangalore",
+  "Mumbai",
+  "Delhi",
+  "Pune",
+  "Hyderabad",
+  "Chennai",
+  "Kolkata",
+  "Ahmedabad",
+  "Noida",
+  "Gurgaon",
+  "Jaipur",
+  "Chandigarh",
+  "Kochi",
+  "Coimbatore",
+  "Lucknow",
+  "Indore",
+  "Nagpur",
+  "Surat",
+  "Thane",
+  "Navi Mumbai",
+] as const;
+
 // Curated art-direction photo per city — decorative, independent of which
 // listings currently exist there. Falls back to a generic shot for any city
 // that turns up in real data but isn't one of ours yet.

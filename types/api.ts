@@ -5,7 +5,7 @@ export type PropertyStatus =
   | "LIVE"
   | "REJECTED"
   | "CLOSED";
-export type PropertyPlan = "BASIC" | "VERIFIED" | "ELITE";
+export type PropertyPlan = "BASIC" | "ELITE";
 export type Furnishing = "UNFURNISHED" | "SEMI_FURNISHED" | "FULLY_FURNISHED";
 export type Facing = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 export type PossessionStatus = "READY_TO_MOVE" | "UNDER_CONSTRUCTION";

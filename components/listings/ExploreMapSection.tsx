@@ -70,7 +70,7 @@ export default function ExploreMapSection({ places }: { places: CityGroup[] }) {
             custom={i}
           >
             <Link
-              href={`/listings?q=${encodeURIComponent(p.city)}`}
+              href={`/listings?city=${encodeURIComponent(p.city)}`}
               className="group relative block h-72 overflow-hidden rounded-[24px]"
             >
               <Image

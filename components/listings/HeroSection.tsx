@@ -256,7 +256,7 @@ export default function HeroSection({
                 {cities.map((c) => (
                   <Link
                     key={c}
-                    href={`/listings?q=${c}`}
+                    href={`/listings?city=${encodeURIComponent(c)}`}
                     className="flex items-center gap-3 rounded-2xl p-2 px-3 transition-colors hover:bg-limepale"
                   >
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/5 text-xs">📍</span>
@@ -283,7 +283,7 @@ export default function HeroSection({
             {popularCities.map((c) => (
               <Link
                 key={c}
-                href={`/listings?q=${c}`}
+                href={`/listings?city=${encodeURIComponent(c)}`}
                 className="rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-lime hover:text-ink hover:ring-lime"
               >
                 {c}

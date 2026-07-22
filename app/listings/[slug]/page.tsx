@@ -10,7 +10,7 @@ import Gallery from "@/components/listings/Gallery";
 import { getProperties, getProperty } from "@/lib/api/properties";
 import { parsePropertyId } from "@/lib/slug";
 import { price } from "@/lib/listings";
-import { badgeFor } from "@/lib/badge";
+import { badgeFor, isElite } from "@/lib/badge";
 import { buildSpecs, sqft } from "@/lib/property";
 import { ApiError } from "@/lib/api/client";
 import type { Property } from "@/types/api";
@@ -110,6 +110,11 @@ export default async function ListingDetail({
           <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
+                {isElite(l) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-panel px-4 py-1.5 text-xs font-semibold text-lime shadow-sm ring-1 ring-lime/30">
+                    ✦ Elite
+                  </span>
+                )}
                 <span
                   className={`inline-block rounded-full px-4 py-1.5 text-xs font-medium shadow-sm ${
                     badge === "New" ? "bg-lime text-ink" : "bg-white text-ink"
