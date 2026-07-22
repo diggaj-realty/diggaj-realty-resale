@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import ListingsBrowser from "@/components/ListingsBrowser";
+import ListingsBrowser from "@/components/listings/ListingsBrowser";
 
 export const metadata: Metadata = {
   title: "Homes for Sale — Diggaj Realty",
