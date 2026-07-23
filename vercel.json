@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/list-property", "destination": "https://resale-admin.diggajrealty.com/list-property" },
+    { "source": "/list-property/:path*", "destination": "https://resale-admin.diggajrealty.com/list-property/:path*" },
+    { "source": "/api/v1/public/:path*", "destination": "https://resale-admin.diggajrealty.com/api/v1/public/:path*" }
+  ]
+}
