@@ -1,11 +1,10 @@
-import { getProperties } from "@/lib/api/properties";
+import { getHomeCatalog } from "@/lib/api/home";
 import ShowcaseSection from "@/components/listings/ShowcaseSection";
 
 export default async function Showcase() {
   // No `plan` filter on GET /properties, so fetch a page and filter client-side.
-  // NOTE: same pageSize-100 cap as ExploreMap — fine for now, would need
-  // multi-page fetching (or a backend filter) once the catalog grows past that.
-  const { items } = await getProperties({ pageSize: 100 }, { cache: "no-store" });
+  // Shares the single cached catalog fetch with Hero + ExploreMap.
+  const { items } = await getHomeCatalog();
   const homes = items.filter((p) => p.plan === "ELITE").slice(0, 6);
 
   if (homes.length === 0) return null;

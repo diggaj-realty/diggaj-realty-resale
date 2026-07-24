@@ -42,13 +42,13 @@ const CITY_IMAGES: Record<string, string> = {
 
 const DEFAULT_CITY_IMAGE = "/img/building-hero.jpg";
 
-export function cityImageFor(city: string): string {
+function cityImageFor(city: string): string {
   return CITY_IMAGES[city.trim().toLowerCase()] ?? DEFAULT_CITY_IMAGE;
 }
 
 // city field is usually null on real listings — fall back to the text after
 // the last comma in `location` (e.g. "Koramangala, Bangalore" -> "Bangalore").
-export function cityFor(property: Property): string | null {
+function cityFor(property: Property): string | null {
   if (property.city) return property.city;
   const parts = property.location.split(",");
   if (parts.length < 2) return null;

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ListingsBrowser from "@/components/listings/ListingsBrowser";
+import { ListingGridSkeleton } from "@/components/Skeleton";
 
 export const metadata: Metadata = {
   title: "Homes for Sale — Diggaj Realty",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function ListingsPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen overflow-x-clip bg-white">
       <div className="bg-cream pb-10">
         <Nav />
         <div className="px-8 pt-14 md:px-14">
@@ -25,7 +26,13 @@ export default function ListingsPage() {
           </p>
         </div>
       </div>
-      <Suspense>
+      <Suspense
+        fallback={
+          <section className="px-8 py-12 md:px-14">
+            <ListingGridSkeleton count={6} />
+          </section>
+        }
+      >
         <ListingsBrowser />
       </Suspense>
       <Footer />

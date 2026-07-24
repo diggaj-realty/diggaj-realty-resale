@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { price } from "@/lib/listings";
 import { propertyHref } from "@/lib/slug";
+import { isElite } from "@/lib/badge";
+import GatedPrice from "@/components/listings/GatedPrice";
 import type { Property } from "@/types/api";
 
 function Card({ home }: { home: Property }) {
   const cover = home.photos[0]?.url;
+  const elite = isElite(home);
   const meta = `${home.bhk ?? "—"} bed · ${home.bathrooms ?? "—"} bath · ${home.areaSqft.toLocaleString("en-IN")} sqft`;
 
   return (
@@ -30,9 +32,21 @@ function Card({ home }: { home: Property }) {
           No photo yet
         </div>
       )}
-      <span className="absolute right-4 top-4 rounded-full bg-lime px-4 py-1.5 text-xs font-semibold text-ink shadow">
-        {price(home.askingPrice)}
-      </span>
+      <div className="absolute right-4 top-4 flex items-center gap-2">
+        {elite && (
+          <span className="rounded-full bg-panel px-3 py-1.5 text-xs font-semibold text-lime shadow ring-1 ring-lime/30">
+            ✦ Elite
+          </span>
+        )}
+        <div
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <GatedPrice property={home} variant="chip" className="text-xs font-semibold text-ink" />
+        </div>
+      </div>
       {home.videoUrl && (
         <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">
           ▶ Video

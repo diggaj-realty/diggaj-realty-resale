@@ -1,4 +1,4 @@
-import { getProperties } from "@/lib/api/properties";
+import { getHomeCatalog } from "@/lib/api/home";
 import { groupByCity } from "@/lib/cities";
 import HeroSection from "@/components/listings/HeroSection";
 
@@ -13,7 +13,7 @@ const PIN_SLOTS = [
 ];
 
 export default async function Hero() {
-  const { items } = await getProperties({ pageSize: 100 }, { cache: "no-store" });
+  const { items } = await getHomeCatalog();
 
   const popularCities = groupByCity(items)
     .slice(0, POPULAR_CITY_LIMIT)

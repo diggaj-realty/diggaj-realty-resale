@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const CHECK = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -37,6 +38,12 @@ function Checklist({ items, dark }: { items: string[]; dark?: boolean }) {
 }
 
 export default function BuySell() {
+  const { user } = useAuth();
+  const buyerLoggedIn = user?.role === "BUYER";
+  const sellerLoggedIn = user?.role === "SELLER";
+  const buyerHref = buyerLoggedIn ? "/dashboard/buyer" : "/login/buyer";
+  const sellerHref = sellerLoggedIn ? "/dashboard/seller" : "/login/seller";
+
   return (
     <section id="buy-sell" className="bg-white px-8 py-24 md:px-14">
       {/* header */}
@@ -86,9 +93,12 @@ export default function BuySell() {
                 "Up to 75% of agent commission back",
               ]}
             />
-            <div className="mt-auto pt-8">
+            <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-8">
               <Link href="/listings" className="inline-block rounded-full bg-panel px-6 py-3 text-sm text-white">
                 Start browsing →
+              </Link>
+              <Link href={buyerHref} className="text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/70">
+                {buyerLoggedIn ? "Go to your dashboard →" : "Buyer login →"}
               </Link>
             </div>
           </div>
@@ -124,9 +134,12 @@ export default function BuySell() {
                 "One flat listing fee — no surprises",
               ]}
             />
-            <div className="mt-auto pt-8">
+            <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-8">
               <Link href="/contact" className="inline-block rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink">
                 Get a free valuation →
+              </Link>
+              <Link href={sellerHref} className="text-sm font-medium text-lime underline underline-offset-4 hover:text-lime/70">
+                {sellerLoggedIn ? "Go to your dashboard →" : "Seller login →"}
               </Link>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import SmoothScroll from "@/components/SmoothScroll";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,8 +22,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <head>
+        {/* Warm up connections to the API + image CDN before the first fetch/image. */}
+        <link rel="preconnect" href="https://diggaj-realty-resale-admin.vercel.app" crossOrigin="" />
+        <link rel="preconnect" href="https://zgadjucdqocbyntijbvy.supabase.co" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://zgadjucdqocbyntijbvy.supabase.co" />
+      </head>
       <body className="min-h-full">
-        <SmoothScroll>{children}</SmoothScroll>
+        <AuthProvider>
+          <SmoothScroll>{children}</SmoothScroll>
+        </AuthProvider>
       </body>
     </html>
   );

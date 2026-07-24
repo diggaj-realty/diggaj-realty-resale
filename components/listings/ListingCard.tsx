@@ -6,9 +6,11 @@ import { motion } from "framer-motion";
 import { price } from "@/lib/listings";
 import { propertyHref } from "@/lib/slug";
 import { badgeFor, isElite } from "@/lib/badge";
+import { useAuth } from "@/lib/auth/AuthContext";
+import GatedPrice from "@/components/listings/GatedPrice";
 import type { Property } from "@/types/api";
 
-export function BedIcon() {
+function BedIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M2 11V5a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v6" />
@@ -19,7 +21,7 @@ export function BedIcon() {
   );
 }
 
-export function BathIcon() {
+function BathIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M4 12h16a1 1 0 0 1 1 1 6 6 0 0 1-6 6H9a6 6 0 0 1-6-6 1 1 0 0 1 1-1Z" />
@@ -46,9 +48,13 @@ const rise = {
 };
 
 export default function ListingCard({ property, i = 0 }: { property: Property; i?: number }) {
+  const { user } = useAuth();
   const cover = property.photos[0]?.url;
   const badge = badgeFor(property);
   const elite = isElite(property);
+  const priceVisible = !elite || !!user;
+  const perSqft = property.areaSqft > 0 ? Math.round(property.askingPrice / property.areaSqft) : 0;
+  const chips = (property.amenities ?? []).slice(0, 2);
 
   return (
     <motion.article
@@ -98,22 +104,58 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
           </span>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 text-xs text-body">
+        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-body">
           <span className="flex items-center gap-1.5">
-            <BedIcon /> {property.bhk ?? "—"} Bedrooms
+            <BedIcon /> {property.bhk ?? "—"} BHK
           </span>
           <span className="text-ink/25">·</span>
           <span className="flex items-center gap-1.5">
-            <BathIcon /> {property.bathrooms ?? "—"} Bathroom
+            <BathIcon /> {property.bathrooms ?? "—"} Bath
           </span>
           <span className="text-ink/25">·</span>
           <span>{property.areaSqft.toLocaleString("en-IN")} sqft</span>
+          {priceVisible && perSqft > 0 && (
+            <>
+              <span className="text-ink/25">·</span>
+              <span>{price(perSqft)}/sqft</span>
+            </>
+          )}
         </div>
         <div className="mt-2 flex items-baseline justify-between gap-4">
-          <p className="text-lg font-medium tracking-[-0.01em] text-ink">{property.title}</p>
-          <p className="shrink-0 text-lg font-semibold text-ink">{price(property.askingPrice)}</p>
+          <p className="truncate text-lg font-medium tracking-[-0.01em] text-ink">{property.title}</p>
+          <div
+            className="shrink-0 text-right"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <GatedPrice property={property} className="text-lg font-semibold text-ink" />
+          </div>
         </div>
-        <p className="mt-1 text-xs text-body">{property.location}</p>
+        <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-body">{property.location}</p>
+
+        {/* trust + amenity chips */}
+        {(property.reraId || property.verifiedAt || chips.length > 0) && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {property.verifiedAt && (
+              <span className="rounded-full bg-limepale px-2.5 py-1 text-[11px] font-medium text-ink">
+                ✓ Verified
+              </span>
+            )}
+            {property.reraId && (
+              <span className="rounded-full bg-ink/5 px-2.5 py-1 text-[11px] font-medium text-ink/70">
+                ✓ RERA
+              </span>
+            )}
+            {chips.map((a) => (
+              <span key={a} className="rounded-full bg-ink/5 px-2.5 py-1 text-[11px] text-ink/70">
+                {a}
+              </span>
+            ))}
+          </div>
+        )}
+
       </Link>
     </motion.article>
   );

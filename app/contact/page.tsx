@@ -18,7 +18,7 @@ const POINTS = [
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen overflow-x-clip bg-white">
       <div className="bg-cream pb-14">
         <Nav />
         <div className="px-8 pt-14 md:px-14">

@@ -82,7 +82,7 @@ export default function Footer() {
         </div>
         <motion.div
           style={{ width: cardWidth, height: cardHeight, borderRadius: cardRadius }}
-          className="relative mx-auto min-w-[320px] overflow-hidden shadow-2xl will-change-[width,height,border-radius]"
+          className="relative mx-auto min-w-[280px] overflow-hidden shadow-2xl will-change-[width,height,border-radius]"
         >
           <motion.div style={{ scale: imageScale }} className="absolute inset-0">
             <Image src="/img/footer-house.jpg" alt="Modern home" fill sizes="100vw" quality={82} className="object-cover" />
@@ -93,7 +93,7 @@ export default function Footer() {
       {/* footer brand block */}
       <div className="mt-24 px-8 pb-12 md:px-14">
         <div className="flex items-end gap-4 border-b border-ink/10 pb-6">
-          <span className="text-[13vw] font-medium leading-[0.9] tracking-[-0.04em] md:text-[9vw]">
+          <span className="text-[11vw] font-medium leading-[0.9] tracking-[-0.04em] md:text-[9vw]">
             Diggaj Realty
           </span>
           <div className="relative mb-2 hidden h-16 w-28 shrink-0 overflow-hidden rounded-full md:block">

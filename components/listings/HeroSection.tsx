@@ -9,7 +9,9 @@ import Nav from "@/components/Nav";
 import { price } from "@/lib/listings";
 import { getProperties } from "@/lib/api/properties";
 import { propertyHref } from "@/lib/slug";
-import { badgeFor } from "@/lib/badge";
+import { badgeFor, isElite } from "@/lib/badge";
+import GatedPrice from "@/components/listings/GatedPrice";
+import { useAuth } from "@/lib/auth/AuthContext";
 import type { Property } from "@/types/api";
 
 const rise = {
@@ -37,9 +39,14 @@ function ListingPin({
     <div className={`absolute z-20 hidden md:block ${pos}`}>
       <div className="drift" style={{ animationDelay: delay }}>
         <div className="flex justify-center">
-          <span className="rounded-full bg-lime px-4 py-1.5 text-sm font-medium text-ink shadow-lg">
-            {price(property.askingPrice)}
-          </span>
+          <div
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <GatedPrice property={property} variant="chip" className="text-sm font-medium text-ink shadow-lg" />
+          </div>
         </div>
         <div className="mx-auto h-3 w-px bg-white/90" />
 
@@ -62,9 +69,16 @@ function ListingPin({
                   No photo yet
                 </div>
               )}
-              <span className="absolute left-2 top-2 rounded-full bg-lime px-2.5 py-1 text-[10px] font-semibold text-ink">
-                {badge}
-              </span>
+              <div className="absolute left-2 top-2 flex items-center gap-1.5">
+                {isElite(property) && (
+                  <span className="rounded-full bg-panel px-2.5 py-1 text-[10px] font-semibold text-lime ring-1 ring-lime/30">
+                    ✦ Elite
+                  </span>
+                )}
+                <span className="rounded-full bg-lime px-2.5 py-1 text-[10px] font-semibold text-ink">
+                  {badge}
+                </span>
+              </div>
             </div>
             <div className="px-2 pb-1.5 pt-2">
               <p className="truncate text-sm font-semibold text-ink">{property.title}</p>
@@ -90,6 +104,7 @@ export default function HeroSection({
   pins: Pin[];
 }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [q, setQ] = useState("");
   const [focused, setFocused] = useState(false);
 
@@ -129,7 +144,7 @@ export default function HeroSection({
   const hasSuggestions = homes.length > 0 || cities.length > 0;
 
   return (
-    <section className="relative h-svh min-h-[640px] overflow-clip">
+    <section className="relative h-svh min-h-[560px] overflow-clip sm:min-h-[640px]">
       {/* full-bleed house with slow Ken Burns drift */}
       <motion.div
         initial={{ scale: 1 }}
@@ -247,7 +262,14 @@ export default function HeroSection({
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-ink">{p.title}</p>
                       <p className="truncate text-xs text-body">
-                        {p.location} · {price(p.askingPrice)}
+                        {p.location} ·{" "}
+                        {isElite(p) && !user ? (
+                          <span className="select-none tracking-widest" aria-hidden>
+                            ₹ •• •• •••
+                          </span>
+                        ) : (
+                          price(p.askingPrice)
+                        )}
                       </p>
                     </div>
                     <span className="ml-auto pr-2 text-ink/40">↗</span>
@@ -298,21 +320,21 @@ export default function HeroSection({
         <ListingPin key={p.property.id} property={p.property} pos={p.pos} delay={p.delay} />
       ))}
 
-      {/* bottom bar: stats + scroll cue */}
-      <div className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between px-8 pb-7 text-white md:px-14">
+      {/* bottom bar: stats (centered) + scroll cue */}
+      <div className="absolute inset-x-0 bottom-0 z-20 flex items-end px-8 pb-7 text-white md:px-14">
         <motion.div
           variants={rise}
           initial="hidden"
           animate="show"
           custom={5}
-          className="flex divide-x divide-white/25"
+          className="absolute inset-x-0 bottom-7 flex justify-center divide-x divide-white/25"
         >
           {[
             { n: "₹5L", l: "avg. cash back" },
             { n: "10L+", l: "listings" },
             { n: "4.9★", l: "rating" },
           ].map((s) => (
-            <div key={s.l} className="px-5 first:pl-0">
+            <div key={s.l} className="px-5 text-center first:pl-0">
               <p className="text-xl font-medium tracking-[-0.02em] md:text-2xl">{s.n}</p>
               <p className="mt-0.5 text-[11px] text-white/65">{s.l}</p>
             </div>
@@ -325,7 +347,7 @@ export default function HeroSection({
           transition={{ delay: 1.6, duration: 0.6 }}
           onClick={() => window.scrollTo({ top: window.innerHeight, behavior: "smooth" })}
           aria-label="Scroll down"
-          className="hidden md:block"
+          className="relative z-10 ml-auto hidden md:block"
         >
           <motion.span
             animate={{ y: [0, 6, 0] }}
