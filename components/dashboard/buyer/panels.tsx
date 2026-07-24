@@ -439,7 +439,7 @@ export function ClosingPanel() {
             <StatusBadge status={d.status} />
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="rounded-xl bg-cream px-3 py-2.5">
               <p className="text-[11px] text-body">Agreed price</p>
               <p className="text-sm font-semibold text-ink">{price(d.agreedPrice)}</p>

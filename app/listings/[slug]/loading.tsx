@@ -26,7 +26,7 @@ export default function LoadingListingDetail() {
       </div>
 
       {/* gallery */}
-      <div className="grid gap-2.5 px-3 pt-3 md:grid-cols-[1.7fr_1fr]">
+      <div className="grid grid-cols-1 gap-2.5 px-3 pt-3 md:grid-cols-[1.7fr_1fr]">
         <Skeleton className="h-[34vh] max-h-[460px] rounded-[24px] md:h-[46vh]" />
         <div className="hidden grid-cols-2 gap-2.5 md:grid">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -43,7 +43,7 @@ export default function LoadingListingDetail() {
       </div>
 
       {/* body */}
-      <div className="grid gap-14 px-8 py-16 md:grid-cols-[1.4fr_1fr] md:px-14">
+      <div className="grid gap-14 px-8 py-16 md:px-14 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-4">
           <Skeleton className="h-7 w-48" />
           <Skeleton className="h-4 w-full max-w-xl" />

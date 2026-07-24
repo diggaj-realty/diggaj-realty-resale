@@ -66,7 +66,7 @@ export default function ListingsSection({
       </div>
 
       {/* grid */}
-      <div className="mt-14 grid gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-14 grid gap-x-7 gap-y-14 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((p, i) => (
           <ListingCard key={p.id} property={p} i={i} />
         ))}

@@ -61,7 +61,7 @@ export default function Gallery({
 
   return (
     <>
-      <div className="grid gap-2.5 px-3 pt-3 md:grid-cols-[1.7fr_1fr]">
+      <div className="grid grid-cols-1 gap-2.5 px-3 pt-3 md:grid-cols-[1.7fr_1fr]">
         {/* hero */}
         <button
           type="button"

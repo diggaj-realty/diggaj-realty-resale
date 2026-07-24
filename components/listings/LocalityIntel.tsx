@@ -80,7 +80,7 @@ export default async function LocalityIntel({ property }: { property: Property }
       <p className="mt-1 text-sm text-body">
         {data.area} · {data.live ? "driving distance & time from this address" : "approximate distances"}
       </p>
-      <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         <Row title="Metro & transit" icon="🚇" items={data.metro} />
         <Row title="IT parks & offices" icon="🏢" items={data.itParks} />
         <Row title="Hospitals" icon="🏥" items={data.hospitals} />

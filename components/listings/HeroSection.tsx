@@ -36,7 +36,7 @@ function ListingPin({
   const badge = badgeFor(property);
 
   return (
-    <div className={`absolute z-20 hidden md:block ${pos}`}>
+    <div className={`absolute z-20 hidden lg:block ${pos}`}>
       <div className="drift" style={{ animationDelay: delay }}>
         <div className="flex justify-center">
           <div

@@ -32,7 +32,7 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <div className="grid gap-14 px-8 py-16 md:grid-cols-2 md:px-14">
+      <div className="grid gap-14 px-8 py-16 md:px-14 lg:grid-cols-2">
         <div>
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 overflow-hidden rounded-full">

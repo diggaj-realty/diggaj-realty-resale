@@ -63,9 +63,9 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
       whileInView="show"
       viewport={{ once: true, amount: 0.25 }}
       custom={i % 3}
-      className="group"
+      className="group min-w-0"
     >
-      <Link href={propertyHref(property)} className="block">
+      <Link href={propertyHref(property)} className="block min-w-0">
         <div className="relative aspect-[10/9] overflow-hidden rounded-[20px] bg-cream">
           {cover ? (
             <Image
@@ -122,7 +122,7 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
           )}
         </div>
         <div className="mt-2 flex items-baseline justify-between gap-4">
-          <p className="truncate text-lg font-medium tracking-[-0.01em] text-ink">{property.title}</p>
+          <p className="min-w-0 truncate text-lg font-medium tracking-[-0.01em] text-ink">{property.title}</p>
           <div
             className="shrink-0 text-right"
             onClick={(e) => {

@@ -8,7 +8,7 @@ export default function LoginChooserPage() {
         <h1 className="mt-2 text-3xl font-medium tracking-[-0.02em] text-ink md:text-4xl">
           How would you like to continue?
         </h1>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Link
             href="/login/buyer"
             className="group rounded-3xl bg-white p-8 text-left shadow-sm ring-1 ring-ink/5 transition-transform hover:-translate-y-1"

@@ -121,7 +121,7 @@ export default async function ListingDetail({
             <span aria-hidden>/</span>
             <span className="max-w-[45vw] truncate text-ink/70 md:max-w-xs">{l.title}</span>
           </nav>
-          <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 {isElite(l) && (
@@ -173,7 +173,7 @@ export default async function ListingDetail({
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-start md:items-end">
+            <div className="flex flex-col items-start lg:items-end">
               <GatedPrice
                 property={l}
                 variant="hero"
@@ -231,7 +231,7 @@ export default async function ListingDetail({
       </div>
 
       {/* body */}
-      <div className="grid gap-14 px-8 py-16 md:grid-cols-[1.4fr_1fr] md:px-14">
+      <div className="grid gap-14 px-8 py-16 md:px-14 lg:grid-cols-[1.4fr_1fr]">
         <div>
           <h2 className="text-2xl font-medium tracking-[-0.02em] text-ink">About this home</h2>
           <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-body">{l.description}</p>
@@ -269,7 +269,7 @@ export default async function ListingDetail({
           {amenities.length > 0 && (
             <>
               <h2 className="mt-12 text-2xl font-medium tracking-[-0.02em] text-ink">Amenities</h2>
-              <ul className="mt-5 grid max-w-xl gap-3 sm:grid-cols-2">
+              <ul className="mt-5 grid max-w-xl grid-cols-1 gap-3 sm:grid-cols-2">
                 {amenities.map((a) => (
                   <li key={a} className="flex items-center gap-3 rounded-2xl bg-cream px-4 py-3 text-sm text-ink/80">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lime text-[10px] text-ink">✓</span>
@@ -309,7 +309,7 @@ export default async function ListingDetail({
         </div>
 
         {/* sticky sidebar */}
-        <div className="h-fit md:sticky md:top-8">
+        <div className="h-fit lg:sticky lg:top-8">
           {/* EMI calculator */}
           <PriceUnlocked property={l}>
             <EmiCalculator askingPrice={l.askingPrice} maintenanceMonthly={l.maintenanceMonthly} />
@@ -385,7 +385,7 @@ export default async function ListingDetail({
       {others.length > 0 && (
         <div className="px-8 pb-24 md:px-14">
           <h2 className="text-2xl font-medium tracking-[-0.02em] text-ink">More homes</h2>
-          <div className="mt-8 grid gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {others.map((o, i) => (
               <ListingCard key={o.id} property={o} i={i} />
             ))}

@@ -49,7 +49,7 @@ export default function DashboardShell({
         <div className="mx-auto max-w-5xl">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="mt-2 h-8 w-64" />
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-ink/5">
                 <Skeleton className="h-3 w-20" />
@@ -99,7 +99,7 @@ export default function DashboardShell({
           </button>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {summary!.stats.map((s) => (
             <div key={s.label} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-ink/5">
               <p className="text-xs text-body">{s.label}</p>

@@ -72,7 +72,7 @@ export default function LeadForm({
             className="flex flex-col gap-3"
           >
             <input type="hidden" name="subject" value={subject} />
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input required name="name" placeholder="Full name" className={field} />
               <input
                 required

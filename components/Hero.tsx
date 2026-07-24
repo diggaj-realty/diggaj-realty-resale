@@ -7,9 +7,9 @@ const POPULAR_CITY_LIMIT = 5;
 // fixed screen positions art-directed for the hero photo — content changes,
 // placement doesn't
 const PIN_SLOTS = [
-  { pos: "left-[18%] top-[58%]", delay: "0s" },
-  { pos: "left-[44%] top-[42%]", delay: "1.6s" },
-  { pos: "right-[22%] top-[64%]", delay: "3s" },
+  { pos: "left-[16%] top-[56%]", delay: "0s" },
+  { pos: "left-[48%] top-[46%]", delay: "1.6s" },
+  { pos: "right-[16%] top-[52%]", delay: "3s" },
 ];
 
 export default async function Hero() {
