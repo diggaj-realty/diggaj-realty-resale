@@ -1,9 +1,11 @@
 import { api } from "@/lib/api/client";
 import type { GetPropertiesParams, Paginated, Property } from "@/types/api";
 
+type FetchOpts = { cache?: RequestCache; revalidate?: number };
+
 export async function getProperties(
   params: GetPropertiesParams = {},
-  opts: { cache?: RequestCache } = {}
+  opts: FetchOpts = {}
 ): Promise<Paginated<Property>> {
   const search = new URLSearchParams();
   if (params.q) search.set("q", params.q);
@@ -16,14 +18,9 @@ export async function getProperties(
   if (params.pageSize) search.set("pageSize", String(params.pageSize));
 
   const qs = search.toString();
-  return api<Paginated<Property>>(`/properties${qs ? `?${qs}` : ""}`, {
-    cache: opts.cache,
-  });
+  return api<Paginated<Property>>(`/properties${qs ? `?${qs}` : ""}`, opts);
 }
 
-export async function getProperty(
-  id: string,
-  opts: { cache?: RequestCache } = {}
-): Promise<Property> {
-  return api<Property>(`/properties/${id}`, { cache: opts.cache });
+export async function getProperty(id: string, opts: FetchOpts = {}): Promise<Property> {
+  return api<Property>(`/properties/${id}`, opts);
 }

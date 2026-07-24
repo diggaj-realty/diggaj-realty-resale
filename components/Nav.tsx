@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const MENU = [
   { label: "Home", href: "/" },
@@ -16,23 +17,33 @@ const MENU = [
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
+  const { user, loading } = useAuth();
+  const dashboardHref = user ? `/dashboard/${user.role.toLowerCase()}` : "/login";
 
   return (
     <>
-      <nav className="relative z-30 flex items-center justify-between px-8 pt-7 md:px-14">
-        <Link href="/" className="text-xl font-semibold tracking-tight text-ink">
+      <nav className="relative z-30 flex items-center justify-between px-5 pt-7 md:px-14">
+        <Link href="/" className="text-lg font-semibold tracking-tight text-ink md:text-xl">
           Diggaj Realty
         </Link>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3">
+          {!loading && (
+            <Link
+              href={dashboardHref}
+              className="hidden rounded-full bg-panel px-5 py-2.5 text-sm text-white transition-transform hover:-translate-y-px sm:inline-block"
+            >
+              {user ? "Dashboard" : "Login"}
+            </Link>
+          )}
           <Link
             href="/contact"
-            className="rounded-full bg-panel px-5 py-2.5 text-sm text-white transition-transform hover:-translate-y-px"
+            className="rounded-full bg-panel px-4 py-2.5 text-sm text-white transition-transform hover:-translate-y-px md:px-5"
           >
             Get help
           </Link>
           <button
             onClick={() => setOpen(true)}
-            className="rounded-full bg-white px-5 py-2.5 text-sm text-ink shadow-sm"
+            className="rounded-full bg-white px-4 py-2.5 text-sm text-ink shadow-sm md:px-5"
           >
             Menu <span className="ml-1 align-middle">⋮</span>
           </button>
@@ -90,6 +101,22 @@ export default function Nav() {
                     </Link>
                   </motion.div>
                 ))}
+                {!loading && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 + MENU.length * 0.06, duration: 0.4 }}
+                  >
+                    <Link
+                      href={dashboardHref}
+                      onClick={() => setOpen(false)}
+                      className="group flex items-center justify-between border-b border-white/10 py-4 text-2xl font-medium tracking-[-0.02em] text-lime transition-colors hover:text-white"
+                    >
+                      {user ? "Dashboard" : "Login"}
+                      <span className="opacity-0 transition-opacity group-hover:opacity-100">→</span>
+                    </Link>
+                  </motion.div>
+                )}
               </div>
 
               <motion.div

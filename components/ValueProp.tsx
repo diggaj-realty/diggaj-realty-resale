@@ -79,7 +79,7 @@ export default function ValueProp() {
           custom={1}
           className="relative"
         >
-          <div className="relative h-40 w-64 overflow-hidden rounded-[48px]">
+          <div className="relative h-40 w-full max-w-xs overflow-hidden rounded-[48px] sm:w-64">
             <Image src="/img/interior-kitchen.jpg" alt="Interior" fill sizes="256px" className="object-cover" />
           </div>
           <span className="absolute -top-3 left-2 flex items-center gap-1.5 rounded-full bg-lime px-3 py-1.5 text-xs font-semibold shadow">
@@ -95,7 +95,7 @@ export default function ValueProp() {
           custom={2}
           className="relative"
         >
-          <div className="relative h-40 w-64 overflow-hidden rounded-[48px]">
+          <div className="relative h-40 w-full max-w-xs overflow-hidden rounded-[48px] sm:w-64">
             <Image src="/img/house2.jpg" alt="Modern home" fill sizes="256px" className="object-cover" />
           </div>
           <span className="absolute -bottom-3 left-8 rounded-full bg-panel px-3.5 py-1.5 text-xs font-medium text-white shadow">

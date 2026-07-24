@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,24 +8,42 @@ import Footer from "@/components/Footer";
 import LeadForm from "@/components/LeadForm";
 import ListingCard from "@/components/listings/ListingCard";
 import Gallery from "@/components/listings/Gallery";
+import GatedPrice, { PriceUnlocked, PriceLocked } from "@/components/listings/GatedPrice";
+import ShortlistButton from "@/components/listings/ShortlistButton";
+import EmiCalculator from "@/components/listings/EmiCalculator";
+import ProjectInfo from "@/components/listings/ProjectInfo";
+import LocalityIntel from "@/components/listings/LocalityIntel";
+import PropertyMap from "@/components/listings/PropertyMap";
 import { getProperties, getProperty } from "@/lib/api/properties";
-import { parsePropertyId } from "@/lib/slug";
+import { parsePropertyId, slugify } from "@/lib/slug";
 import { price } from "@/lib/listings";
-import { badgeFor } from "@/lib/badge";
+import { badgeFor, isElite } from "@/lib/badge";
 import { buildSpecs, sqft } from "@/lib/property";
 import { ApiError } from "@/lib/api/client";
 import type { Property } from "@/types/api";
 
-async function loadProperty(slug: string): Promise<Property | null> {
+// Prerender all current listings as static HTML at build time; new ones still
+// render on-demand (dynamicParams defaults to true) and are then ISR-cached.
+export async function generateStaticParams() {
+  try {
+    const { items } = await getProperties({ pageSize: 100 }, { revalidate: 120 });
+    return items.map((p) => ({ slug: `${slugify(p.title)}--${p.id}` }));
+  } catch {
+    return [];
+  }
+}
+
+// Wrapped in cache() so generateMetadata + the page component share one fetch.
+const loadProperty = cache(async (slug: string): Promise<Property | null> => {
   const id = parsePropertyId(slug);
   if (!id) return null;
   try {
-    return await getProperty(id, { cache: "no-store" });
+    return await getProperty(id, { revalidate: 120 });
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) return null;
     throw err;
   }
-}
+});
 
 export async function generateMetadata({
   params,
@@ -75,13 +94,8 @@ export default async function ListingDetail({
 
   const cashBack = Math.round((l.askingPrice * 0.03 * 0.75) / 100) * 100;
   const perSqft = Math.round(l.askingPrice / l.areaSqft);
-  // rough 30-yr est: 20% down, ~6.5% → 0.00632 monthly factor on financed amount
-  const monthly = Math.round((l.askingPrice * 0.8 * 0.00632) / 10) * 10;
 
-  const { items: othersRaw } = await getProperties(
-    { pageSize: 4 },
-    { cache: "no-store" }
-  );
+  const { items: othersRaw } = await getProperties({ pageSize: 4 }, { revalidate: 120 });
   const others = othersRaw.filter((x) => x.id !== l.id).slice(0, 3);
 
   const stats = [
@@ -96,7 +110,7 @@ export default async function ListingDetail({
   ];
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen overflow-x-clip bg-white">
       <div className="bg-cream pb-8">
         <Nav />
         <div className="px-8 pt-10 md:px-14">
@@ -110,6 +124,11 @@ export default async function ListingDetail({
           <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
+                {isElite(l) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-panel px-4 py-1.5 text-xs font-semibold text-lime shadow-sm ring-1 ring-lime/30">
+                    ✦ Elite
+                  </span>
+                )}
                 <span
                   className={`inline-block rounded-full px-4 py-1.5 text-xs font-medium shadow-sm ${
                     badge === "New" ? "bg-lime text-ink" : "bg-white text-ink"
@@ -154,13 +173,20 @@ export default async function ListingDetail({
                 )}
               </div>
             </div>
-            <div className="md:text-right">
-              <p className="text-4xl font-medium tracking-[-0.02em] text-ink md:text-5xl">
-                {price(l.askingPrice)}
-              </p>
-              <p className="mt-2 inline-block rounded-full bg-lime px-4 py-1.5 text-xs font-semibold text-ink">
-                ⌂ Est. {price(cashBack)} cash back
-              </p>
+            <div className="flex flex-col items-start md:items-end">
+              <GatedPrice
+                property={l}
+                variant="hero"
+                className="text-4xl font-medium tracking-[-0.02em] text-ink md:text-5xl"
+              />
+              <PriceUnlocked property={l}>
+                <p className="mt-2 inline-block rounded-full bg-lime px-4 py-1.5 text-xs font-semibold text-ink">
+                  ⌂ Est. {price(cashBack)} cash back
+                </p>
+              </PriceUnlocked>
+              <div className="mt-4">
+                <ShortlistButton propertyId={l.id} />
+              </div>
             </div>
           </div>
         </div>
@@ -213,11 +239,11 @@ export default async function ListingDetail({
           {specs.length > 0 && (
             <>
               <h2 className="mt-12 text-2xl font-medium tracking-[-0.02em] text-ink">Specifications</h2>
-              <dl className="mt-5 grid gap-px overflow-hidden rounded-[24px] bg-ink/10 sm:grid-cols-2">
+              <dl className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                 {specs.map((s) => (
-                  <div key={s.label} className="flex items-center justify-between gap-4 bg-white px-5 py-3.5">
-                    <dt className="text-sm text-body">{s.label}</dt>
-                    <dd className="text-sm font-medium text-ink text-right">{s.value}</dd>
+                  <div key={s.label} className="rounded-2xl bg-cream px-4 py-3.5">
+                    <dt className="text-xs text-body">{s.label}</dt>
+                    <dd className="mt-1 text-sm font-medium leading-snug text-ink [overflow-wrap:anywhere]">{s.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -254,12 +280,23 @@ export default async function ListingDetail({
             </>
           )}
 
+          {/* project & builder */}
+          <ProjectInfo property={l} />
+
+          {/* locality & connectivity */}
+          <LocalityIntel property={l} />
+
           {/* cash-back explainer */}
           <div className="mt-12 overflow-hidden rounded-[24px] bg-panel p-8 text-white">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-white/60">Your estimated cash back</p>
-                <p className="mt-1 text-4xl font-medium tracking-[-0.02em] text-lime">{price(cashBack)}</p>
+                <PriceUnlocked property={l}>
+                  <p className="mt-1 text-4xl font-medium tracking-[-0.02em] text-lime">{price(cashBack)}</p>
+                </PriceUnlocked>
+                <PriceLocked property={l}>
+                  <p className="mt-1 text-4xl font-medium tracking-[-0.02em] text-lime/40">₹ •• •••</p>
+                </PriceLocked>
                 <p className="mt-2 max-w-xs text-xs leading-relaxed text-white/50">
                   Up to 75% of the buyer&apos;s agent commission, returned at closing when you buy this home with Diggaj Realty.
                 </p>
@@ -273,24 +310,21 @@ export default async function ListingDetail({
 
         {/* sticky sidebar */}
         <div className="h-fit md:sticky md:top-8">
-          {/* payment estimate */}
-          <div className="rounded-[24px] bg-cream p-6">
-            <p className="text-sm font-medium text-ink">Estimated monthly payment</p>
-            <p className="mt-1 text-3xl font-medium tracking-[-0.02em] text-ink">
-              {price(monthly)}<span className="text-base text-body">/mo</span>
-            </p>
-            <div className="mt-4 space-y-2 text-xs text-body">
-              <div className="flex justify-between"><span>List price</span><span className="font-medium text-ink">{price(l.askingPrice)}</span></div>
-              <div className="flex justify-between"><span>Down payment (20%)</span><span className="font-medium text-ink">{price(Math.round(l.askingPrice * 0.2))}</span></div>
-              <div className="flex justify-between"><span>Est. rate</span><span className="font-medium text-ink">6.5% / 30yr</span></div>
-              {l.maintenanceMonthly != null && (
-                <div className="flex justify-between"><span>Maintenance</span><span className="font-medium text-ink">{price(l.maintenanceMonthly)}/mo</span></div>
-              )}
+          {/* EMI calculator */}
+          <PriceUnlocked property={l}>
+            <EmiCalculator askingPrice={l.askingPrice} maintenanceMonthly={l.maintenanceMonthly} />
+          </PriceUnlocked>
+          <PriceLocked property={l}>
+            <div className="rounded-[24px] bg-cream p-6 text-center">
+              <p className="text-sm font-medium text-ink">Pricing is exclusive</p>
+              <p className="mt-1 text-xs text-body">
+                This is an Elite listing. Log in as a buyer to see the price, payment estimate, and cash back.
+              </p>
+              <div className="mt-4 flex justify-center">
+                <GatedPrice property={l} variant="hero" />
+              </div>
             </div>
-            <p className="mt-4 text-[11px] leading-relaxed text-ink/40">
-              Estimate only. Actual terms vary — talk to a Diggaj lender for a real quote.
-            </p>
-          </div>
+          </PriceLocked>
 
           {/* tour request */}
           <div className="mt-4 rounded-[28px] bg-panel p-8 text-white">
@@ -328,12 +362,21 @@ export default async function ListingDetail({
                 Open in Maps →
               </a>
             </div>
-            <iframe
-              title={`Map of ${l.title}`}
-              loading="lazy"
-              className="h-[40vh] w-full border-0"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${l.longitude - 0.012}%2C${l.latitude - 0.008}%2C${l.longitude + 0.012}%2C${l.latitude + 0.008}&layer=mapnik&marker=${l.latitude}%2C${l.longitude}`}
-            />
+            {process.env.GOOGLE_PLACES_API_KEY ? (
+              <PropertyMap
+                lat={l.latitude}
+                lng={l.longitude}
+                title={l.title}
+                apiKey={process.env.GOOGLE_PLACES_API_KEY}
+              />
+            ) : (
+              <iframe
+                title={`Map of ${l.title}`}
+                loading="lazy"
+                className="h-[40vh] w-full border-0"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${l.longitude - 0.012}%2C${l.latitude - 0.008}%2C${l.longitude + 0.012}%2C${l.latitude + 0.008}&layer=mapnik&marker=${l.latitude}%2C${l.longitude}`}
+              />
+            )}
           </div>
         </div>
       )}

@@ -14,7 +14,15 @@ const rise = {
   }),
 };
 
-export default function ListingsSection({ items }: { items: Property[] }) {
+export default function ListingsSection({
+  items,
+  title = "Featured Listings",
+  subtitle = "Hand-picked homes on the market right now — every one eligible for commission cash back.",
+}: {
+  items: Property[];
+  title?: string;
+  subtitle?: string;
+}) {
   return (
     <section className="bg-white px-8 py-24 md:px-14">
       {/* header */}
@@ -28,7 +36,7 @@ export default function ListingsSection({ items }: { items: Property[] }) {
             custom={0}
             className="text-4xl font-medium tracking-[-0.02em] md:text-5xl"
           >
-            Featured Listings
+            {title}
           </motion.h2>
           <motion.p
             variants={rise}
@@ -38,8 +46,7 @@ export default function ListingsSection({ items }: { items: Property[] }) {
             custom={1}
             className="mt-3 max-w-sm text-sm text-body"
           >
-            Hand-picked homes on the market right now — every one eligible for
-            commission cash back.
+            {subtitle}
           </motion.p>
         </div>
         <motion.div

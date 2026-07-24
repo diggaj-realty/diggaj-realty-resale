@@ -10,13 +10,24 @@ export class ApiError extends Error {
 
 export async function api<T>(
   path: string,
-  opts: { method?: string; body?: unknown; cache?: RequestCache } = {}
+  opts: {
+    method?: string;
+    body?: unknown;
+    cache?: RequestCache;
+    /** ISR window (seconds) for the Next.js Data Cache. Ignored if `cache` is set. */
+    revalidate?: number;
+    tags?: string[];
+  } = {}
 ): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: opts.method ?? "GET",
     headers: opts.body ? { "Content-Type": "application/json" } : undefined,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
-    cache: opts.cache,
+    ...(opts.cache
+      ? { cache: opts.cache }
+      : opts.revalidate != null
+      ? { next: { revalidate: opts.revalidate, tags: opts.tags } }
+      : {}),
   });
   const json = await res.json();
   if (!res.ok) {
