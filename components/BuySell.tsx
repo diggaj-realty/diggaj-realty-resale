@@ -103,7 +103,7 @@ export default function BuySell() {
             </div>
           </div>
           {/* image peeking from the corner */}
-          <div className="absolute -bottom-10 -right-12 h-56 w-72 rotate-[-6deg] overflow-hidden rounded-[24px] shadow-2xl transition-transform duration-500 group-hover:rotate-[-2deg] group-hover:scale-[1.04] md:h-64 md:w-80">
+          <div className="absolute -bottom-10 -right-12 hidden h-56 w-72 rotate-[-6deg] overflow-hidden rounded-[24px] shadow-2xl transition-transform duration-500 group-hover:rotate-[-2deg] group-hover:scale-[1.04] md:block md:h-64 md:w-80">
             <Image src="/img/villa.jpg" alt="Home for buyers" fill sizes="320px" className="object-cover" />
             <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow">
               ⌂ ₹8.9 Cr
@@ -144,7 +144,7 @@ export default function BuySell() {
             </div>
           </div>
           {/* image peeking from the corner */}
-          <div className="absolute -bottom-10 -right-12 h-56 w-72 rotate-[5deg] overflow-hidden rounded-[24px] shadow-2xl transition-transform duration-500 group-hover:rotate-[1deg] group-hover:scale-[1.04] md:h-64 md:w-80">
+          <div className="absolute -bottom-10 -right-12 hidden h-56 w-72 rotate-[5deg] overflow-hidden rounded-[24px] shadow-2xl transition-transform duration-500 group-hover:rotate-[1deg] group-hover:scale-[1.04] md:block md:h-64 md:w-80">
             <Image src="/img/footer-house.jpg" alt="Home for sellers" fill sizes="320px" className="object-cover" />
             <span className="absolute left-4 top-4 rounded-full bg-lime px-3 py-1.5 text-xs font-semibold text-ink shadow">
               ✓ Sold in 12 days

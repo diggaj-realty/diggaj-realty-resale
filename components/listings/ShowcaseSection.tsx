@@ -2,12 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { propertyHref } from "@/lib/slug";
 import { isElite } from "@/lib/badge";
 import GatedPrice from "@/components/listings/GatedPrice";
 import type { Property } from "@/types/api";
+
+// The 300vh scroll-hijack (vertical scroll → horizontal move) is smooth with a
+// mouse but janky on touch. On touch/small screens we swap it for a native
+// horizontal swipe carousel — hardware-accelerated momentum + snap = buttery.
+const subscribe = (cb: () => void) => {
+  const m = window.matchMedia("(max-width: 1023px), (pointer: coarse)");
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+function useNativeScroll() {
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches,
+    () => true // SSR default: native (mobile-first, avoids the heavy path on first paint)
+  );
+}
 
 function Card({ home }: { home: Property }) {
   const cover = home.photos[0]?.url;
@@ -61,14 +77,47 @@ function Card({ home }: { home: Property }) {
   );
 }
 
+// Split so the ref-based useScroll only runs when the desktop tree is actually
+// mounted (avoids framer-motion's "target ref not hydrated" on the mobile path).
 export default function ShowcaseSection({ homes }: { homes: Property[] }) {
+  const nativeScroll = useNativeScroll();
+  return nativeScroll ? <MobileShowcase homes={homes} /> : <DesktopShowcase homes={homes} />;
+}
+
+// ── Mobile / touch: native swipe carousel (buttery, no scroll-jack) ──
+function MobileShowcase({ homes }: { homes: Property[] }) {
+  return (
+    <section className="overflow-clip bg-cream px-8 py-20 md:px-14">
+      <h2 className="text-4xl font-medium tracking-[-0.02em] md:text-5xl">Homes worth the scroll</h2>
+      <p className="mt-3 max-w-xs text-sm leading-relaxed text-body">
+        A hand-picked strip of standout architecture — swipe through the collection.
+      </p>
+      <div className="-mx-8 mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-4 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] md:-mx-14 md:px-14 [&::-webkit-scrollbar]:hidden">
+        {homes.map((h) => (
+          <div key={h.id} className="shrink-0 snap-start">
+            <Card home={h} />
+          </div>
+        ))}
+        <div className="flex shrink-0 items-center">
+          <Link
+            href="/listings"
+            className="rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink shadow-lg"
+          >
+            View all homes →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Desktop: scroll-scrubbed horizontal track ──
+function DesktopShowcase({ homes }: { homes: Property[] }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
-
-  // the track glides left as you scroll down — scrubbed and reversible
   const x = useTransform(scrollYProgress, [0.05, 0.95], ["0%", "-58%"]);
   const counter = useTransform(scrollYProgress, (v) =>
     String(Math.min(homes.length, Math.max(1, Math.ceil(v * homes.length)))).padStart(2, "0")

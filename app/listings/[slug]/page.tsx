@@ -269,11 +269,11 @@ export default async function ListingDetail({
           {amenities.length > 0 && (
             <>
               <h2 className="mt-12 text-2xl font-medium tracking-[-0.02em] text-ink">Amenities</h2>
-              <ul className="mt-5 grid max-w-xl grid-cols-1 gap-3 sm:grid-cols-2">
+              <ul className="mt-5 grid max-w-xl grid-cols-2 gap-2.5 sm:gap-3">
                 {amenities.map((a) => (
-                  <li key={a} className="flex items-center gap-3 rounded-2xl bg-cream px-4 py-3 text-sm text-ink/80">
+                  <li key={a} className="flex items-center gap-2.5 rounded-2xl bg-cream px-3 py-3 text-sm text-ink/80 sm:gap-3 sm:px-4">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lime text-[10px] text-ink">✓</span>
-                    {a}
+                    <span className="min-w-0 [overflow-wrap:anywhere]">{a}</span>
                   </li>
                 ))}
               </ul>
