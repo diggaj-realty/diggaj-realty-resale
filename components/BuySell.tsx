@@ -93,12 +93,12 @@ export default function BuySell() {
                 "Up to 75% of agent commission back",
               ]}
             />
-            <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-8">
-              <Link href="/listings" className="inline-block rounded-full bg-panel px-6 py-3 text-sm text-white">
-                Start browsing →
-              </Link>
-              <Link href={buyerHref} className="text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/70">
-                {buyerLoggedIn ? "Go to your dashboard →" : "Buyer login →"}
+            <div className="mt-auto pt-8">
+              <Link
+                href={buyerLoggedIn ? buyerHref : "/listings"}
+                className="inline-block rounded-full bg-panel px-6 py-3 text-sm text-white"
+              >
+                {buyerLoggedIn ? "Go to your dashboard →" : "Start browsing →"}
               </Link>
             </div>
           </div>
@@ -134,12 +134,12 @@ export default function BuySell() {
                 "One flat listing fee — no surprises",
               ]}
             />
-            <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-3 pt-8">
-              <Link href="/contact" className="inline-block rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink">
-                Get a free valuation →
-              </Link>
-              <Link href={sellerHref} className="text-sm font-medium text-lime underline underline-offset-4 hover:text-lime/70">
-                {sellerLoggedIn ? "Go to your dashboard →" : "Seller login →"}
+            <div className="mt-auto pt-8">
+              <Link
+                href={sellerLoggedIn ? sellerHref : "/contact"}
+                className="inline-block rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink"
+              >
+                {sellerLoggedIn ? "Go to your dashboard →" : "Get a free valuation →"}
               </Link>
             </div>
           </div>

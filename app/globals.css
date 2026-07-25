@@ -31,6 +31,19 @@ body {
   color: var(--color-ink);
 }
 
+/* iOS/Android auto-zoom the whole page on focus when a form field's font
+ * size is under 16px — most of this app's inputs use text-sm (14px) for
+ * visual density, which is fine on desktop but triggers that zoom on
+ * mobile. Force 16px on small viewports only, so desktop sizing is
+ * untouched. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 button {
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;

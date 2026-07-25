@@ -174,7 +174,7 @@ export default function HeroSection({
         custom={0}
         className="relative z-30 [&_a:first-child]:text-white"
       >
-        <Nav />
+        <Nav showActionButton={false} />
       </motion.div>
 
       {/* click-away layer for suggestions */}

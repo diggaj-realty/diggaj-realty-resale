@@ -6,6 +6,7 @@ import { useState } from "react";
 import { login, register } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import type { UserRole } from "@/types/auth";
 
 export default function AuthForm({ role }: { role: UserRole }) {
@@ -120,6 +121,15 @@ export default function AuthForm({ role }: { role: UserRole }) {
           {submitting ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
         </button>
       </form>
+
+      {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+        <>
+          <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-wide text-ink/35">
+            <span className="h-px flex-1 bg-ink/10" /> or <span className="h-px flex-1 bg-ink/10" />
+          </div>
+          <GoogleSignInButton role={role} dashboardPath={dashboardPath} onError={setError} />
+        </>
+      )}
 
       <button
         onClick={() => {

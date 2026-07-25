@@ -5,6 +5,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth/AuthContext";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import AiSearchButton from "@/components/ai/AiSearchButton";
 
 // framer-motion (the drawer's slide/stagger animation) is only ever needed
 // once someone actually opens the mobile menu, so it's dynamically imported
@@ -12,7 +13,14 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 // every page load — see `mounted` below.
 const NavMobileMenu = dynamic(() => import("@/components/NavMobileMenu"), { ssr: false });
 
-export default function Nav() {
+export default function Nav({
+  showActionButton = true,
+}: {
+  // The home page replaces this slot entirely with a floating AI button
+  // elsewhere on the page (see HeroSection), so it hides both "Get help"
+  // and the inline AI Search pill here rather than showing both at once.
+  showActionButton?: boolean;
+} = {}) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { user, loading } = useAuth();
@@ -34,12 +42,10 @@ export default function Nav() {
               {user ? "Dashboard" : "Login"}
             </Link>
           )}
-          <Link
-            href="/contact"
-            className="rounded-full bg-panel px-4 py-2.5 text-sm text-white transition-transform hover:-translate-y-px md:px-5"
-          >
-            Get help
-          </Link>
+          {/* Shown to everyone, not just logged-in users — anonymous
+              visitors get a free preview of the chat before it asks them
+              to sign in, so this can't be gated behind login. */}
+          {showActionButton && !loading && <AiSearchButton />}
           <button
             onClick={() => {
               setMounted(true);

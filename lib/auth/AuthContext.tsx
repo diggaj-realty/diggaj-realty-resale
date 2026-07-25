@@ -5,6 +5,13 @@ import { me as fetchMe } from "@/lib/api/auth";
 import type { AuthUser } from "@/types/auth";
 
 const STORAGE_KEY = "diggaj_auth_token";
+// Caches the last-known full user object alongside the token so a repeat
+// visit can render as logged-in immediately (no network wait) instead of
+// blocking every page — including the dashboard — behind a fresh /auth/me
+// round trip before anything can render. Still reconciled with a real
+// fetchMe() call in the background; a failure there clears both and logs
+// the session out, same as before this existed.
+const USER_STORAGE_KEY = "diggaj_auth_user";
 
 type AuthState = {
   user: AuthUser | null;
@@ -23,30 +30,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    // All state updates happen in promise callbacks (never synchronously in the
-    // effect body) so we don't trigger cascading renders on mount.
+    const cachedUserRaw = stored ? window.localStorage.getItem(USER_STORAGE_KEY) : null;
+    let cachedUser: AuthUser | null = null;
+    if (cachedUserRaw) {
+      try {
+        cachedUser = JSON.parse(cachedUserRaw) as AuthUser;
+      } catch {
+        cachedUser = null;
+      }
+    }
+
+    // Optimistic: a cached user from a prior visit renders as logged-in
+    // almost immediately (deferred one microtask, not a real network wait)
+    // — fetchMe below still runs to reconcile/verify, but the UI doesn't sit
+    // and wait for it. Deferred via microtask rather than called directly
+    // here since setState synchronously in an effect body risks cascading
+    // renders (react-hooks/set-state-in-effect) — a microtask still resolves
+    // long before fetchMe's network round trip ever could.
+    if (stored && cachedUser) {
+      queueMicrotask(() => {
+        setToken(stored);
+        setUser(cachedUser);
+        setLoading(false);
+      });
+    }
+
+    // Verification/refresh path — its own state updates stay inside promise
+    // callbacks (the optimistic block above is the deliberate exception,
+    // since it needs to render before this network call even resolves).
     const load = stored ? fetchMe(stored) : Promise.resolve(null);
     load
       .then((u) => {
         if (stored && u) {
           setToken(stored);
           setUser(u);
+          window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(u));
         }
       })
       .catch(() => {
         window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(USER_STORAGE_KEY);
+        setToken(null);
+        setUser(null);
       })
       .finally(() => setLoading(false));
   }, []);
 
   const setSession = useCallback((newToken: string, newUser: AuthUser) => {
     window.localStorage.setItem(STORAGE_KEY, newToken);
+    window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
   }, []);
 
   const logout = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(USER_STORAGE_KEY);
     setToken(null);
     setUser(null);
   }, []);

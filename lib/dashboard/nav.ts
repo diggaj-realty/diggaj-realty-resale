@@ -9,6 +9,7 @@ import {
   BuildingIcon,
   HandshakeIcon,
   SparkleIcon,
+  UserIcon,
 } from "@/components/dashboard/icons";
 
 export type NavItem = {
@@ -37,3 +38,14 @@ export const SELLER_NAV: NavItem[] = [
   { href: "/dashboard/seller/site-visits", label: "Site Visits", description: "Who's touring your property", Icon: CalendarIcon },
   { href: "/dashboard/seller/plans", label: "Plans", description: "Boost your listing's visibility", Icon: SparkleIcon },
 ];
+
+// Rendered separately, pinned to the bottom of the sidebar/drawer — not part
+// of BUYER_NAV/SELLER_NAV so it doesn't also show up in the Overview page's
+// "Jump to" quick-links grid (SectionLinks), which is for core dashboard
+// sections, not account settings.
+export const PROFILE_NAV_ITEM: NavItem = {
+  href: "/profile",
+  label: "Profile & Settings",
+  description: "Manage your account details",
+  Icon: UserIcon,
+};

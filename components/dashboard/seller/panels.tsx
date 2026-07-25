@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { price } from "@/lib/listings";
 import { useAuth } from "@/lib/auth/AuthContext";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import PropertyRow from "@/components/dashboard/PropertyRow";
 import { Panel, Step, fmtDate } from "@/components/dashboard/shared";
+import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
 import { getOffers, getDeals, getSiteVisits } from "@/lib/api/buyer";
 import { acceptOffer, rejectOffer, counterOffer, getMyListings } from "@/lib/api/seller";
 import type { Deal, Offer, SiteVisit } from "@/types/buyer";
@@ -15,15 +16,10 @@ import type { Property } from "@/types/api";
 // ── My listings ────────────────────────────────────────────────
 export function ListingsPanel() {
   const { token } = useAuth();
-  const [items, setItems] = useState<Property[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!token) return;
-    getMyListings(token)
-      .then((r) => setItems(r.items))
-      .catch((e) => setError(e.message));
-  }, [token]);
+  const cacheKey = token ? `sellerListings:${token}` : null;
+  const { items, error } = useCachedPanelData<Property[]>(cacheKey, () =>
+    getMyListings(token!).then((r) => r.items)
+  );
 
   return (
     <Panel
@@ -45,19 +41,13 @@ export function ListingsPanel() {
 // current state — not a full multi-step timeline.
 export function OffersPanel() {
   const { token } = useAuth();
-  const [items, setItems] = useState<Offer[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const cacheKey = token ? `sellerOffers:${token}` : null;
+  const { items, error, setError, load } = useCachedPanelData<Offer[]>(cacheKey, () =>
+    getOffers(token!).then((r) => r.items)
+  );
   const [busy, setBusy] = useState<string | null>(null);
   const [counterDraft, setCounterDraft] = useState<Record<string, string>>({});
   const [counteringId, setCounteringId] = useState<string | null>(null);
-
-  function load() {
-    if (!token) return;
-    getOffers(token)
-      .then((r) => setItems(r.items))
-      .catch((e) => setError(e.message));
-  }
-  useEffect(load, [token]);
 
   async function respond(offerId: string, action: "accept" | "reject") {
     if (!token) return;
@@ -193,15 +183,10 @@ export function OffersPanel() {
 // ── Site visits (read-only for sellers) ───────────────────────
 export function VisitsPanel() {
   const { token } = useAuth();
-  const [items, setItems] = useState<SiteVisit[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!token) return;
-    getSiteVisits(token)
-      .then((r) => setItems(r.items))
-      .catch((e) => setError(e.message));
-  }, [token]);
+  const cacheKey = token ? `sellerVisits:${token}` : null;
+  const { items, error } = useCachedPanelData<SiteVisit[]>(cacheKey, () =>
+    getSiteVisits(token!).then((r) => r.items)
+  );
 
   return (
     <Panel
@@ -237,15 +222,8 @@ export function VisitsPanel() {
 // ── Deals (closing / documentation) ───────────────────────────
 export function DealsPanel() {
   const { token } = useAuth();
-  const [items, setItems] = useState<Deal[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!token) return;
-    getDeals(token)
-      .then((r) => setItems(r.items))
-      .catch((e) => setError(e.message));
-  }, [token]);
+  const cacheKey = token ? `sellerDeals:${token}` : null;
+  const { items, error } = useCachedPanelData<Deal[]>(cacheKey, () => getDeals(token!).then((r) => r.items));
 
   return (
     <Panel

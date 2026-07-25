@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/api/client";
-import type { AuthUser, LoginResponse, UserRole } from "@/types/auth";
+import type { AuthUser, GoogleAuthResponse, LoginResponse, UserRole } from "@/types/auth";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
@@ -31,6 +31,14 @@ export function register(input: {
   role: UserRole;
 }) {
   return authApi<LoginResponse>("/auth/register", input);
+}
+
+// Public-API equivalent of /auth/register + /auth/login combined — the
+// frontend gets an ID token from Google Identity Services and the backend
+// verifies it server-side, so a raw idToken is trusted input here only in
+// the sense that the backend re-verifies it against Google before use.
+export function googleAuth(idToken: string, role: UserRole, phone?: string) {
+  return authApi<GoogleAuthResponse>("/auth/google", { idToken, role, phone });
 }
 
 export async function me(token: string): Promise<AuthUser> {

@@ -15,3 +15,7 @@ export type LoginResponse = {
   token: string;
   user: AuthUser;
 };
+
+export type GoogleAuthResponse = LoginResponse & {
+  isNewUser: boolean;
+};

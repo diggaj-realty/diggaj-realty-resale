@@ -16,7 +16,10 @@ export default function DashboardNavList({
   return (
     <nav className="flex flex-col gap-1">
       {items.map((item) => {
-        const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+        // A plain startsWith would also match "/saved-searches" against the
+        // "/saved" item's href — require an exact match or a real path
+        // segment boundary (a trailing "/") after the prefix.
+        const active = pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
         return (
           <Link
             key={item.href}

@@ -11,7 +11,7 @@ import AccountMenu from "@/components/dashboard/AccountMenu";
 import DashboardNavList from "@/components/dashboard/DashboardNavList";
 import { DashboardSummaryProvider } from "@/components/dashboard/DashboardSummaryContext";
 import { MenuIcon, CloseIcon } from "@/components/dashboard/icons";
-import { BUYER_NAV, SELLER_NAV } from "@/lib/dashboard/nav";
+import { BUYER_NAV, SELLER_NAV, PROFILE_NAV_ITEM } from "@/lib/dashboard/nav";
 import type { DashboardSummary } from "@/types/dashboard";
 import type { UserRole } from "@/types/auth";
 
@@ -30,7 +30,11 @@ export default function DashboardShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navItems = role === "BUYER" ? BUYER_NAV : SELLER_NAV;
-  const currentLabel = navItems.find((i) => (i.exact ? pathname === i.href : pathname.startsWith(i.href)))?.label;
+  // Same boundary rule as DashboardNavList — a plain startsWith would match
+  // "/saved-searches" against the "/saved" item too.
+  const currentLabel = navItems.find(
+    (i) => pathname === i.href || (!i.exact && pathname.startsWith(`${i.href}/`))
+  )?.label;
 
   useEffect(() => {
     if (loading) return;
@@ -55,7 +59,11 @@ export default function DashboardShell({
     if (drawerOpen) setDrawerOpen(false);
   }
 
-  if (loading || (!error && !summary)) {
+  // `!user` must gate this too, not just `!summary` — on logout (or a role
+  // change) `user` clears to null immediately but `summary` from a prior
+  // successful fetch lingers until the redirect effect above actually
+  // navigates away, which would otherwise fall through to `user!.name` below.
+  if (loading || !user || (!error && !summary)) {
     return (
       <div className="flex min-h-screen bg-cream">
         <div className="hidden w-64 shrink-0 border-r border-ink/10 bg-white lg:block" />
@@ -95,8 +103,11 @@ export default function DashboardShell({
         <p className="px-6 pb-6 text-xs font-medium uppercase tracking-wide text-body">
           {role === "BUYER" ? "Buyer dashboard" : "Seller dashboard"}
         </p>
-        <div className="flex-1 overflow-y-auto px-4">
+        <div className="flex flex-1 flex-col overflow-y-auto px-4">
           <DashboardNavList items={navItems} />
+          <div className="mt-auto border-t border-ink/10 pt-2">
+            <DashboardNavList items={[PROFILE_NAV_ITEM]} />
+          </div>
         </div>
       </aside>
 
@@ -118,7 +129,12 @@ export default function DashboardShell({
             <p className="mb-4 mt-1 text-xs font-medium uppercase tracking-wide text-body">
               {role === "BUYER" ? "Buyer dashboard" : "Seller dashboard"}
             </p>
-            <DashboardNavList items={navItems} onNavigate={() => setDrawerOpen(false)} />
+            <div className="flex flex-1 flex-col overflow-y-auto">
+              <DashboardNavList items={navItems} onNavigate={() => setDrawerOpen(false)} />
+              <div className="mt-auto border-t border-ink/10 pt-2">
+                <DashboardNavList items={[PROFILE_NAV_ITEM]} onNavigate={() => setDrawerOpen(false)} />
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -135,7 +151,7 @@ export default function DashboardShell({
               <MenuIcon />
             </button>
             <div className="min-w-0">
-              <p className="truncate text-xs text-body">Welcome back, {user!.name.split(" ")[0]}</p>
+              <p className="truncate text-xs text-body">Welcome back, {user.name.split(" ")[0]}</p>
               <h1 className="truncate text-lg font-medium tracking-[-0.01em] text-ink">
                 {currentLabel ?? "Dashboard"}
               </h1>

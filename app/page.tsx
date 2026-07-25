@@ -9,6 +9,7 @@ import ExploreMap from "@/components/ExploreMap";
 import ExploreProjects from "@/components/ExploreProjects";
 import Faq from "@/components/Faq";
 import Footer from "@/components/Footer";
+import HomeFloatingAi from "@/components/ai/HomeFloatingAi";
 
 // Page narrative: what it is (Hero) → why it exists (ValueProp) →
 // who it's for (BuySell) → the homes themselves (Showcase + Listings + Popular) →
@@ -27,6 +28,7 @@ export default function Home() {
       <ExploreProjects />
       <Faq />
       <Footer />
+      <HomeFloatingAi />
     </main>
   );
 }

@@ -316,6 +316,11 @@ export default function ListingsBrowser({
   ].filter(Boolean).length;
   const anyFilterActive =
     q.trim() !== "" || type !== "" || priceActive || beds !== 0 || city !== "" || moreActiveCount > 0;
+  // On mobile the Tier-1 pill row (city/type/price/beds) is folded into the
+  // same drawer as "More filters", so its one "Filters" button needs the
+  // combined count across both tiers.
+  const tier1ActiveCount = [type !== "", priceActive, beds !== 0, city !== ""].filter(Boolean).length;
+  const totalActiveCount = tier1ActiveCount + moreActiveCount;
 
   function clearAll() {
     setQ("");
@@ -363,6 +368,51 @@ export default function ListingsBrowser({
     }
   }
 
+  // Shared between the desktop pill row and the mobile compact bar — same
+  // sortOpen/sort state either way, just rendered at two different spots.
+  const sortControl = (
+    <div className="relative">
+      <button
+        onClick={() => setSortOpen((o) => !o)}
+        className="flex w-full items-center justify-center gap-1.5 rounded-full bg-ink/5 py-3 pl-4 pr-3 text-sm font-medium text-ink/70 hover:bg-ink/10 md:w-auto md:py-2 md:text-xs"
+      >
+        {SORT_OPTIONS.find((s) => s.value === sort)?.label}
+        <svg
+          className={sortOpen ? "rotate-180" : ""}
+          width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {sortOpen && (
+        <>
+          <button
+            aria-label="Close sort menu"
+            onClick={() => setSortOpen(false)}
+            className="fixed inset-0 z-30 cursor-default"
+          />
+          <div className="absolute right-0 top-full z-40 mt-2 w-52 rounded-2xl bg-white p-1.5 shadow-2xl ring-1 ring-ink/10">
+            {SORT_OPTIONS.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => {
+                  setSort(s.value);
+                  setSortOpen(false);
+                }}
+                className={`block w-full rounded-xl px-3 py-2 text-left text-xs font-medium ${
+                  sort === s.value ? "bg-panel text-white" : "text-ink/70 hover:bg-ink/5"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <section className="px-8 py-12 md:px-14">
       {/* search + filters */}
@@ -384,7 +434,9 @@ export default function ListingsBrowser({
           </svg>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Tier-1 filters — full pill row, desktop/tablet only. On mobile
+            these fold into the same "Filters" drawer as Tier 2 (below). */}
+        <div className="hidden flex-wrap items-center gap-2 md:flex">
           {/* city */}
           <div className="relative">
             <select
@@ -543,46 +595,7 @@ export default function ListingsBrowser({
           </button>
 
           {/* Sort */}
-          <div className="relative ml-auto">
-            <button
-              onClick={() => setSortOpen((o) => !o)}
-              className="flex items-center gap-1.5 rounded-full bg-ink/5 py-2 pl-4 pr-3 text-xs font-medium text-ink/70 hover:bg-ink/10"
-            >
-              {SORT_OPTIONS.find((s) => s.value === sort)?.label}
-              <svg
-                className={sortOpen ? "rotate-180" : ""}
-                width="12" height="12" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
-            {sortOpen && (
-              <>
-                <button
-                  aria-label="Close sort menu"
-                  onClick={() => setSortOpen(false)}
-                  className="fixed inset-0 z-30 cursor-default"
-                />
-                <div className="absolute right-0 top-full z-40 mt-2 w-52 rounded-2xl bg-white p-1.5 shadow-2xl ring-1 ring-ink/10">
-                  {SORT_OPTIONS.map((s) => (
-                    <button
-                      key={s.value}
-                      onClick={() => {
-                        setSort(s.value);
-                        setSortOpen(false);
-                      }}
-                      className={`block w-full rounded-xl px-3 py-2 text-left text-xs font-medium ${
-                        sort === s.value ? "bg-panel text-white" : "text-ink/70 hover:bg-ink/5"
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <div className="ml-auto">{sortControl}</div>
 
           {anyFilterActive && (
             <button
@@ -594,9 +607,126 @@ export default function ListingsBrowser({
           )}
         </div>
 
+        {/* Compact filter bar — mobile only. City/type/price/beds fold into
+            the same drawer as "More filters" below instead of a long row of
+            wrapping pills. */}
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            onClick={() => setMoreOpen((o) => !o)}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-3 text-sm font-medium ${
+              totalActiveCount > 0 || moreOpen ? "bg-panel text-white" : "bg-ink/5 text-ink/70"
+            }`}
+          >
+            Filters
+            {totalActiveCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-lime text-[10px] font-semibold text-ink">
+                {totalActiveCount}
+              </span>
+            )}
+          </button>
+          {sortControl}
+          {anyFilterActive && (
+            <button
+              onClick={clearAll}
+              aria-label="Clear all filters"
+              className="shrink-0 rounded-full bg-ink/5 px-3 py-3 text-xs font-medium text-ink/50"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         {/* More filters drawer */}
         {moreOpen && (
           <div className="rounded-2xl bg-cream p-5">
+            {/* Tier-1 filters — mobile only, since the pill row above already
+                covers these on desktop/tablet. */}
+            <div className="mb-5 grid grid-cols-1 gap-5 border-b border-ink/10 pb-5 sm:grid-cols-2 md:hidden">
+              <div>
+                <p className="text-xs font-medium text-ink">City</p>
+                <select
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="mt-2 w-full appearance-none rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-ink/30"
+                >
+                  <option value="">All cities</option>
+                  {city && !CANONICAL_CITIES.includes(city as (typeof CANONICAL_CITIES)[number]) && (
+                    <option value={city}>{city}</option>
+                  )}
+                  {CANONICAL_CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-ink">Property type</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {TYPE_OPTIONS.map((t) => (
+                    <button key={t.value} onClick={() => setType(t.value)} className={chip(type === t.value)}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-ink">Price range</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {PRICE_PRESETS.map((p) => {
+                    const active = minPrice === p.min && maxPrice === p.max;
+                    return (
+                      <button key={p.label} onClick={() => applyPreset(p.min, p.max)} className={chip(active)}>
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={minInput}
+                    onChange={(e) => setMinInput(e.target.value)}
+                    placeholder="Min ₹Cr"
+                    className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm outline-none focus:border-ink/30"
+                  />
+                  <span className="text-ink/40">–</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={maxInput}
+                    onChange={(e) => setMaxInput(e.target.value)}
+                    placeholder="Max ₹Cr"
+                    className="w-full rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm outline-none focus:border-ink/30"
+                  />
+                  <button
+                    onClick={applyCustomRange}
+                    className="shrink-0 rounded-full bg-panel px-4 py-2 text-xs font-medium text-white"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+
+              {!bedsDisabled && (
+                <div>
+                  <p className="text-xs font-medium text-ink">Bedrooms</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {BED_OPTIONS.map((b, i) => (
+                      <button key={b.label} onClick={() => setBeds(i)} className={chip(beds === i)}>
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <p className="text-xs font-medium text-ink">Locality</p>

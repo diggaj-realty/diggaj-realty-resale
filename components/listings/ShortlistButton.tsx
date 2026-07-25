@@ -46,7 +46,8 @@ export default function ShortlistButton({ propertyId }: { propertyId: string }) 
       onClick={toggle}
       disabled={busy}
       aria-pressed={saved}
-      className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium ring-1 transition-colors disabled:opacity-60 ${
+      aria-label={isBuyer ? (saved ? "Saved" : "Save") : "Save to shortlist"}
+      className={`inline-flex h-11 w-11 items-center justify-center gap-2 rounded-full ring-1 transition-colors disabled:opacity-60 sm:h-auto sm:w-auto sm:px-5 sm:py-2.5 sm:text-sm sm:font-medium ${
         saved
           ? "bg-lime text-ink ring-lime"
           : "bg-white text-ink ring-ink/15 hover:bg-cream"
@@ -59,7 +60,7 @@ export default function ShortlistButton({ propertyId }: { propertyId: string }) 
       >
         <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
       </svg>
-      {isBuyer ? (saved ? "Saved" : "Save") : "Save to shortlist"}
+      <span className="hidden sm:inline">{isBuyer ? (saved ? "Saved" : "Save") : "Save to shortlist"}</span>
     </button>
   );
 }

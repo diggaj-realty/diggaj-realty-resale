@@ -221,8 +221,8 @@ export default async function ListingDetail({
                   ⌂ Est. {price(cashBack)} cash back
                 </p>
               </PriceUnlocked>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <div className="w-full sm:w-auto">
+              <div className="mt-4 flex w-full items-center gap-3 sm:w-auto">
+                <div className="flex-1 sm:flex-none">
                   <MakeOfferModal propertyId={l.id} askingPrice={l.askingPrice} />
                 </div>
                 <ShortlistButton propertyId={l.id} />
