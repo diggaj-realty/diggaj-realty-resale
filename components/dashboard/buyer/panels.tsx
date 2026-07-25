@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { price } from "@/lib/listings";
 import { propertyHref } from "@/lib/slug";
+import { buildFilterQueryString } from "@/lib/filters";
 import { useAuth } from "@/lib/auth/AuthContext";
 import StatusBadge from "@/components/dashboard/StatusBadge";
-import { RowSkeleton } from "@/components/Skeleton";
+import { Panel, Step, fmtDate } from "@/components/dashboard/shared";
 import {
   getShortlist,
   removeShortlist,
@@ -29,44 +31,16 @@ import type {
   ShortlistedProperty,
 } from "@/types/buyer";
 
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-
-function Panel({
-  loading,
-  error,
-  empty,
-  emptyText,
-  children,
-}: {
-  loading: boolean;
-  error: string | null;
-  empty: boolean;
-  emptyText: string;
-  children: React.ReactNode;
-}) {
-  if (loading)
-    return (
-      <div className="flex flex-col gap-3">
-        <RowSkeleton />
-        <RowSkeleton />
-        <RowSkeleton />
-      </div>
-    );
-  if (error) return <p className="py-8 text-sm text-red-700">{error}</p>;
-  if (empty)
-    return (
-      <p className="rounded-2xl bg-white p-6 text-sm text-body ring-1 ring-ink/5">{emptyText}</p>
-    );
-  return <div className="flex flex-col gap-3">{children}</div>;
-}
-
 // ── Saved properties ──────────────────────────────────────────
+const MAX_COMPARE = 3;
+
 export function SavedPanel() {
   const { token } = useAuth();
+  const router = useRouter();
   const [items, setItems] = useState<ShortlistedProperty[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!token) return;
@@ -81,6 +55,7 @@ export function SavedPanel() {
     try {
       await removeShortlist(token, id);
       setItems((prev) => prev?.filter((p) => p.id !== id) ?? null);
+      setCompareIds((prev) => prev.filter((x) => x !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to remove");
     } finally {
@@ -88,33 +63,65 @@ export function SavedPanel() {
     }
   }
 
+  function toggleCompare(id: string) {
+    setCompareIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < MAX_COMPARE ? [...prev, id] : prev
+    );
+  }
+
   return (
-    <Panel
-      loading={items === null && !error}
-      error={error}
-      empty={items?.length === 0}
-      emptyText="No saved properties yet. Browse listings and tap the heart to save the ones you like."
-    >
-      {items?.map((p) => (
-        <div key={p.id} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
-          <Link href={propertyHref(p)} className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-cream">
-            {p.photos[0]?.url && <Image src={p.photos[0].url} alt={p.title} fill sizes="80px" className="object-cover" />}
-          </Link>
-          <Link href={propertyHref(p)} className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-ink">{p.title}</p>
-            <p className="truncate text-xs text-body">{p.location}</p>
-            <p className="mt-0.5 text-[11px] text-ink/40">Saved {fmtDate(p.shortlistedAt)}</p>
-          </Link>
+    <div>
+      <Panel
+        loading={items === null && !error}
+        error={error}
+        empty={items?.length === 0}
+        emptyText="No saved properties yet. Browse listings and tap the heart to save the ones you like."
+      >
+        {items?.map((p) => {
+          const checked = compareIds.includes(p.id);
+          return (
+            <div key={p.id} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
+              <label className="flex shrink-0 cursor-pointer items-center" title="Select to compare">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={!checked && compareIds.length >= MAX_COMPARE}
+                  onChange={() => toggleCompare(p.id)}
+                  className="h-4 w-4 accent-lime"
+                />
+              </label>
+              <Link href={propertyHref(p)} className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-cream">
+                {p.photos[0]?.url && <Image src={p.photos[0].url} alt={p.title} fill sizes="80px" className="object-cover" />}
+              </Link>
+              <Link href={propertyHref(p)} className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-ink">{p.title}</p>
+                <p className="truncate text-xs text-body">{p.location}</p>
+                <p className="mt-0.5 text-[11px] text-ink/40">Saved {fmtDate(p.shortlistedAt)}</p>
+              </Link>
+              <button
+                onClick={() => remove(p.id)}
+                disabled={busy === p.id}
+                className="shrink-0 rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50"
+              >
+                {busy === p.id ? "Removing…" : "Remove"}
+              </button>
+            </div>
+          );
+        })}
+      </Panel>
+
+      {compareIds.length >= 2 && (
+        <div className="sticky bottom-4 mt-4 flex items-center justify-between gap-3 rounded-2xl bg-panel px-5 py-3.5 text-white shadow-2xl">
+          <p className="text-sm">{compareIds.length} selected to compare</p>
           <button
-            onClick={() => remove(p.id)}
-            disabled={busy === p.id}
-            className="shrink-0 rounded-full bg-ink/5 px-3 py-1.5 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50"
+            onClick={() => router.push(`/compare?ids=${compareIds.join(",")}`)}
+            className="shrink-0 rounded-full bg-lime px-5 py-2 text-xs font-semibold text-ink"
           >
-            {busy === p.id ? "Removing…" : "Remove"}
+            Compare →
           </button>
         </div>
-      ))}
-    </Panel>
+      )}
+    </div>
   );
 }
 
@@ -282,19 +289,14 @@ export function VisitsPanel() {
 }
 
 // ── Saved searches ────────────────────────────────────────────
-function filtersToQuery(f: SavedSearchFilters): string {
-  const p = new URLSearchParams();
-  if (f.q) p.set("q", f.q);
-  if (f.type) p.set("type", f.type);
-  if (f.city) p.set("city", f.city);
-  return p.toString();
-}
 function filtersSummary(f: SavedSearchFilters): string {
   const parts: string[] = [];
   if (f.q) parts.push(`“${f.q}”`);
   if (f.type) parts.push(f.type.charAt(0) + f.type.slice(1).toLowerCase());
   if (f.city) parts.push(f.city);
+  if (f.locality) parts.push(f.locality);
   if (f.minBhk) parts.push(`${f.minBhk}+ BHK`);
+  if (f.minBathrooms) parts.push(`${f.minBathrooms}+ bath`);
   if (f.minPrice || f.maxPrice) {
     parts.push(
       f.minPrice && f.maxPrice
@@ -304,6 +306,10 @@ function filtersSummary(f: SavedSearchFilters): string {
         : `up to ${price(f.maxPrice!)}`
     );
   }
+  if (f.furnishing) parts.push(f.furnishing.replace(/_/g, " ").toLowerCase());
+  if (f.possessionStatus) parts.push(f.possessionStatus === "READY_TO_MOVE" ? "Ready to move" : "Under construction");
+  if (f.eliteOnly) parts.push("Elite only");
+  if (f.amenities?.length) parts.push(`${f.amenities.length} amenities`);
   return parts.length ? parts.join(" · ") : "All properties";
 }
 
@@ -372,7 +378,7 @@ export function SearchesPanel() {
           </div>
           <div className="mt-4 flex items-center gap-3 border-t border-ink/5 pt-4">
             <Link
-              href={`/listings${filtersToQuery(s.filters) ? `?${filtersToQuery(s.filters)}` : ""}`}
+              href={`/listings${buildFilterQueryString(s.filters) ? `?${buildFilterQueryString(s.filters)}` : ""}`}
               className="rounded-full bg-panel px-4 py-2 text-xs font-medium text-white"
             >
               Apply search →
@@ -392,24 +398,6 @@ export function SearchesPanel() {
 }
 
 // ── Closing / documentation (deals) ───────────────────────────
-function Step({ done, label, detail }: { done: boolean; label: string; detail?: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <span
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
-          done ? "bg-lime text-ink" : "bg-ink/10 text-ink/40"
-        }`}
-      >
-        {done ? "✓" : ""}
-      </span>
-      <div>
-        <p className={`text-sm ${done ? "text-ink" : "text-ink/50"}`}>{label}</p>
-        {detail && <p className="text-xs text-body">{detail}</p>}
-      </div>
-    </div>
-  );
-}
-
 export function ClosingPanel() {
   const { token } = useAuth();
   const [items, setItems] = useState<Deal[] | null>(null);

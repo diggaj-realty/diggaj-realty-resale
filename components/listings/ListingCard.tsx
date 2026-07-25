@@ -8,7 +8,30 @@ import { propertyHref } from "@/lib/slug";
 import { badgeFor, isElite } from "@/lib/badge";
 import { useAuth } from "@/lib/auth/AuthContext";
 import GatedPrice from "@/components/listings/GatedPrice";
-import type { Property } from "@/types/api";
+import type { Furnishing, OwnershipType, PossessionStatus, Property } from "@/types/api";
+
+const FURNISHING_LABEL: Record<Furnishing, string> = {
+  UNFURNISHED: "Unfurnished",
+  SEMI_FURNISHED: "Semi furnished",
+  FULLY_FURNISHED: "Fully furnished",
+};
+
+const OWNERSHIP_LABEL: Record<OwnershipType, string> = {
+  FREEHOLD: "Freehold",
+  LEASEHOLD: "Leasehold",
+  POWER_OF_ATTORNEY: "Power of attorney",
+  CO_OPERATIVE: "Co-operative",
+};
+
+const POSSESSION_LABEL: Record<PossessionStatus, string> = {
+  READY_TO_MOVE: "Ready to move",
+  UNDER_CONSTRUCTION: "Under construction",
+};
+
+const POSSESSION_TONE: Record<PossessionStatus, string> = {
+  READY_TO_MOVE: "bg-limepale text-ink ring-lime/40",
+  UNDER_CONSTRUCTION: "bg-amber-100 text-amber-900 ring-amber-200",
+};
 
 function BedIcon() {
   return (
@@ -47,7 +70,18 @@ const rise = {
   }),
 };
 
-export default function ListingCard({ property, i = 0 }: { property: Property; i?: number }) {
+export default function ListingCard({
+  property,
+  i = 0,
+  priority = false,
+}: {
+  property: Property;
+  i?: number;
+  /** Only the primary above-the-fold browse grid's first row should set
+   *  this — secondary/below-the-fold sections (similar properties, homepage
+   *  showcases) should stay lazy so they don't compete with the real LCP image. */
+  priority?: boolean;
+}) {
   const { user } = useAuth();
   const cover = property.photos[0]?.url;
   const badge = badgeFor(property);
@@ -55,6 +89,20 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
   const priceVisible = !elite || !!user;
   const perSqft = property.areaSqft > 0 ? Math.round(property.askingPrice / property.areaSqft) : 0;
   const chips = (property.amenities ?? []).slice(0, 2);
+  const hasParking = (property.parkingCovered ?? 0) + (property.parkingOpen ?? 0) > 0;
+  const ageLabel =
+    property.ageYears == null
+      ? null
+      : property.ageYears === 0
+        ? "New construction"
+        : `${property.ageYears} yr${property.ageYears === 1 ? "" : "s"} old`;
+  const factTags = [
+    property.furnishing ? FURNISHING_LABEL[property.furnishing] : null,
+    property.facing ? `Facing ${property.facing}` : null,
+    ageLabel,
+    hasParking ? "Parking" : null,
+    property.ownershipType ? OWNERSHIP_LABEL[property.ownershipType] : null,
+  ].filter((t): t is string => !!t);
 
   return (
     <motion.article
@@ -73,6 +121,7 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
               alt={property.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              priority={priority}
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             />
           ) : (
@@ -80,10 +129,17 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
               No photo yet
             </div>
           )}
-          <div className="absolute left-4 top-4 flex items-center gap-2">
+          <div className="absolute left-4 right-4 top-4 flex flex-wrap items-center gap-2">
             {elite && (
               <span className="flex items-center gap-1 rounded-full bg-panel px-3 py-1.5 text-xs font-semibold text-lime shadow ring-1 ring-lime/30">
                 ✦ Elite
+              </span>
+            )}
+            {property.possessionStatus && (
+              <span
+                className={`rounded-full px-3 py-1.5 text-xs font-medium shadow ring-1 ${POSSESSION_TONE[property.possessionStatus]}`}
+              >
+                {POSSESSION_LABEL[property.possessionStatus]}
               </span>
             )}
             <span
@@ -134,6 +190,10 @@ export default function ListingCard({ property, i = 0 }: { property: Property; i
           </div>
         </div>
         <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-body">{property.location}</p>
+
+        {factTags.length > 0 && (
+          <p className="mt-1.5 truncate text-xs text-body">{factTags.join(" · ")}</p>
+        )}
 
         {/* trust + amenity chips */}
         {(property.reraId || property.verifiedAt || chips.length > 0) && (

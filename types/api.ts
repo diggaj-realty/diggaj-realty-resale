@@ -86,6 +86,14 @@ export type Paginated<T> = {
   totalPages: number;
 };
 
+export type SortOrder =
+  | "newest"
+  | "price_asc"
+  | "price_desc"
+  | "area_asc"
+  | "area_desc"
+  | "most_viewed";
+
 export type GetPropertiesParams = {
   q?: string;
   type?: PropertyType;
@@ -93,6 +101,20 @@ export type GetPropertiesParams = {
   maxPrice?: number;
   minBhk?: number;
   city?: string;
+  locality?: string;
+  pincode?: string;
+  minBathrooms?: number;
+  minArea?: number;
+  maxArea?: number;
+  furnishing?: Furnishing;
+  facing?: Facing;
+  possessionStatus?: PossessionStatus;
+  maxAgeYears?: number;
+  parking?: boolean;
+  ownershipType?: OwnershipType;
+  amenities?: string[];
+  eliteOnly?: boolean;
+  sort?: SortOrder;
   page?: number;
   pageSize?: number;
 };

@@ -2,8 +2,11 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import ListingsBrowser from "@/components/listings/ListingsBrowser";
+import ListingsBrowser, { PAGE_SIZE } from "@/components/listings/ListingsBrowser";
 import { ListingGridSkeleton } from "@/components/Skeleton";
+import { getProperties } from "@/lib/api/properties";
+import { parseFilterSearchParams } from "@/lib/filters";
+import type { Paginated, Property } from "@/types/api";
 
 export const metadata: Metadata = {
   title: "Homes for Sale — Diggaj Realty",
@@ -11,7 +14,33 @@ export const metadata: Metadata = {
     "Browse every home on Diggaj Realty. Filter by city, price, and bedrooms — every listing eligible for commission cash back.",
 };
 
-export default function ListingsPage() {
+// Fetches page 1 for whatever filters are in the URL so the first paint
+// already has real listing HTML (and real <title>-adjacent content for
+// crawlers) instead of a client-fetched skeleton. Falls back to letting
+// ListingsBrowser fetch client-side if this ever fails.
+async function loadInitialPage(
+  searchParams: Record<string, string | string[] | undefined>
+): Promise<Paginated<Property> | undefined> {
+  const sp = new URLSearchParams();
+  for (const [key, value] of Object.entries(searchParams)) {
+    if (typeof value === "string") sp.set(key, value);
+    else if (Array.isArray(value) && value[0] != null) sp.set(key, value[0]);
+  }
+  const filters = parseFilterSearchParams(sp);
+  try {
+    return await getProperties({ ...filters, page: 1, pageSize: PAGE_SIZE }, { revalidate: 60 });
+  } catch {
+    return undefined;
+  }
+}
+
+export default async function ListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const initialData = await loadInitialPage(await searchParams);
+
   return (
     <main className="min-h-screen overflow-x-clip bg-white">
       <div className="bg-cream pb-10">
@@ -33,7 +62,7 @@ export default function ListingsPage() {
           </section>
         }
       >
-        <ListingsBrowser />
+        <ListingsBrowser initialData={initialData} />
       </Suspense>
       <Footer />
     </main>

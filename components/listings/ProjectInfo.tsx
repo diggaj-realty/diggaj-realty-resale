@@ -7,8 +7,15 @@ const POSSESSION: Record<string, string> = {
   UNDER_CONSTRUCTION: "Under construction",
 };
 
+// Real, official state RERA authority portals — only listed where we're
+// confident of the URL. Unmapped states just show the RERA ID as text.
+const RERA_PORTAL_BY_CITY: Record<string, string> = {
+  Bangalore: "https://rera.karnataka.gov.in",
+};
+
 export default function ProjectInfo({ property: p }: { property: Property }) {
   const builder = getBuilderProfile(p.builderName);
+  const reraPortal = p.reraId && p.city ? RERA_PORTAL_BY_CITY[p.city] : undefined;
 
   // Real fields from the API; only rendered when present.
   const facts: { label: string; value: string }[] = [];
@@ -44,6 +51,17 @@ export default function ProjectInfo({ property: p }: { property: Property }) {
             </div>
           ))}
         </dl>
+      )}
+
+      {reraPortal && (
+        <a
+          href={reraPortal}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-ink underline underline-offset-2"
+        >
+          Verify RERA ID on the official state portal →
+        </a>
       )}
 
       {builder && (

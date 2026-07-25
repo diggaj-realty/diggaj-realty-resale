@@ -35,3 +35,28 @@ export async function authedSend<T>(
   }
   return json.data as T;
 }
+
+/** Multipart file upload — POST /api/v1/uploads (bucket: property-media |
+ *  kyc-documents | deal-documents). Returns the stored file's public URL. */
+export async function authedUpload(
+  token: string,
+  file: File,
+  bucket: "property-media" | "kyc-documents" | "deal-documents",
+  folder?: string
+): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("bucket", bucket);
+  if (folder) form.append("folder", folder);
+
+  const res = await fetch(`${BASE}/uploads`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new ApiError(json?.error?.message ?? `Upload failed (${res.status})`, res.status);
+  }
+  return json.data as { url: string };
+}

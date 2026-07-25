@@ -2,28 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useSyncExternalStore } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-
-// True only on pointer-fine (desktop) devices with motion enabled — where the
-// scroll-driven width/height morph is smooth. Mobile/touch gets a static card.
-function subscribe(cb: () => void) {
-  const a = window.matchMedia("(pointer: fine)");
-  const b = window.matchMedia("(prefers-reduced-motion: reduce)");
-  a.addEventListener("change", cb);
-  b.addEventListener("change", cb);
-  return () => {
-    a.removeEventListener("change", cb);
-    b.removeEventListener("change", cb);
-  };
-}
-const getSnapshot = () =>
-  window.matchMedia("(pointer: fine)").matches &&
-  !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-function useHeavyAnimation() {
-  return useSyncExternalStore(subscribe, getSnapshot, () => false);
-}
+import { useInView } from "@/lib/useInView";
 
 const socials = [
   { label: "X", href: "https://x.com" },
@@ -42,44 +21,26 @@ const links = [
 ];
 
 export default function Footer() {
-  const marqueeRef = useRef<HTMLDivElement>(null);
-  // Animating width/height/border-radius on scroll forces a layout reflow every
-  // frame — fine on desktop, janky on phones. Morph only on desktop; mobile
-  // gets a static card.
-  const heavy = useHeavyAnimation();
-
-  const { scrollYProgress } = useScroll({
-    target: marqueeRef,
-    offset: ["start end", "end start"],
-  });
-  // wordmark scrubs horizontally with scroll
-  const marqueeX = useTransform(scrollYProgress, [0, 1], ["2%", "-28%"]);
-  // the house card starts as a squat centered pill and expands to
-  // near-full-bleed as it passes through the viewport — the video's key move
-  const cardWidth = useTransform(scrollYProgress, [0.12, 0.6], ["34%", "96%"]);
-  const cardHeight = useTransform(scrollYProgress, [0.12, 0.6], ["15rem", "26rem"]);
-  const cardRadius = useTransform(scrollYProgress, [0.12, 0.6], ["120px", "40px"]);
-  const imageScale = useTransform(scrollYProgress, [0.12, 0.6], [1.25, 1]);
+  const { ref: headingRef, inView: headingInView } = useInView<HTMLHeadingElement>();
+  const { ref: blurbRef, inView: blurbInView } = useInView<HTMLDivElement>();
 
   return (
     <section className="relative overflow-clip bg-white pt-24">
       {/* future CTA */}
       <div className="flex flex-col gap-8 px-8 md:flex-row md:items-start md:justify-between md:px-14">
-        <motion.h2
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.6 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-xl text-4xl font-medium leading-tight tracking-[-0.02em] md:text-5xl"
+        <h2
+          ref={headingRef}
+          className={`max-w-xl text-4xl font-medium leading-tight tracking-[-0.02em] transition-all duration-700 ease-out md:text-5xl ${
+            headingInView ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+          }`}
         >
           The Future of Homebuying Is Here
-        </motion.h2>
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.6 }}
-          transition={{ duration: 0.6, delay: 0.15 }}
-          className="max-w-xs"
+        </h2>
+        <div
+          ref={blurbRef}
+          className={`max-w-xs transition-all delay-150 duration-700 ease-out ${
+            blurbInView ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+          }`}
         >
           <p className="text-sm leading-relaxed text-body">
             Discover a smarter way to buy real estate with AI. Explore homes
@@ -88,41 +49,11 @@ export default function Footer() {
           <Link href="/listings" className="mt-5 inline-block rounded-full bg-panel px-5 py-2.5 text-xs text-white">
             Get started
           </Link>
-        </motion.div>
-      </div>
-
-      {/* scroll-scrubbed wordmark passing behind the house card */}
-      <div ref={marqueeRef} className="relative mt-16">
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 select-none overflow-hidden">
-          <motion.div style={{ x: marqueeX }} className="flex w-max whitespace-nowrap will-change-transform">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <span
-                key={i}
-                className="px-5 text-3xl font-medium tracking-tight text-ink/60 md:text-4xl"
-              >
-                Diggaj Realty
-              </span>
-            ))}
-          </motion.div>
         </div>
-        {heavy ? (
-          <motion.div
-            style={{ width: cardWidth, height: cardHeight, borderRadius: cardRadius }}
-            className="relative mx-auto min-w-[280px] overflow-hidden shadow-2xl will-change-[width,height,border-radius]"
-          >
-            <motion.div style={{ scale: imageScale }} className="absolute inset-0">
-              <Image src="/img/footer-house.jpg" alt="Modern home" fill sizes="100vw" quality={82} className="object-cover" />
-            </motion.div>
-          </motion.div>
-        ) : (
-          <div className="relative mx-auto h-[26vh] max-h-[380px] w-[92%] overflow-hidden rounded-[32px] shadow-2xl">
-            <Image src="/img/footer-house.jpg" alt="Modern home" fill sizes="100vw" quality={82} className="object-cover" />
-          </div>
-        )}
       </div>
 
       {/* footer brand block */}
-      <div className="mt-24 px-8 pb-12 md:px-14">
+      <div className="mt-20 px-8 pb-12 md:px-14">
         <div className="flex items-end gap-4 border-b border-ink/10 pb-6">
           <span className="text-[11vw] font-medium leading-[0.9] tracking-[-0.04em] md:text-[9vw]">
             Diggaj Realty

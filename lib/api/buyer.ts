@@ -4,6 +4,7 @@ import type {
   Deal,
   Offer,
   SavedSearch,
+  SavedSearchFilters,
   SiteVisit,
   ShortlistedProperty,
 } from "@/types/buyer";
@@ -28,6 +29,12 @@ export const respondToCounter = (token: string, offerId: string, accept: boolean
     body: { action: accept ? "acceptCounter" : "rejectCounter" },
   });
 
+/** Buyer makes a new offer on a LIVE property. Always starts PENDING_REVIEW. */
+export const createOffer = (
+  token: string,
+  input: { propertyId: string; amount: number; message?: string }
+) => authedSend<Offer>("/offers", token, { method: "POST", body: input });
+
 // ── Site visits ──
 export const getSiteVisits = (token: string) =>
   authedGet<Paginated<SiteVisit>>("/site-visits?pageSize=50", token);
@@ -38,9 +45,21 @@ export const cancelSiteVisit = (token: string, id: string) =>
     body: { action: "cancel" },
   });
 
+/** Buyer requests a site visit. Auto-assigns the property's agent, if any.
+ *  403s with a clear message if AppConfig.siteVisitsEnabled is off. */
+export const createSiteVisit = (
+  token: string,
+  input: { propertyId: string; requestedDate: string; buyerNote?: string }
+) => authedSend<SiteVisit>("/site-visits", token, { method: "POST", body: input });
+
 // ── Saved searches ──
 export const getSavedSearches = (token: string) =>
   authedGet<SavedSearch[]>("/saved-searches", token);
+
+export const createSavedSearch = (
+  token: string,
+  input: { name?: string; filters: SavedSearchFilters; alertsEnabled?: boolean }
+) => authedSend<SavedSearch>("/saved-searches", token, { method: "POST", body: input });
 
 export const deleteSavedSearch = (token: string, id: string) =>
   authedSend<{ id: string; deleted: boolean }>(`/saved-searches/${id}`, token, {

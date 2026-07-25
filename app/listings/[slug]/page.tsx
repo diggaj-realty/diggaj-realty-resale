@@ -5,11 +5,14 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import LeadForm from "@/components/LeadForm";
 import ListingCard from "@/components/listings/ListingCard";
 import Gallery from "@/components/listings/Gallery";
 import GatedPrice, { PriceUnlocked, PriceLocked } from "@/components/listings/GatedPrice";
 import ShortlistButton from "@/components/listings/ShortlistButton";
+import MakeOfferModal from "@/components/listings/MakeOfferModal";
+import ShareButton from "@/components/listings/ShareButton";
+import RequestVisitForm from "@/components/listings/RequestVisitForm";
+import ViewTracker from "@/components/listings/ViewTracker";
 import EmiCalculator from "@/components/listings/EmiCalculator";
 import ProjectInfo from "@/components/listings/ProjectInfo";
 import LocalityIntel from "@/components/listings/LocalityIntel";
@@ -95,8 +98,42 @@ export default async function ListingDetail({
   const cashBack = Math.round((l.askingPrice * 0.03 * 0.75) / 100) * 100;
   const perSqft = Math.round(l.askingPrice / l.areaSqft);
 
-  const { items: othersRaw } = await getProperties({ pageSize: 4 }, { revalidate: 120 });
-  const others = othersRaw.filter((x) => x.id !== l.id).slice(0, 3);
+  // "Similar properties" (same city + type + BHK, widened if too few matches)
+  // and the city's current avg price/sqft don't depend on each other's
+  // results, so fetch them in parallel rather than one after another.
+  const [{ items: sameMatch }, { items: cityListings }] = await Promise.all([
+    getProperties(
+      { city: l.city, type: l.type, minBhk: l.bhk ?? undefined, pageSize: 6 },
+      { revalidate: 120 }
+    ),
+    l.city
+      ? getProperties({ city: l.city, pageSize: 20 }, { revalidate: 120 })
+      : Promise.resolve({ items: [] as Property[] }),
+  ]);
+
+  let others = sameMatch.filter((x) => x.id !== l.id);
+  if (others.length < 3) {
+    const { items: fallback } = await getProperties({ city: l.city, pageSize: 6 }, { revalidate: 120 });
+    const seen = new Set(others.map((o) => o.id));
+    for (const p of fallback) {
+      if (p.id !== l.id && !seen.has(p.id)) {
+        others.push(p);
+        seen.add(p.id);
+      }
+    }
+  }
+  others = others.slice(0, 3);
+
+  // Current average price/sqft across other LIVE listings in the same city —
+  // a real number from today's live data, not a historical trend (no price
+  // history is stored, so a trend arrow isn't something we can compute honestly).
+  let cityAvgPerSqft: number | null = null;
+  const withArea = cityListings.filter((p) => p.areaSqft > 0);
+  if (withArea.length >= 3) {
+    const avg =
+      withArea.reduce((sum, p) => sum + p.askingPrice / p.areaSqft, 0) / withArea.length;
+    cityAvgPerSqft = Math.round(avg);
+  }
 
   const stats = [
     { icon: <BedIcon />, label: "Bedrooms", value: l.bhk != null ? `${l.bhk} BHK` : "—" },
@@ -184,13 +221,18 @@ export default async function ListingDetail({
                   ⌂ Est. {price(cashBack)} cash back
                 </p>
               </PriceUnlocked>
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <div className="w-full sm:w-auto">
+                  <MakeOfferModal propertyId={l.id} askingPrice={l.askingPrice} />
+                </div>
                 <ShortlistButton propertyId={l.id} />
+                <ShareButton title={l.title} />
               </div>
             </div>
           </div>
         </div>
       </div>
+      <ViewTracker property={l} />
 
       {/* gallery */}
       <Gallery photos={photos} title={l.title} />
@@ -285,6 +327,14 @@ export default async function ListingDetail({
 
           {/* locality & connectivity */}
           <LocalityIntel property={l} />
+          {cityAvgPerSqft != null && (
+            <PriceUnlocked property={l}>
+              <p className="mt-3 text-xs text-body">
+                Avg. asking price in {l.city}: <span className="font-medium text-ink">{price(cityAvgPerSqft)}/sq ft</span>{" "}
+                across live listings today.
+              </p>
+            </PriceUnlocked>
+          )}
 
           {/* cash-back explainer */}
           <div className="mt-12 overflow-hidden rounded-[24px] bg-panel p-8 text-white">
@@ -338,7 +388,7 @@ export default async function ListingDetail({
               </div>
             </div>
             <div className="mt-6">
-              <LeadForm dark subject={`Tour request: ${l.title}`} cta="Request a tour" />
+              <RequestVisitForm propertyId={l.id} />
             </div>
           </div>
         </div>
@@ -384,7 +434,7 @@ export default async function ListingDetail({
       {/* more homes */}
       {others.length > 0 && (
         <div className="px-8 pb-24 md:px-14">
-          <h2 className="text-2xl font-medium tracking-[-0.02em] text-ink">More homes</h2>
+          <h2 className="text-2xl font-medium tracking-[-0.02em] text-ink">Similar properties</h2>
           <div className="mt-8 grid grid-cols-1 gap-x-7 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
             {others.map((o, i) => (
               <ListingCard key={o.id} property={o} i={i} />

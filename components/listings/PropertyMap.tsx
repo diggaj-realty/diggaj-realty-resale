@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { loadMapsApi } from "@/lib/googleMaps";
 
 // On-brand marker: dark teardrop pin with a lime house glyph.
 const HOME_PIN =
@@ -9,22 +10,6 @@ const HOME_PIN =
   `<path d="M22 0C9.85 0 0 9.85 0 22c0 15 22 30 22 30s22-15 22-30C44 9.85 34.15 0 22 0Z" fill="#171717"/>` +
   `<path d="M22 10.5 11.5 19.5V33H19v-7h6v7h7.5V19.5z" fill="#cdea6f"/>` +
   `</svg>`;
-
-let loaderPromise: Promise<void> | null = null;
-function loadMapsApi(key: string): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
-  if ((window as any).google?.maps) return Promise.resolve();
-  if (loaderPromise) return loaderPromise;
-  loaderPromise = new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async`;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("maps script failed"));
-    document.head.appendChild(s);
-  });
-  return loaderPromise;
-}
 
 export default function PropertyMap({
   lat,

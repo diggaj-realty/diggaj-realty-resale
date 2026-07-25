@@ -1,4 +1,4 @@
-import type { Property } from "./api";
+import type { GetPropertiesParams, Property } from "./api";
 
 export type OfferStatus = "PENDING_REVIEW" | "PENDING" | "ACCEPTED" | "REJECTED" | "COUNTERED";
 
@@ -62,16 +62,12 @@ export type SiteVisit = {
   propertyTitle?: string;
   propertyLocation?: string;
   agentName?: string;
+  buyerName?: string;
 };
 
-export type SavedSearchFilters = {
-  q?: string;
-  type?: string;
-  city?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  minBhk?: number;
-};
+/** Mirrors the backend's PropertyFilters — same shape GET /properties accepts,
+ *  minus pagination — since a SavedSearch just persists a normalized filter set. */
+export type SavedSearchFilters = Omit<GetPropertiesParams, "page" | "pageSize">;
 
 export type SavedSearch = {
   id: string;

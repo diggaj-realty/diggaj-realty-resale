@@ -4,6 +4,7 @@ import BuySell from "@/components/BuySell";
 import Showcase from "@/components/Showcase";
 import Listings from "@/components/Listings";
 import PopularListings from "@/components/PopularListings";
+import RecentlyViewed from "@/components/RecentlyViewed";
 import ExploreMap from "@/components/ExploreMap";
 import ExploreProjects from "@/components/ExploreProjects";
 import Faq from "@/components/Faq";
@@ -21,6 +22,7 @@ export default function Home() {
       <Showcase />
       <Listings />
       <PopularListings />
+      <RecentlyViewed />
       <ExploreMap />
       <ExploreProjects />
       <Faq />
