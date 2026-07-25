@@ -2,8 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+
+// True only on pointer-fine (desktop) devices with motion enabled — where the
+// scroll-driven width/height morph is smooth. Mobile/touch gets a static card.
+function subscribe(cb: () => void) {
+  const a = window.matchMedia("(pointer: fine)");
+  const b = window.matchMedia("(prefers-reduced-motion: reduce)");
+  a.addEventListener("change", cb);
+  b.addEventListener("change", cb);
+  return () => {
+    a.removeEventListener("change", cb);
+    b.removeEventListener("change", cb);
+  };
+}
+const getSnapshot = () =>
+  window.matchMedia("(pointer: fine)").matches &&
+  !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function useHeavyAnimation() {
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
+}
 
 const socials = [
   { label: "X", href: "https://x.com" },
@@ -23,6 +43,11 @@ const links = [
 
 export default function Footer() {
   const marqueeRef = useRef<HTMLDivElement>(null);
+  // Animating width/height/border-radius on scroll forces a layout reflow every
+  // frame — fine on desktop, janky on phones. Morph only on desktop; mobile
+  // gets a static card.
+  const heavy = useHeavyAnimation();
+
   const { scrollYProgress } = useScroll({
     target: marqueeRef,
     offset: ["start end", "end start"],
@@ -80,14 +105,20 @@ export default function Footer() {
             ))}
           </motion.div>
         </div>
-        <motion.div
-          style={{ width: cardWidth, height: cardHeight, borderRadius: cardRadius }}
-          className="relative mx-auto min-w-[280px] overflow-hidden shadow-2xl will-change-[width,height,border-radius]"
-        >
-          <motion.div style={{ scale: imageScale }} className="absolute inset-0">
-            <Image src="/img/footer-house.jpg" alt="Modern home" fill sizes="100vw" quality={82} className="object-cover" />
+        {heavy ? (
+          <motion.div
+            style={{ width: cardWidth, height: cardHeight, borderRadius: cardRadius }}
+            className="relative mx-auto min-w-[280px] overflow-hidden shadow-2xl will-change-[width,height,border-radius]"
+          >
+            <motion.div style={{ scale: imageScale }} className="absolute inset-0">
+              <Image src="/img/footer-house.jpg" alt="Modern home" fill sizes="100vw" quality={82} className="object-cover" />
+            </motion.div>
           </motion.div>
-        </motion.div>
+        ) : (
+          <div className="relative mx-auto h-[26vh] max-h-[380px] w-[92%] overflow-hidden rounded-[32px] shadow-2xl">
+            <Image src="/img/footer-house.jpg" alt="Modern home" fill sizes="100vw" quality={82} className="object-cover" />
+          </div>
+        )}
       </div>
 
       {/* footer brand block */}
