@@ -3,6 +3,7 @@ export type PropertyStatus =
   | "DRAFT"
   | "PENDING_VERIFICATION"
   | "LIVE"
+  | "UNDER_CONTRACT"
   | "REJECTED"
   | "CLOSED";
 export type PropertyPlan = "BASIC" | "ELITE";
@@ -37,6 +38,8 @@ export type Property = {
   unitsAvailable?: number | null;
   status: PropertyStatus;
   plan: PropertyPlan;
+  /** Pending seller-requested upgrade (e.g. "ELITE"), awaiting staff approval. Null when nothing's pending. */
+  requestedPlan: PropertyPlan | null;
   viewCount: number;
 
   city?: string;

@@ -41,6 +41,12 @@ export function googleAuth(idToken: string, role: UserRole, phone?: string) {
   return authApi<GoogleAuthResponse>("/auth/google", { idToken, role, phone });
 }
 
+/** Adds the other public role (BUYER/SELLER) to an existing account, instead
+ *  of requiring a second signup — e.g. a seller who now also wants to buy. */
+export function addRole(token: string, role: UserRole) {
+  return authApi<AuthUser>("/auth/roles", { role }, token);
+}
+
 export async function me(token: string): Promise<AuthUser> {
   const res = await fetch(`${BASE}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },

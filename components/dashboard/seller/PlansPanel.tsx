@@ -77,7 +77,19 @@ export default function PlansPanel() {
         ))}
       </div>
       <div className="mt-6 flex flex-col items-start gap-3 rounded-2xl bg-cream p-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-ink">Interested in Verified or Elite for one of your listings?</p>
+        <p className="text-sm text-ink">
+          Elite upgrades are requested per-property — head to My Listings and use &quot;Request Elite&quot; on the
+          listing you want boosted.
+        </p>
+        <Link
+          href="/dashboard/seller/listings"
+          className="shrink-0 rounded-full bg-lime px-5 py-2.5 text-xs font-semibold text-ink"
+        >
+          Go to My Listings →
+        </Link>
+      </div>
+      <div className="mt-3 flex flex-col items-start gap-3 rounded-2xl bg-white p-5 ring-1 ring-ink/5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-ink">Interested in Verified or Verified+ instead?</p>
         <Link href="/contact" className="shrink-0 rounded-full bg-panel px-5 py-2.5 text-xs font-medium text-white">
           Contact us to upgrade →
         </Link>

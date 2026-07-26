@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 import { createSiteVisit } from "@/lib/api/buyer";
 import { ApiError } from "@/lib/api/client";
 
 export default function RequestVisitForm({ propertyId }: { propertyId: string }) {
   const { user, token } = useAuth();
   const router = useRouter();
-  const isBuyer = user?.role === "BUYER";
+  const isBuyer = hasRole(user, "BUYER");
 
   const [date, setDate] = useState("");
   const [note, setNote] = useState("");

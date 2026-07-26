@@ -8,12 +8,15 @@ const TONE: Record<string, string> = {
 
 /** Maps a raw status string to a tone + human label. */
 const MAP: Record<string, { tone: keyof typeof TONE; label: string }> = {
+  // properties
+  UNDER_CONTRACT: { tone: "blue", label: "Sale in progress" },
   // offers
   PENDING: { tone: "gold", label: "Pending" },
   PENDING_REVIEW: { tone: "gold", label: "Pending" },
   COUNTERED: { tone: "blue", label: "Countered" },
   ACCEPTED: { tone: "green", label: "Accepted" },
   REJECTED: { tone: "red", label: "Rejected" },
+  NEGOTIATION_CLOSED: { tone: "gray", label: "Negotiation closed" },
   // site visits
   REQUESTED: { tone: "gold", label: "Requested" },
   SCHEDULED: { tone: "blue", label: "Scheduled" },

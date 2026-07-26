@@ -6,6 +6,7 @@ import { useState } from "react";
 import { login, register } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import type { UserRole } from "@/types/auth";
 
@@ -33,7 +34,10 @@ export default function AuthForm({ role }: { role: UserRole }) {
           ? await login(email, password)
           : await register({ name, email, password, phone: phone || undefined, role });
 
-      if (result.user.role !== role) {
+      // A dual-role account (e.g. a seller who's also added buyer access)
+      // can log in from either page — only reject if it holds neither role
+      // being logged in as here.
+      if (!hasRole(result.user, role)) {
         throw new ApiError(
           `This account is registered as a ${result.user.role.toLowerCase()}. Use the ${result.user.role === "BUYER" ? "buyer" : "seller"} login instead.`,
           403

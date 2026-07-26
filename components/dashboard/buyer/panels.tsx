@@ -9,13 +9,14 @@ import { propertyHref } from "@/lib/slug";
 import { buildFilterQueryString } from "@/lib/filters";
 import { useAuth } from "@/lib/auth/AuthContext";
 import StatusBadge from "@/components/dashboard/StatusBadge";
+import DealDocuments from "@/components/dashboard/DealDocuments";
+import OfferCard from "@/components/dashboard/OfferCard";
 import { Panel, Step, fmtDate } from "@/components/dashboard/shared";
 import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
 import {
   getShortlist,
   removeShortlist,
   getOffers,
-  respondToCounter,
   getSiteVisits,
   cancelSiteVisit,
   getSavedSearches,
@@ -125,23 +126,9 @@ export function SavedPanel() {
 export function OffersPanel() {
   const { token } = useAuth();
   const cacheKey = token ? `buyerOffers:${token}` : null;
-  const { items, error, setError, load } = useCachedPanelData<Offer[]>(cacheKey, () =>
-    getOffers(token!).then((r) => r.items)
+  const { items, setItems, error } = useCachedPanelData<Offer[]>(cacheKey, () =>
+    getOffers(token!, "buyer").then((r) => r.items)
   );
-  const [busy, setBusy] = useState<string | null>(null);
-
-  async function respond(offerId: string, accept: boolean) {
-    if (!token) return;
-    setBusy(offerId);
-    try {
-      await respondToCounter(token, offerId, accept);
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed");
-    } finally {
-      setBusy(null);
-    }
-  }
 
   return (
     <Panel
@@ -150,57 +137,14 @@ export function OffersPanel() {
       empty={items?.length === 0}
       emptyText="No offers yet. Open a listing and submit an offer to start negotiating."
     >
-      {items?.map((o) => {
-        const countered = o.displayStatus === "COUNTERED" && o.counterAmount != null;
-        return (
-          <div key={o.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <Link href={`/listings/x--${o.propertyId}`} className="block truncate text-sm font-medium text-ink hover:underline">
-                  {o.propertyTitle ?? "Property"}
-                </Link>
-                <p className="truncate text-xs text-body">{o.propertyLocation}</p>
-              </div>
-              <StatusBadge status={o.displayStatus} />
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
-              <span className="text-body">
-                Your offer: <span className="font-semibold text-ink">{price(o.amount)}</span>
-              </span>
-              {o.counterAmount != null && (
-                <span className="text-body">
-                  Counter: <span className="font-semibold text-ink">{price(o.counterAmount)}</span>
-                </span>
-              )}
-            </div>
-            {o.message && <p className="mt-2 text-xs text-body">“{o.message}”</p>}
-            {countered && (
-              <div className="mt-4 flex flex-col gap-3 border-t border-ink/5 pt-4 sm:flex-row sm:items-center">
-                <p className="text-xs text-body sm:mr-auto">
-                  The seller countered at {price(o.counterAmount!)}. Accept to start the deal, or decline.
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => respond(o.id, false)}
-                    disabled={busy === o.id}
-                    className="flex-1 rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50 sm:flex-none"
-                  >
-                    Decline
-                  </button>
-                  <button
-                    onClick={() => respond(o.id, true)}
-                    disabled={busy === o.id}
-                    className="flex-1 rounded-full bg-panel px-4 py-2 text-xs font-medium text-white disabled:opacity-50 sm:flex-none"
-                  >
-                    {busy === o.id ? "Working…" : "Accept counter"}
-                  </button>
-                </div>
-              </div>
-            )}
-            <p className="mt-3 text-[11px] text-ink/40">Submitted {fmtDate(o.createdAt)}</p>
-          </div>
-        );
-      })}
+      {items?.map((o) => (
+        <OfferCard
+          key={o.id}
+          offer={o}
+          viewerRole="BUYER"
+          onChanged={(updated) => setItems((prev) => prev?.map((x) => (x.id === updated.id ? updated : x)) ?? null)}
+        />
+      ))}
     </Panel>
   );
 }
@@ -210,7 +154,7 @@ export function VisitsPanel() {
   const { token } = useAuth();
   const cacheKey = token ? `buyerVisits:${token}` : null;
   const { items, error, setError, load } = useCachedPanelData<SiteVisit[]>(cacheKey, () =>
-    getSiteVisits(token!).then((r) => r.items)
+    getSiteVisits(token!, "buyer").then((r) => r.items)
   );
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -377,6 +321,79 @@ export function SearchesPanel() {
 }
 
 // ── Closing / documentation (deals) ───────────────────────────
+function BuyerDealCard({ deal }: { deal: Deal }) {
+  const [showDocs, setShowDocs] = useState(false);
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-ink/5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-ink">{deal.propertyTitle ?? "Property"}</p>
+          <p className="truncate text-xs text-body">{deal.propertyLocation}</p>
+        </div>
+        <StatusBadge status={deal.status} />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="rounded-xl bg-cream px-3 py-2.5">
+          <p className="text-[11px] text-body">Agreed price</p>
+          <p className="text-sm font-semibold text-ink">{price(deal.agreedPrice)}</p>
+        </div>
+        <div className="rounded-xl bg-cream px-3 py-2.5">
+          <p className="text-[11px] text-body">Token paid</p>
+          <p className="text-sm font-semibold text-ink">{deal.tokenAmount != null ? price(deal.tokenAmount) : "—"}</p>
+        </div>
+        <div className="rounded-xl bg-cream px-3 py-2.5">
+          <p className="text-[11px] text-body">Final payment</p>
+          <p className="text-sm font-semibold text-ink">{deal.finalAmount != null ? price(deal.finalAmount) : "—"}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        <Step done label="Offer accepted — deal opened" detail={fmtDate(deal.createdAt)} />
+        <Step
+          done={deal.tokenAmount != null}
+          label="Token payment recorded"
+          detail={deal.tokenDate ? fmtDate(deal.tokenDate) : deal.tokenAmount != null ? undefined : "Pending"}
+        />
+        <Step
+          done={deal.finalAmount != null}
+          label="Final payment & documentation"
+          detail={deal.finalPaymentDate ? fmtDate(deal.finalPaymentDate) : deal.finalAmount != null ? undefined : "Pending"}
+        />
+        <Step done={deal.status === "CLOSED"} label="Deal closed" />
+      </div>
+
+      {deal.notes && (
+        <p className="mt-4 rounded-xl bg-ink/5 px-3 py-2.5 text-xs text-ink/70">
+          <span className="font-medium">Notes: </span>
+          {deal.notes}
+        </p>
+      )}
+
+      <div className="mt-4 border-t border-ink/5 pt-4">
+        <button
+          onClick={() => setShowDocs((s) => !s)}
+          className="text-xs font-medium text-ink underline underline-offset-2"
+        >
+          {showDocs ? "Hide document checklist" : "View document checklist →"}
+        </button>
+        {showDocs && (
+          <div className="mt-4">
+            <DealDocuments dealId={deal.id} viewerRole="BUYER" />
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 border-t border-ink/5 pt-4 text-xs text-body">
+        Questions about your paperwork or documentation?{" "}
+        <Link href="/contact" className="font-medium text-ink underline underline-offset-2">
+          Contact your Diggaj coordinator →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function ClosingPanel() {
   const { token } = useAuth();
   const cacheKey = token ? `buyerDeals:${token}` : null;
@@ -390,59 +407,7 @@ export function ClosingPanel() {
       emptyText="No active deals. Once an offer is accepted, your closing paperwork and payment progress appear here."
     >
       {items?.map((d) => (
-        <div key={d.id} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-ink/5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-ink">{d.propertyTitle ?? "Property"}</p>
-              <p className="truncate text-xs text-body">{d.propertyLocation}</p>
-            </div>
-            <StatusBadge status={d.status} />
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <div className="rounded-xl bg-cream px-3 py-2.5">
-              <p className="text-[11px] text-body">Agreed price</p>
-              <p className="text-sm font-semibold text-ink">{price(d.agreedPrice)}</p>
-            </div>
-            <div className="rounded-xl bg-cream px-3 py-2.5">
-              <p className="text-[11px] text-body">Token paid</p>
-              <p className="text-sm font-semibold text-ink">{d.tokenAmount != null ? price(d.tokenAmount) : "—"}</p>
-            </div>
-            <div className="rounded-xl bg-cream px-3 py-2.5">
-              <p className="text-[11px] text-body">Final payment</p>
-              <p className="text-sm font-semibold text-ink">{d.finalAmount != null ? price(d.finalAmount) : "—"}</p>
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            <Step done label="Offer accepted — deal opened" detail={fmtDate(d.createdAt)} />
-            <Step
-              done={d.tokenAmount != null}
-              label="Token payment recorded"
-              detail={d.tokenDate ? fmtDate(d.tokenDate) : d.tokenAmount != null ? undefined : "Pending"}
-            />
-            <Step
-              done={d.finalAmount != null}
-              label="Final payment & documentation"
-              detail={d.finalPaymentDate ? fmtDate(d.finalPaymentDate) : d.finalAmount != null ? undefined : "Pending"}
-            />
-            <Step done={d.status === "CLOSED"} label="Deal closed" />
-          </div>
-
-          {d.notes && (
-            <p className="mt-4 rounded-xl bg-ink/5 px-3 py-2.5 text-xs text-ink/70">
-              <span className="font-medium">Notes: </span>
-              {d.notes}
-            </p>
-          )}
-
-          <div className="mt-4 border-t border-ink/5 pt-4 text-xs text-body">
-            Questions about your paperwork or documentation?{" "}
-            <Link href="/contact" className="font-medium text-ink underline underline-offset-2">
-              Contact your Diggaj coordinator →
-            </Link>
-          </div>
-        </div>
+        <BuyerDealCard key={d.id} deal={d} />
       ))}
     </Panel>
   );

@@ -1,7 +1,6 @@
 import { authedGet, authedSend, authedUpload } from "@/lib/api/authed";
 import type { Paginated, Property } from "@/types/api";
 import type { CreatePropertyInput, SellerKyc } from "@/types/seller";
-import type { Offer } from "@/types/buyer";
 
 // ── KYC ──
 export const getMyKyc = (token: string) => authedGet<SellerKyc | null>("/kyc", token);
@@ -25,18 +24,12 @@ export const getMyListings = (token: string) =>
 export const createListing = (token: string, input: CreatePropertyInput) =>
   authedSend<Property>("/listings", token, { method: "POST", body: input });
 
-// ── Offers & negotiation (seller side — GET /offers, GET /deals, GET
-// /site-visits are role-scoped server-side and shared with lib/api/buyer.ts).
-// Sellers act on a forwarded (PENDING) offer with accept / reject / counter —
-// distinct from the buyer's acceptCounter / rejectCounter on a COUNTERED one. ──
-export const acceptOffer = (token: string, offerId: string) =>
-  authedSend<Offer>(`/offers/${offerId}`, token, { method: "PATCH", body: { action: "accept" } });
+// Seller requests to promote a property to a higher plan (currently ELITE
+// only). Doesn't change `plan` immediately — sets `requestedPlan` pending
+// staff approval. No payment collected yet.
+export const requestPlanUpgrade = (token: string, propertyId: string, plan: "ELITE") =>
+  authedSend<Property>(`/listings/${propertyId}/request-plan`, token, { method: "POST", body: { plan } });
 
-export const rejectOffer = (token: string, offerId: string) =>
-  authedSend<Offer>(`/offers/${offerId}`, token, { method: "PATCH", body: { action: "reject" } });
-
-export const counterOffer = (token: string, offerId: string, counterAmount: number) =>
-  authedSend<Offer>(`/offers/${offerId}`, token, {
-    method: "PATCH",
-    body: { action: "counter", counterAmount },
-  });
+// Offer negotiation actions (accept/reject/counter/close) and GET /offers,
+// /deals, /site-visits are all role-symmetric and live in lib/api/buyer.ts —
+// the backend gates them by the record's `turn`/participants, not by role.

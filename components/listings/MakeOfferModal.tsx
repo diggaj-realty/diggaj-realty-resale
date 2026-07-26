@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 import { createOffer } from "@/lib/api/buyer";
 import { ApiError } from "@/lib/api/client";
 import { price } from "@/lib/listings";
@@ -16,7 +17,7 @@ export default function MakeOfferModal({
 }) {
   const { user, token } = useAuth();
   const router = useRouter();
-  const isBuyer = user?.role === "BUYER";
+  const isBuyer = hasRole(user, "BUYER");
 
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");

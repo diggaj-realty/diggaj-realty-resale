@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { googleAuth } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 import { ApiError } from "@/lib/api/client";
 import type { UserRole } from "@/types/auth";
 
@@ -83,7 +84,7 @@ export default function GoogleSignInButton({
     async function handleCredentialResponse(response: { credential: string }) {
       try {
         const result = await googleAuth(response.credential, role);
-        if (result.user.role !== role) {
+        if (!hasRole(result.user, role)) {
           onError(
             `This account is registered as a ${result.user.role.toLowerCase()}. Use the ${
               result.user.role === "BUYER" ? "buyer" : "seller"

@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 import { authedSend } from "@/lib/api/authed";
 import { getShortlist } from "@/lib/api/buyer";
 
 export default function ShortlistButton({ propertyId }: { propertyId: string }) {
   const { user, token } = useAuth();
   const router = useRouter();
-  const isBuyer = user?.role === "BUYER";
+  const isBuyer = hasRole(user, "BUYER");
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
 

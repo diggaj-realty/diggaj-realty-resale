@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 
 const CHECK = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -39,8 +40,8 @@ function Checklist({ items, dark }: { items: string[]; dark?: boolean }) {
 
 export default function BuySell() {
   const { user } = useAuth();
-  const buyerLoggedIn = user?.role === "BUYER";
-  const sellerLoggedIn = user?.role === "SELLER";
+  const buyerLoggedIn = hasRole(user, "BUYER");
+  const sellerLoggedIn = hasRole(user, "SELLER");
   const buyerHref = buyerLoggedIn ? "/dashboard/buyer" : "/login/buyer";
   const sellerHref = sellerLoggedIn ? "/dashboard/seller" : "/login/seller";
 

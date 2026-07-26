@@ -3,11 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 import ListingFormWizard from "./ListingFormWizard";
 
 export default function NewListingPageClient({ mapsApiKey }: { mapsApiKey?: string }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const isSeller = hasRole(user, "SELLER");
 
   useEffect(() => {
     if (loading) return;
@@ -15,12 +17,12 @@ export default function NewListingPageClient({ mapsApiKey }: { mapsApiKey?: stri
       router.replace("/login/seller");
       return;
     }
-    if (user.role !== "SELLER") {
+    if (!isSeller) {
       router.replace(`/dashboard/${user.role.toLowerCase()}`);
     }
-  }, [loading, user, router]);
+  }, [loading, user, isSeller, router]);
 
-  if (loading || !user || user.role !== "SELLER") {
+  if (loading || !user || !isSeller) {
     return (
       <main className="flex min-h-screen w-full items-center justify-center bg-cream px-8">
         <p className="text-sm text-body">Loading…</p>

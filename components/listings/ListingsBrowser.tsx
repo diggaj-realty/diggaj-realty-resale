@@ -11,6 +11,7 @@ import { CANONICAL_CITIES } from "@/lib/cities";
 import { FURNISHING, FACING, POSSESSION_STATUS, OWNERSHIP_TYPE } from "@/lib/propertyEnums";
 import { price } from "@/lib/listings";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { hasRole } from "@/lib/auth/roles";
 import { ApiError } from "@/lib/api/client";
 import type {
   Facing,
@@ -346,7 +347,7 @@ export default function ListingsBrowser({
   }
 
   async function saveSearch() {
-    if (!user || user.role !== "BUYER" || !token) {
+    if (!hasRole(user, "BUYER") || !token) {
       router.push("/login/buyer");
       return;
     }

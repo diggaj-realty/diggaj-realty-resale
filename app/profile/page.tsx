@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import Nav from "@/components/Nav";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { updateProfile, changePassword } from "@/lib/api/profile";
+import { addRole } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
+import type { UserRole } from "@/types/auth";
 
 export default function ProfilePage() {
   const { user, token, loading, setSession } = useAuth();
@@ -32,6 +34,9 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordChanged, setPasswordChanged] = useState(false);
 
+  const [addingRole, setAddingRole] = useState(false);
+  const [addRoleError, setAddRoleError] = useState<string | null>(null);
+
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace("/login");
@@ -51,6 +56,20 @@ export default function ProfilePage() {
       setProfileError(err instanceof ApiError ? err.message : "Failed to update profile");
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  async function handleAddRole(newRole: UserRole) {
+    if (!token) return;
+    setAddingRole(true);
+    setAddRoleError(null);
+    try {
+      const updated = await addRole(token, newRole);
+      setSession(token, updated);
+    } catch (err) {
+      setAddRoleError(err instanceof ApiError ? err.message : "Failed to add role");
+    } finally {
+      setAddingRole(false);
     }
   }
 
@@ -114,9 +133,27 @@ export default function ProfilePage() {
             </div>
             <div className="flex flex-col gap-1.5 text-sm text-ink">
               Account type
-              <p className="rounded-xl bg-ink/5 px-4 py-3 text-sm text-ink/50">
-                {user.role === "BUYER" ? "Buyer" : "Seller"}
-              </p>
+              <div className="flex flex-wrap items-center gap-2 rounded-xl bg-ink/5 px-4 py-3">
+                {(user.roles?.length ? user.roles : [user.role]).map((r) => (
+                  <span key={r} className="rounded-full bg-panel px-3 py-1 text-xs font-medium text-white">
+                    {r === "BUYER" ? "Buyer" : "Seller"}
+                  </span>
+                ))}
+                {(["BUYER", "SELLER"] as const)
+                  .filter((r) => !(user.roles?.length ? user.roles : [user.role]).includes(r))
+                  .map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => handleAddRole(r)}
+                      disabled={addingRole}
+                      className="rounded-full bg-white px-3 py-1 text-xs font-medium text-ink/70 ring-1 ring-ink/10 hover:bg-ink/5 disabled:opacity-50"
+                    >
+                      {addingRole ? "Adding…" : `+ Add ${r === "BUYER" ? "buyer" : "seller"} access`}
+                    </button>
+                  ))}
+              </div>
+              {addRoleError && <p className="text-xs text-red-700">{addRoleError}</p>}
             </div>
           </div>
           {profileError && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{profileError}</p>}

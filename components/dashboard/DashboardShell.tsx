@@ -36,19 +36,27 @@ export default function DashboardShell({
     (i) => pathname === i.href || (!i.exact && pathname.startsWith(`${i.href}/`))
   )?.label;
 
+  // A dual-role account (roles: ["SELLER", "BUYER"]) can open either shell —
+  // gate on membership in `roles`, not equality with the single legacy
+  // `role` field, which only ever reflects the account's original role.
+  const userRoles = user?.roles?.length ? user.roles : user ? [user.role] : [];
+  const otherRole: UserRole | null =
+    userRoles.length > 1 ? (userRoles.find((r) => r !== role) as UserRole) ?? null : null;
+
   useEffect(() => {
     if (loading) return;
     if (!user || !token) {
       router.replace(`/login/${role.toLowerCase()}`);
       return;
     }
-    if (user.role !== role) {
-      router.replace(`/dashboard/${user.role.toLowerCase()}`);
+    if (!userRoles.includes(role)) {
+      router.replace(`/dashboard/${userRoles[0].toLowerCase()}`);
       return;
     }
     authedGet<DashboardSummary>("/dashboard", token)
       .then(setSummary)
       .catch((err) => setError(err.message ?? "Failed to load dashboard."));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, user, token, role, router]);
 
   // close the mobile drawer on route change — done during render (not an
@@ -100,9 +108,19 @@ export default function DashboardShell({
         <Link href="/" className="px-6 pb-2 pt-6 text-lg font-semibold tracking-tight text-ink">
           Diggaj Realty
         </Link>
-        <p className="px-6 pb-6 text-xs font-medium uppercase tracking-wide text-body">
-          {role === "BUYER" ? "Buyer dashboard" : "Seller dashboard"}
-        </p>
+        <div className="flex items-center justify-between gap-2 px-6 pb-6">
+          <p className="text-xs font-medium uppercase tracking-wide text-body">
+            {role === "BUYER" ? "Buyer dashboard" : "Seller dashboard"}
+          </p>
+          {otherRole && (
+            <Link
+              href={`/dashboard/${otherRole.toLowerCase()}`}
+              className="shrink-0 rounded-full bg-ink/5 px-3 py-1 text-[11px] font-medium text-ink/70 hover:bg-ink/10"
+            >
+              Switch to {otherRole === "BUYER" ? "buyer" : "seller"} →
+            </Link>
+          )}
+        </div>
         <div className="flex flex-1 flex-col overflow-y-auto px-4">
           <DashboardNavList items={navItems} />
           <div className="mt-auto border-t border-ink/10 pt-2">
@@ -126,9 +144,20 @@ export default function DashboardShell({
                 <CloseIcon />
               </button>
             </div>
-            <p className="mb-4 mt-1 text-xs font-medium uppercase tracking-wide text-body">
-              {role === "BUYER" ? "Buyer dashboard" : "Seller dashboard"}
-            </p>
+            <div className="mb-4 mt-1 flex items-center justify-between gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-body">
+                {role === "BUYER" ? "Buyer dashboard" : "Seller dashboard"}
+              </p>
+              {otherRole && (
+                <Link
+                  href={`/dashboard/${otherRole.toLowerCase()}`}
+                  onClick={() => setDrawerOpen(false)}
+                  className="shrink-0 rounded-full bg-ink/5 px-3 py-1 text-[11px] font-medium text-ink/70 hover:bg-ink/10"
+                >
+                  Switch →
+                </Link>
+              )}
+            </div>
             <div className="flex flex-1 flex-col overflow-y-auto">
               <DashboardNavList items={navItems} onNavigate={() => setDrawerOpen(false)} />
               <div className="mt-auto border-t border-ink/10 pt-2">
