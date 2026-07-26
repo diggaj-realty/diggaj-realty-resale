@@ -22,35 +22,66 @@ function requiredFromLabel(doc: DealDocument, viewerRole: UserRole) {
   return doc.requiredFrom === viewerRole ? "Required from you" : `Required from ${doc.requiredFrom.toLowerCase()}`;
 }
 
-export default function DealDocuments({ dealId, viewerRole }: { dealId: string; viewerRole: UserRole }) {
+export default function DealDocuments({
+  dealId,
+  viewerRole,
+  initialDocuments,
+  onChanged,
+}: {
+  dealId: string;
+  viewerRole: UserRole;
+  /** Pass the checklist directly when the caller already has it (e.g. the
+   *  transaction detail page's single aggregate fetch already includes
+   *  `documents`), to skip a redundant `GET /deals/:id/documents` round trip.
+   *  Omit to have this component fetch it itself. */
+  initialDocuments?: DealDocument[];
+  /** Called after a successful upload — lets a parent transaction view
+   *  refetch the aggregate deal data (stage/documentProgress) it derives
+   *  from, so the rest of the page never lags behind this component's own
+   *  local state. */
+  onChanged?: () => void;
+}) {
   const { token } = useAuth();
-  const [docs, setDocs] = useState<DealDocument[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [docs, setDocs] = useState<DealDocument[] | null>(initialDocuments ?? null);
+  // Tracks the last `initialDocuments` reference we've synced `docs` from, so
+  // a parent refetch (e.g. the transaction page's "Refresh" button) is picked
+  // up during render rather than via a setState-in-effect cascade — the
+  // backend copy is always the source of truth, never this component's own
+  // locally-patched state from its last upload. Per React's guidance for
+  // "adjusting state when a prop changes": https://react.dev/learn/you-might-not-need-an-effect
+  const [syncedFrom, setSyncedFrom] = useState(initialDocuments);
+  if (initialDocuments && initialDocuments !== syncedFrom) {
+    setSyncedFrom(initialDocuments);
+    setDocs(initialDocuments);
+  }
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<{ docId: string; message: string } | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (initialDocuments || !token) return;
     getDealDocuments(token, dealId)
       .then(setDocs)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load documents"));
-  }, [token, dealId]);
+      .catch((e) => setLoadError(e instanceof Error ? e.message : "Failed to load documents"));
+  }, [token, dealId, initialDocuments]);
 
   async function upload(doc: DealDocument, file: File) {
     if (!token) return;
     setBusyId(doc.id);
-    setError(null);
+    setActionError(null);
     try {
       const { url } = await authedUpload(token, file, "deal-documents");
       const updated = await uploadDealDocument(token, dealId, doc.id, url);
       setDocs((prev) => prev?.map((d) => (d.id === doc.id ? updated : d)) ?? null);
+      onChanged?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setActionError({ docId: doc.id, message: e instanceof Error ? e.message : "Upload failed" });
     } finally {
       setBusyId(null);
     }
   }
 
-  if (error) return <p className="text-sm text-red-700">{error}</p>;
+  if (loadError) return <p className="text-sm text-red-700">{loadError}</p>;
   if (docs === null) return <RowSkeleton />;
   if (docs.length === 0) {
     return <p className="text-sm text-body">No documents requested yet — your agent will add these as the deal progresses.</p>;
@@ -103,6 +134,7 @@ export default function DealDocuments({ dealId, viewerRole }: { dealId: string; 
                   className="block w-full text-xs text-ink/70 file:mr-3 file:rounded-full file:border-0 file:bg-panel file:px-3 file:py-2 file:text-xs file:font-medium file:text-white disabled:opacity-60"
                 />
                 {busyId === doc.id && <p className="mt-1 text-xs text-body">Uploading…</p>}
+                {actionError?.docId === doc.id && <p className="mt-1 text-xs text-red-700">{actionError.message}</p>}
               </div>
             )}
           </div>

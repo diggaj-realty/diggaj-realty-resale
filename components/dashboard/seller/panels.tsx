@@ -6,7 +6,6 @@ import { price } from "@/lib/listings";
 import { useAuth } from "@/lib/auth/AuthContext";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import PropertyRow from "@/components/dashboard/PropertyRow";
-import DealDocuments from "@/components/dashboard/DealDocuments";
 import OfferCard from "@/components/dashboard/OfferCard";
 import { Panel, Step, fmtDate } from "@/components/dashboard/shared";
 import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
@@ -156,7 +155,6 @@ export function VisitsPanel() {
 
 // ── Deals (closing / documentation) ───────────────────────────
 function SellerDealCard({ deal }: { deal: Deal }) {
-  const [showDocs, setShowDocs] = useState(false);
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-ink/5">
       <div className="flex items-start justify-between gap-4">
@@ -205,23 +203,11 @@ function SellerDealCard({ deal }: { deal: Deal }) {
       )}
 
       <div className="mt-4 border-t border-ink/5 pt-4">
-        <button
-          onClick={() => setShowDocs((s) => !s)}
+        <Link
+          href={`/dashboard/seller/deals/${deal.id}`}
           className="text-xs font-medium text-ink underline underline-offset-2"
         >
-          {showDocs ? "Hide document checklist" : "View document checklist →"}
-        </button>
-        {showDocs && (
-          <div className="mt-4">
-            <DealDocuments dealId={deal.id} viewerRole="SELLER" />
-          </div>
-        )}
-      </div>
-
-      <div className="mt-4 border-t border-ink/5 pt-4 text-xs text-body">
-        Questions about the paperwork?{" "}
-        <Link href="/contact" className="font-medium text-ink underline underline-offset-2">
-          Contact your Diggaj coordinator →
+          View full transaction →
         </Link>
       </div>
     </div>

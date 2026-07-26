@@ -5,10 +5,12 @@ import type {
   DealDocument,
   Offer,
   OfferWithEvents,
+  PaymentRequest,
   SavedSearch,
   SavedSearchFilters,
   SiteVisit,
   ShortlistedProperty,
+  TransactionDetail,
 } from "@/types/buyer";
 
 // ── Saved properties (shortlist) ──
@@ -113,4 +115,23 @@ export const uploadDealDocument = (token: string, dealId: string, docId: string,
   authedSend<DealDocument>(`/deals/${dealId}/documents/${docId}`, token, {
     method: "PATCH",
     body: { fileUrl },
+  });
+
+// ── Post-acceptance transaction detail ──
+// One deal id, one call: property, both parties, assigned agent, the
+// accepted offer's full timeline, site visit, offline negotiation records,
+// document checklist, payment requests, and the backend-derived `stage` —
+// see `GET /accepted-offers/:id` in the resale-admin API. Same party-scoped
+// access as `/deals/:id` (buyer/seller/agent of this specific deal, or staff).
+export const getTransactionDetail = (token: string, dealId: string) =>
+  authedGet<TransactionDetail>(`/accepted-offers/${dealId}`, token);
+
+/** The only payment-request action a buyer/seller may ever call — marks
+ *  "I've started paying," not "I've paid." Only the party the request is
+ *  addressed to (`recipient`) may call this; `markPaid`/`markFailed`/`cancel`
+ *  are staff-only and deliberately have no frontend entry point. */
+export const initiatePayment = (token: string, dealId: string, requestId: string) =>
+  authedSend<PaymentRequest>(`/deals/${dealId}/payment-requests/${requestId}`, token, {
+    method: "PATCH",
+    body: { action: "initiate" },
   });

@@ -12,6 +12,7 @@ import ShortlistButton from "@/components/listings/ShortlistButton";
 import MakeOfferModal from "@/components/listings/MakeOfferModal";
 import ShareButton from "@/components/listings/ShareButton";
 import RequestVisitForm from "@/components/listings/RequestVisitForm";
+import AiSearchButton from "@/components/ai/AiSearchButton";
 import ViewTracker from "@/components/listings/ViewTracker";
 import EmiCalculator from "@/components/listings/EmiCalculator";
 import ProjectInfo from "@/components/listings/ProjectInfo";
@@ -53,11 +54,24 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const l = await loadProperty((await params).slug);
+  const { slug } = await params;
+  const l = await loadProperty(slug);
   if (!l) return {};
+  const title = `${l.title} — ${price(l.askingPrice)} | Diggaj Realty`;
+  const cover = [...l.photos].sort((a, b) => a.order - b.order)[0]?.url;
+  const url = `/listings/${slug}`;
   return {
-    title: `${l.title} — ${price(l.askingPrice)} | Diggaj Realty`,
+    title,
     description: l.description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      title,
+      description: l.description,
+      url,
+      images: cover ? [{ url: cover, width: 1200, height: 800, alt: l.title }] : undefined,
+    },
+    twitter: { card: "summary_large_image", title, description: l.description },
   };
 }
 
@@ -146,8 +160,47 @@ export default async function ListingDetail({
     { icon: <TagIcon />, label: "Per sq. ft.", value: `${price(perSqft)}/sq ft` },
   ];
 
+  const aiPropertyContext = {
+    id: l.id,
+    title: l.title,
+    location: l.location,
+    askingPrice: l.askingPrice,
+    bhk: l.bhk,
+    areaSqft: l.areaSqft,
+  };
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: l.title,
+    description: l.description,
+    url: `https://diggajrealty.com/listings/${slugify(l.title)}--${l.id}`,
+    datePosted: l.createdAt,
+    image: photos.map((p) => p.url),
+    about: {
+      "@type": l.type === "PLOT" ? "LandForm" : l.type === "COMMERCIAL" ? "Place" : "Apartment",
+      name: l.title,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: l.city ?? undefined,
+        addressRegion: l.locality ?? undefined,
+        postalCode: l.pincode ?? undefined,
+        addressCountry: "IN",
+      },
+      numberOfRooms: l.bhk ?? undefined,
+      floorSize: { "@type": "QuantitativeValue", value: l.areaSqft, unitCode: "FTK" },
+    },
+    offers: {
+      "@type": "Offer",
+      price: l.askingPrice,
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <main className="min-h-screen overflow-x-clip bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="bg-cream pb-8">
         <Nav />
         <div className="px-8 pt-10 md:px-14">
@@ -227,6 +280,7 @@ export default async function ListingDetail({
                 </div>
                 <ShortlistButton propertyId={l.id} />
                 <ShareButton title={l.title} />
+                <AiSearchButton propertyContext={aiPropertyContext} />
               </div>
             </div>
           </div>

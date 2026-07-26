@@ -3,13 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useInView } from "@/lib/useInView";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
+// Placeholder domains until real profile URLs are provided — set the
+// matching NEXT_PUBLIC_SOCIAL_* env var per platform to swap one in.
 const socials = [
-  { label: "X", href: "https://x.com" },
-  { label: "f", href: "https://facebook.com" },
-  { label: "in", href: "https://linkedin.com" },
-  { label: "ig", href: "https://instagram.com" },
-  { label: "yt", href: "https://youtube.com" },
+  { label: "X", href: process.env.NEXT_PUBLIC_SOCIAL_X || "https://x.com" },
+  { label: "f", href: process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK || "https://facebook.com" },
+  { label: "in", href: process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN || "https://linkedin.com" },
+  { label: "ig", href: process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM || "https://instagram.com" },
+  { label: "yt", href: process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE || "https://youtube.com" },
 ];
 const links = [
   { label: "All Homes", href: "/listings" },
@@ -63,7 +66,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-          <div className="flex gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {socials.map((s) => (
               <a
                 key={s.label}
@@ -76,6 +79,7 @@ export default function Footer() {
                 {s.label}
               </a>
             ))}
+            <WhatsAppButton className="ml-1" />
           </div>
           <nav className="flex flex-wrap gap-x-8 gap-y-2 text-xs text-ink/70">
             {links.map((l) => (

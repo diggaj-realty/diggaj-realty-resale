@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProperties } from "@/lib/api/properties";
+import { getAmenities, FALLBACK_AMENITIES } from "@/lib/api/amenities";
 import type { GetPropertiesParams } from "@/types/api";
+import type { AiPropertyContext } from "@/types/ai";
 
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
 const ANTHROPIC_VERSION = "2023-06-01";
@@ -30,43 +32,53 @@ type AnthropicResponse = { content: AnthropicContentBlock[]; stop_reason: string
 // every single call (twice per turn when a search happens), so trimming
 // descriptions here is one of the few real, guaranteed cost levers available
 // (prompt caching doesn't apply — see MAX_TOKENS comment below).
-const SEARCH_TOOL = {
-  name: "search_properties",
-  description: "Search Diggaj Realty's live property listings.",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      q: { type: "string", description: "Free text: title/address/city" },
-      type: { type: "string", enum: ["RESIDENTIAL", "PLOT", "COMMERCIAL"] },
-      city: { type: "string", description: "e.g. Bangalore, Mumbai, Delhi" },
-      locality: { type: "string", description: "Area within the city" },
-      minPrice: { type: "number", description: "Min price, INR" },
-      maxPrice: { type: "number", description: "Max price, INR" },
-      minBhk: { type: "number", description: "Min bedrooms" },
-      minBathrooms: { type: "number" },
-      minArea: { type: "number", description: "Min sqft" },
-      maxArea: { type: "number", description: "Max sqft" },
-      furnishing: { type: "string", enum: ["UNFURNISHED", "SEMI_FURNISHED", "FULLY_FURNISHED"] },
-      facing: { type: "string", enum: ["N", "S", "E", "W", "NE", "NW", "SE", "SW"] },
-      possessionStatus: { type: "string", enum: ["READY_TO_MOVE", "UNDER_CONSTRUCTION"] },
-      maxAgeYears: { type: "number", description: "Max building age, yrs" },
-      parking: { type: "boolean" },
-      ownershipType: {
-        type: "string",
-        enum: ["FREEHOLD", "LEASEHOLD", "POWER_OF_ATTORNEY", "CO_OPERATIVE"],
-      },
-      amenities: {
-        type: "array",
-        items: { type: "string" },
-        description: "e.g. Gymnasium, Swimming Pool, Lift",
-      },
-      sort: {
-        type: "string",
-        enum: ["newest", "price_asc", "price_desc", "area_asc", "area_desc", "most_viewed"],
+//
+// `amenities` takes the real, admin-managed amenity names as an `enum` (see
+// buildSearchTool below) rather than free text — the backend's amenities
+// filter matches ALL listed names (AND, not OR) against an exact string, so
+// a plausible-sounding guess like "Pool" instead of the real "Swimming Pool"
+// used to silently zero out results. Constraining to a real enum, plus
+// telling the model the AND semantics, fixes both failure modes at once.
+function buildSearchTool(amenityNames: string[]) {
+  return {
+    name: "search_properties",
+    description: "Search Diggaj Realty's live property listings.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        q: { type: "string", description: "Free text: title/address/city" },
+        type: { type: "string", enum: ["RESIDENTIAL", "PLOT", "COMMERCIAL"] },
+        city: { type: "string", description: "e.g. Bangalore, Mumbai, Delhi" },
+        locality: { type: "string", description: "Area within the city" },
+        minPrice: { type: "number", description: "Min price, INR" },
+        maxPrice: { type: "number", description: "Max price, INR" },
+        minBhk: { type: "number", description: "Min bedrooms" },
+        minBathrooms: { type: "number" },
+        minArea: { type: "number", description: "Min sqft" },
+        maxArea: { type: "number", description: "Max sqft" },
+        furnishing: { type: "string", enum: ["UNFURNISHED", "SEMI_FURNISHED", "FULLY_FURNISHED"] },
+        facing: { type: "string", enum: ["N", "S", "E", "W", "NE", "NW", "SE", "SW"] },
+        possessionStatus: { type: "string", enum: ["READY_TO_MOVE", "UNDER_CONSTRUCTION"] },
+        maxAgeYears: { type: "number", description: "Max building age, yrs" },
+        parking: { type: "boolean" },
+        ownershipType: {
+          type: "string",
+          enum: ["FREEHOLD", "LEASEHOLD", "POWER_OF_ATTORNEY", "CO_OPERATIVE"],
+        },
+        amenities: {
+          type: "array",
+          items: { type: "string", enum: amenityNames },
+          description:
+            "Matches listings having ALL of these (AND, not OR) — pass at most one unless you're confident the user wants that exact combination.",
+        },
+        sort: {
+          type: "string",
+          enum: ["newest", "price_asc", "price_desc", "area_asc", "area_desc", "most_viewed"],
+        },
       },
     },
-  },
-};
+  };
+}
 
 // Also kept lean for the same reason — same per-call cost logic applies.
 const SYSTEM_PROMPT = `You're Diggaj Realty's property search assistant, texting casually with a home-hunter — not customer support reading a script. Vary your openers, use contractions, keep it short and loose. No markdown: no lists, bullets, bold, or headers, plain sentences only.
@@ -77,7 +89,24 @@ Found properties already show as photo cards below your message with price/size/
 
 Prices are in INR. Empty results: react like a person would (mildly surprised, not clinical) and suggest loosening one thing — budget, area, or bedrooms.`;
 
-async function callAnthropic(apiKey: string, messages: unknown[]): Promise<AnthropicResponse> {
+/** Prepends the property a user is viewing, when this call comes from a
+ *  property detail page rather than a general search — keeps replies (and
+ *  an initial "want me to summarize this?") grounded in that listing instead
+ *  of treating every message like a fresh, propertyless search. */
+function systemPromptFor(propertyContext?: AiPropertyContext): string {
+  if (!propertyContext) return SYSTEM_PROMPT;
+  return `${SYSTEM_PROMPT}
+
+The user is currently viewing this specific property — ground your replies in it (price, size, location, what stands out) unless they clearly ask to search elsewhere:
+"${propertyContext.title}" in ${propertyContext.location} — ₹${propertyContext.askingPrice.toLocaleString("en-IN")} — ${propertyContext.bhk ?? "?"} BHK — ${propertyContext.areaSqft} sqft.`;
+}
+
+async function callAnthropic(
+  apiKey: string,
+  messages: unknown[],
+  system: string,
+  tool: ReturnType<typeof buildSearchTool>
+): Promise<AnthropicResponse> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -88,8 +117,8 @@ async function callAnthropic(apiKey: string, messages: unknown[]): Promise<Anthr
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
       max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
-      tools: [SEARCH_TOOL],
+      system,
+      tools: [tool],
       messages,
     }),
   });
@@ -98,6 +127,19 @@ async function callAnthropic(apiKey: string, messages: unknown[]): Promise<Anthr
     throw new Error(`Anthropic API error (${res.status}): ${text.slice(0, 300)}`);
   }
   return res.json();
+}
+
+/** The admin-managed amenity master list, for constraining the model's
+ *  `amenities` tool argument to real names (see buildSearchTool). Falls back
+ *  to the same static list the backend itself falls back to if the master
+ *  table is empty or the request fails. */
+async function amenityNames(): Promise<string[]> {
+  try {
+    const list = await getAmenities();
+    return list.filter((a) => a.active).map((a) => a.name);
+  } catch {
+    return FALLBACK_AMENITIES;
+  }
 }
 
 /** Confirms the bearer token is a real, currently-valid session — checked
@@ -132,7 +174,7 @@ export async function POST(req: NextRequest) {
   const token = authHeader?.replace(/^Bearer\s+/i, "");
   const authenticated = !!token && (await verifyUser(token));
 
-  let body: { messages?: { role: string; content: string }[] };
+  let body: { messages?: { role: string; content: string }[]; propertyContext?: AiPropertyContext };
   try {
     body = await req.json();
   } catch {
@@ -161,8 +203,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const system = systemPromptFor(body.propertyContext);
+    const tool = buildSearchTool(await amenityNames());
     const anthMessages: unknown[] = history.map((m) => ({ role: m.role, content: m.content }));
-    const first = await callAnthropic(apiKey, anthMessages);
+    const first = await callAnthropic(apiKey, anthMessages, system, tool);
 
     const toolUse = first.content.find((b): b is AnthropicToolUseBlock => b.type === "tool_use");
     if (!toolUse || first.stop_reason !== "tool_use") {
@@ -190,14 +234,19 @@ export async function POST(req: NextRequest) {
           .join("\n")
       : "No matching live listings found.";
 
-    const second = await callAnthropic(apiKey, [
-      ...anthMessages,
-      { role: "assistant", content: first.content },
-      {
-        role: "user",
-        content: [{ type: "tool_result", tool_use_id: toolUse.id, content: toolResultSummary }],
-      },
-    ]);
+    const second = await callAnthropic(
+      apiKey,
+      [
+        ...anthMessages,
+        { role: "assistant", content: first.content },
+        {
+          role: "user",
+          content: [{ type: "tool_result", tool_use_id: toolUse.id, content: toolResultSummary }],
+        },
+      ],
+      system,
+      tool
+    );
 
     return NextResponse.json({
       data: { reply: extractText(second.content) || "Here's what I found.", properties },

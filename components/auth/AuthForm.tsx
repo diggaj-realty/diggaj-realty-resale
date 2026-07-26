@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { login, register } from "@/lib/api/auth";
@@ -12,6 +12,7 @@ import type { UserRole } from "@/types/auth";
 
 export default function AuthForm({ role }: { role: UserRole }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setSession } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
@@ -23,6 +24,9 @@ export default function AuthForm({ role }: { role: UserRole }) {
 
   const roleLabel = role === "BUYER" ? "Buyer" : "Seller";
   const dashboardPath = role === "BUYER" ? "/dashboard/buyer" : "/dashboard/seller";
+  // Whatever page sent the user here (e.g. a property detail page they were
+  // trying to like/offer/tour from) — falls back to the role's dashboard.
+  const redirectTarget = searchParams.get("redirect") || dashboardPath;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +49,7 @@ export default function AuthForm({ role }: { role: UserRole }) {
       }
 
       setSession(result.token, result.user);
-      router.push(dashboardPath);
+      router.push(redirectTarget);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
     } finally {
@@ -131,7 +135,7 @@ export default function AuthForm({ role }: { role: UserRole }) {
           <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-wide text-ink/35">
             <span className="h-px flex-1 bg-ink/10" /> or <span className="h-px flex-1 bg-ink/10" />
           </div>
-          <GoogleSignInButton role={role} dashboardPath={dashboardPath} onError={setError} />
+          <GoogleSignInButton role={role} redirectTo={redirectTarget} onError={setError} />
         </>
       )}
 

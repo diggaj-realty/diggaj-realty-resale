@@ -89,9 +89,9 @@ export default function BuySell() {
             </h3>
             <Checklist
               items={[
-                "AI-matched listings tuned to your taste",
-                "Book home tours instantly, no phone tag",
-                "Up to 75% of agent commission back",
+                "Verified resale listings, priced against real comps",
+                "Book a site visit in one tap — no phone tag",
+                "Up to 75% of agent commission back at closing",
               ]}
             />
             <div className="mt-auto pt-8">
@@ -130,9 +130,9 @@ export default function BuySell() {
             <Checklist
               dark
               items={[
-                "AI pricing tuned to your neighborhood",
-                "Your home featured to 10L+ active buyers",
-                "One flat listing fee — no surprises",
+                "Free AI valuation using real neighborhood comps",
+                "Your listing shown to 10L+ verified, active buyers",
+                "One flat fee — no surprises at closing",
               ]}
             />
             <div className="mt-auto pt-8">

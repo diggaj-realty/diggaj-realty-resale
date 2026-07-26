@@ -64,11 +64,13 @@ function loadGsiScript(): Promise<void> {
  *  renders nothing if NEXT_PUBLIC_GOOGLE_CLIENT_ID isn't configured. */
 export default function GoogleSignInButton({
   role,
-  dashboardPath,
+  redirectTo,
   onError,
 }: {
   role: UserRole;
-  dashboardPath: string;
+  /** Where to send the user after a successful sign-in — the page they were
+   *  on before being sent to log in, or the role's dashboard as a fallback. */
+  redirectTo: string;
   onError: (message: string) => void;
 }) {
   const router = useRouter();
@@ -93,7 +95,7 @@ export default function GoogleSignInButton({
           return;
         }
         setSession(result.token, result.user);
-        router.push(dashboardPath);
+        router.push(redirectTo);
       } catch (err) {
         onError(err instanceof ApiError ? err.message : "Google sign-in failed. Try again.");
       }
@@ -120,7 +122,7 @@ export default function GoogleSignInButton({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId, role, dashboardPath]);
+  }, [clientId, role, redirectTo]);
 
   if (!clientId || failed) return null;
 

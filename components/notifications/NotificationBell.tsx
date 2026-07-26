@@ -80,7 +80,11 @@ export default function NotificationBell({ dark }: { dark?: boolean }) {
       {open && (
         <>
           <button aria-label="Close notifications" onClick={() => setOpen(false)} className="fixed inset-0 z-30 cursor-default" />
-          <div className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[90vw] rounded-2xl bg-white p-2 shadow-2xl ring-1 ring-ink/10">
+          {/* Below `sm:`, anchor to the viewport instead of the button —
+              `absolute right-0` alone can push this off-screen on a narrow
+              phone if the bell isn't the page's right-most element (e.g.
+              there's a menu button further right in Nav.tsx). */}
+          <div className="fixed inset-x-2 top-20 z-40 rounded-2xl bg-white p-2 shadow-2xl ring-1 ring-ink/10 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-80 sm:max-w-[90vw]">
             <div className="flex items-center justify-between px-3 py-2">
               <p className="text-sm font-medium text-ink">Notifications</p>
               {unreadCount > 0 && (

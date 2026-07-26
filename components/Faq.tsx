@@ -16,15 +16,15 @@ const FAQS = [
   },
   {
     q: "When do I receive my cash back?",
-    a: "Your cash back is applied directly at closing, reducing what you owe out of pocket. In most states we can also issue it as a check shortly after the transaction completes.",
+    a: "Your cash back is applied directly at closing, reducing what you owe out of pocket. We can also pay it out by bank transfer or cheque shortly after the deal completes.",
   },
   {
     q: "Can I use my own agent or lender?",
     a: "Absolutely. Diggaj Realty works great end-to-end, but you're always free to bring your own agent, lender, or title company — you'll just unlock less of the bundled cash back.",
   },
   {
-    q: "Which states and cities are supported?",
-    a: "We currently operate in most major Indian metros and are expanding every quarter. Search any address on our map — if we're live there, you'll see local listings and agents instantly.",
+    q: "Which cities are supported?",
+    a: "We currently operate across major Indian metros and are expanding every quarter. Search any city or locality on our listings page — if we're live there, you'll see verified resale listings and a dedicated agent instantly.",
   },
   {
     q: "How do I get started?",

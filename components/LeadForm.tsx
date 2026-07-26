@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
-// Static-site friendly: swap SIMULATE for a Formspree/Web3Forms endpoint
-// (e.g. fetch("https://formspree.io/f/XXXX", {...})) to receive real emails.
-const SIMULATE = true;
+import { submitLead } from "@/lib/api/leads";
+import type { LeadInput } from "@/lib/api/leads";
 
 export default function LeadForm({
   dark,
@@ -16,19 +14,42 @@ export default function LeadForm({
   subject?: string;
   cta?: string;
 }) {
-  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [lastInput, setLastInput] = useState<LeadInput | null>(null);
 
   const field = dark
     ? "w-full rounded-2xl bg-white/5 px-5 py-3.5 text-sm text-white ring-1 ring-white/10 placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-lime"
     : "w-full rounded-2xl bg-ink/5 px-5 py-3.5 text-sm text-ink ring-1 ring-ink/10 placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-lime";
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function send(input: LeadInput) {
     setState("sending");
-    if (SIMULATE) {
-      await new Promise((r) => setTimeout(r, 900));
+    setError(null);
+    try {
+      await submitLead(input);
+      setLastInput(input);
+      setState("sent");
+    } catch (e) {
+      setLastInput(input);
+      setError(e instanceof Error ? e.message : "Failed to send message");
+      setState("error");
     }
-    setState("sent");
+  }
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    send({
+      name: String(form.get("name") ?? "").trim(),
+      email: String(form.get("email") ?? "").trim(),
+      phone: String(form.get("phone") ?? "").trim() || undefined,
+      message: String(form.get("message") ?? "").trim(),
+      subject,
+    });
+  }
+
+  function retry() {
+    if (lastInput) send(lastInput);
   }
 
   return (
@@ -63,6 +84,40 @@ export default function LeadForm({
               Send another
             </button>
           </motion.div>
+        ) : state === "error" ? (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className={`flex flex-col items-center rounded-[24px] px-8 py-14 text-center ${
+              dark ? "bg-white/5 ring-1 ring-white/10" : "bg-red-50"
+            }`}
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl text-red-700">
+              ✕
+            </span>
+            <p className={`mt-5 text-xl font-medium ${dark ? "text-white" : "text-ink"}`}>
+              Couldn&apos;t send that
+            </p>
+            <p className={`mt-2 max-w-xs text-sm ${dark ? "text-white/60" : "text-body"}`}>
+              {error}
+            </p>
+            <div className="mt-6 flex items-center gap-4">
+              <button
+                onClick={retry}
+                className="rounded-full bg-lime px-5 py-2.5 text-xs font-semibold text-ink"
+              >
+                Resend
+              </button>
+              <button
+                onClick={() => setState("idle")}
+                className={`text-xs font-semibold underline underline-offset-4 ${dark ? "text-white/70" : "text-ink"}`}
+              >
+                Edit message
+              </button>
+            </div>
+          </motion.div>
         ) : (
           <motion.form
             key="form"
@@ -73,22 +128,35 @@ export default function LeadForm({
           >
             <input type="hidden" name="subject" value={subject} />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <input required name="name" placeholder="Full name" className={field} />
+              <input
+                required
+                name="name"
+                placeholder="Full name"
+                defaultValue={lastInput?.name}
+                className={field}
+              />
               <input
                 required
                 name="email"
                 type="email"
                 placeholder="Email address"
+                defaultValue={lastInput?.email}
                 className={field}
               />
             </div>
-            <input name="phone" type="tel" placeholder="Phone (optional)" className={field} />
+            <input
+              name="phone"
+              type="tel"
+              placeholder="Phone (optional)"
+              defaultValue={lastInput?.phone}
+              className={field}
+            />
             <textarea
               required
               name="message"
               rows={4}
               placeholder="Tell us what you're looking for…"
-              defaultValue=""
+              defaultValue={lastInput?.message ?? ""}
               className={`${field} resize-none`}
             />
             <button

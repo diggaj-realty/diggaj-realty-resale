@@ -7,6 +7,7 @@ import { price } from "@/lib/listings";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import OfferTimeline from "@/components/dashboard/OfferTimeline";
 import { fmtDate } from "@/components/dashboard/shared";
+import { invalidate } from "@/lib/dashboard/panelCache";
 import { acceptOffer, rejectOffer, counterOffer, closeNegotiation } from "@/lib/api/buyer";
 import type { Offer } from "@/types/buyer";
 import type { UserRole } from "@/types/auth";
@@ -42,18 +43,30 @@ export default function OfferCard({
   const counterpartLabel = viewerRole === "BUYER" ? "seller" : "buyer";
   const amountLabel = viewerRole === "BUYER" ? "Your offer" : "Buyer offered";
 
-  async function run(action: () => Promise<Offer>) {
+  async function run(action: () => Promise<Offer>, afterSuccess?: () => void) {
     if (!token) return;
     setBusy(true);
     setError(null);
     try {
       const updated = await action();
       onChanged(updated);
+      afterSuccess?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Action failed");
     } finally {
       setBusy(false);
     }
+  }
+
+  // Acceptance auto-creates a Deal on the backend — drop any cached deals
+  // list so the Closing/Deals panel refetches instead of showing stale data
+  // the next time it's opened, rather than relying only on its own remount.
+  function acceptAndRefreshDeals() {
+    if (!token) return;
+    run(() => acceptOffer(token, offer.id), () => {
+      invalidate("buyerDeals:");
+      invalidate("sellerDeals:");
+    });
   }
 
   async function submitCounter() {
@@ -153,7 +166,7 @@ export default function OfferCard({
                 Counter
               </button>
               <button
-                onClick={() => token && run(() => acceptOffer(token, offer.id))}
+                onClick={acceptAndRefreshDeals}
                 disabled={busy}
                 className="rounded-full bg-panel px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
               >

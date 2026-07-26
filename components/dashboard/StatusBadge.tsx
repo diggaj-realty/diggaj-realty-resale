@@ -25,6 +25,10 @@ const MAP: Record<string, { tone: keyof typeof TONE; label: string }> = {
   // deals
   IN_PROGRESS: { tone: "blue", label: "In progress" },
   CLOSED: { tone: "green", label: "Closed" },
+  // payment requests (PENDING/CANCELLED already covered above)
+  PAYMENT_INITIATED: { tone: "blue", label: "Payment initiated" },
+  PAID: { tone: "green", label: "Paid" },
+  FAILED: { tone: "red", label: "Failed" },
 };
 
 export default function StatusBadge({ status }: { status: string }) {

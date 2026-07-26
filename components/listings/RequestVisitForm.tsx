@@ -1,15 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hasRole } from "@/lib/auth/roles";
 import { createSiteVisit } from "@/lib/api/buyer";
 import { ApiError } from "@/lib/api/client";
+import { savePendingIntent, peekPendingIntent, clearPendingIntent, loginHrefWithReturn } from "@/lib/auth/redirectIntent";
 
 export default function RequestVisitForm({ propertyId }: { propertyId: string }) {
   const { user, token } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const isBuyer = hasRole(user, "BUYER");
 
   const [date, setDate] = useState("");
@@ -18,15 +20,16 @@ export default function RequestVisitForm({ propertyId }: { propertyId: string })
   const [error, setError] = useState<string | null>(null);
   const [disabled, setDisabled] = useState(false);
   const [done, setDone] = useState(false);
+  const resumedRef = useRef(false);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!isBuyer || !token) {
-      router.push("/login/buyer");
+  async function submitVisit(rawDate: string, rawNote: string) {
+    if (!rawDate) {
+      setError("Pick a date for your visit");
       return;
     }
-    if (!date) {
-      setError("Pick a date for your visit");
+    if (!isBuyer || !token) {
+      savePendingIntent(propertyId, { type: "VISIT", date: rawDate, note: rawNote });
+      router.push(loginHrefWithReturn("/login/buyer", pathname));
       return;
     }
     setSubmitting(true);
@@ -34,8 +37,8 @@ export default function RequestVisitForm({ propertyId }: { propertyId: string })
     try {
       await createSiteVisit(token, {
         propertyId,
-        requestedDate: new Date(date).toISOString(),
-        buyerNote: note.trim() || undefined,
+        requestedDate: new Date(rawDate).toISOString(),
+        buyerNote: rawNote.trim() || undefined,
       });
       setDone(true);
     } catch (err) {
@@ -48,6 +51,35 @@ export default function RequestVisitForm({ propertyId }: { propertyId: string })
       setSubmitting(false);
     }
   }
+
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submitVisit(date, note);
+  }
+
+  // Resume a tour request that was interrupted by a login redirect — refills
+  // the date/note and submits it, right after the user lands back here
+  // authenticated. Deferred via microtask rather than called directly in the
+  // effect body, since setState synchronously in an effect risks cascading
+  // renders (same pattern as AuthContext.tsx). Only clears the stored intent
+  // once the resumed submit has actually completed — peeking (not
+  // consume-on-read) means this survives React Strict Mode's dev-only
+  // double-invoke of effects, where a throwaway first mount would otherwise
+  // delete it before the real, kept mount ever saw it.
+  useEffect(() => {
+    if (!isBuyer || !token || resumedRef.current) return;
+    const intent = peekPendingIntent(propertyId);
+    if (intent?.type === "VISIT") {
+      resumedRef.current = true;
+      queueMicrotask(async () => {
+        setDate(intent.date);
+        setNote(intent.note);
+        await submitVisit(intent.date, intent.note);
+        clearPendingIntent();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBuyer, token, propertyId]);
 
   const minDate = new Date().toISOString().slice(0, 10);
 
@@ -72,7 +104,7 @@ export default function RequestVisitForm({ propertyId }: { propertyId: string })
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3">
+    <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1.5 text-xs text-white/70">
         Preferred date
         <input

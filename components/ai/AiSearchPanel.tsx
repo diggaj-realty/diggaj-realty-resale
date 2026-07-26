@@ -7,19 +7,36 @@ import { askAi } from "@/lib/api/ai";
 import { ApiError } from "@/lib/api/client";
 import { CloseIcon } from "@/components/dashboard/icons";
 import ListingCard from "@/components/listings/ListingCard";
-import type { AiMessage } from "@/types/ai";
+import type { AiMessage, AiPropertyContext } from "@/types/ai";
 import type { Property } from "@/types/api";
 
 type ChatEntry = AiMessage & { properties?: Property[]; requiresLogin?: boolean };
 
-const GREETING: ChatEntry = {
+const GENERIC_GREETING: ChatEntry = {
   role: "assistant",
   content: "Hey! What kind of place are you after? Toss me a city, a budget, whatever you've got — I'll go dig up some real listings.",
 };
 
-export default function AiSearchPanel({ onClose }: { onClose: () => void }) {
+function greetingFor(propertyContext?: AiPropertyContext): ChatEntry {
+  if (!propertyContext) return GENERIC_GREETING;
+  return {
+    role: "assistant",
+    content: `Hey! Want me to summarize "${propertyContext.title}" for you, or is there something specific about it you're wondering about?`,
+  };
+}
+
+export default function AiSearchPanel({
+  onClose,
+  propertyContext,
+}: {
+  onClose: () => void;
+  /** When set, this chat is scoped to a property detail page — the greeting
+   *  offers to summarize it and every reply stays grounded in it (see
+   *  app/api/ai/chat/route.ts's systemPromptFor). */
+  propertyContext?: AiPropertyContext;
+}) {
   const { token } = useAuth();
-  const [messages, setMessages] = useState<ChatEntry[]>([GREETING]);
+  const [messages, setMessages] = useState<ChatEntry[]>([greetingFor(propertyContext)]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +61,8 @@ export default function AiSearchPanel({ onClose }: { onClose: () => void }) {
     try {
       const res = await askAi(
         token,
-        next.map(({ role, content }) => ({ role, content }))
+        next.map(({ role, content }) => ({ role, content })),
+        propertyContext
       );
       setMessages((prev) => [
         ...prev,

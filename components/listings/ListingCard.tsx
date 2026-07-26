@@ -8,6 +8,7 @@ import { propertyHref } from "@/lib/slug";
 import { badgeFor, isElite } from "@/lib/badge";
 import { useAuth } from "@/lib/auth/AuthContext";
 import GatedPrice from "@/components/listings/GatedPrice";
+import ShortlistButton from "@/components/listings/ShortlistButton";
 import type { Furnishing, OwnershipType, PossessionStatus, Property } from "@/types/api";
 
 const FURNISHING_LABEL: Record<Furnishing, string> = {
@@ -129,7 +130,10 @@ export default function ListingCard({
               No photo yet
             </div>
           )}
-          <div className="absolute left-4 right-4 top-4 flex flex-wrap items-center gap-2">
+          <div className="absolute right-4 top-4 z-10">
+            <ShortlistButton propertyId={property.id} compact />
+          </div>
+          <div className="absolute left-4 right-14 top-4 flex flex-wrap items-center gap-2">
             {elite && (
               <span className="flex items-center gap-1 rounded-full bg-panel px-3 py-1.5 text-xs font-semibold text-lime shadow ring-1 ring-lime/30">
                 ✦ Elite

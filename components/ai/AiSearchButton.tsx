@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { SparkleIcon, CloseIcon } from "@/components/dashboard/icons";
+import type { AiPropertyContext } from "@/types/ai";
 
 const AiSearchPanel = dynamic(() => import("@/components/ai/AiSearchPanel"), { ssr: false });
 
@@ -10,7 +11,13 @@ const GREETING_SEEN_KEY = "diggaj_ai_greeting_seen";
 const GREETING_SHOW_DELAY_MS = 1500;
 const GREETING_AUTO_HIDE_MS = 10000;
 
-export default function AiSearchButton({ floating = false }: { floating?: boolean }) {
+export default function AiSearchButton({
+  floating = false,
+  propertyContext,
+}: {
+  floating?: boolean;
+  propertyContext?: AiPropertyContext;
+}) {
   const [open, setOpen] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
 
@@ -67,8 +74,17 @@ export default function AiSearchButton({ floating = false }: { floating?: boolea
               <CloseIcon className="h-3.5 w-3.5" />
             </button>
             <button onClick={openPanel} className="relative z-10 block w-full text-left">
-              <p className="text-sm font-medium text-ink">👋 Looking for a home?</p>
-              <p className="mt-1 text-xs text-body">Ask our AI — it searches real listings for you.</p>
+              {propertyContext ? (
+                <>
+                  <p className="text-sm font-medium text-ink">👋 Want the highlights?</p>
+                  <p className="mt-1 text-xs text-body">Ask our AI to summarize this property for you.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-ink">👋 Looking for a home?</p>
+                  <p className="mt-1 text-xs text-body">Ask our AI — it searches real listings for you.</p>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -84,9 +100,9 @@ export default function AiSearchButton({ floating = false }: { floating?: boolea
             : "rounded-full bg-panel px-4 py-2.5 text-sm text-white transition-transform hover:-translate-y-px md:px-5"
         }
       >
-        {floating ? <SparkleIcon className="h-6 w-6" /> : "✦ AI Search"}
+        {floating ? <SparkleIcon className="h-6 w-6" /> : propertyContext ? "✦ Ask AI about this home" : "✦ AI Search"}
       </button>
-      {open && <AiSearchPanel onClose={() => setOpen(false)} />}
+      {open && <AiSearchPanel onClose={() => setOpen(false)} propertyContext={propertyContext} />}
     </div>
   );
 }

@@ -1,12 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hasRole } from "@/lib/auth/roles";
 import { createOffer } from "@/lib/api/buyer";
 import { ApiError } from "@/lib/api/client";
 import { price } from "@/lib/listings";
+import { savePendingIntent, peekPendingIntent, clearPendingIntent, loginHrefWithReturn } from "@/lib/auth/redirectIntent";
 
 export default function MakeOfferModal({
   propertyId,
@@ -17,6 +18,7 @@ export default function MakeOfferModal({
 }) {
   const { user, token } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const isBuyer = hasRole(user, "BUYER");
 
   const [open, setOpen] = useState(false);
@@ -25,27 +27,31 @@ export default function MakeOfferModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const resumedRef = useRef(false);
 
+  // Anyone can open and fill in the form — signing in is only required to
+  // actually submit, checked (and prompted for) at that point instead of
+  // gating the button itself, so a logged-out visitor never loses what
+  // they've typed just for looking.
   function openModal() {
-    if (!isBuyer || !token) {
-      router.push("/login/buyer");
-      return;
-    }
     setOpen(true);
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!token) return;
-    const numeric = Number(amount);
+  async function submitOffer(rawAmount: string, rawMessage: string) {
+    const numeric = Number(rawAmount);
     if (!Number.isFinite(numeric) || numeric <= 0) {
       setError("Enter a valid offer amount");
+      return;
+    }
+    if (!isBuyer || !token) {
+      savePendingIntent(propertyId, { type: "OFFER", amount: rawAmount, message: rawMessage });
+      router.push(loginHrefWithReturn("/login/buyer", pathname));
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      await createOffer(token, { propertyId, amount: numeric, message: message.trim() || undefined });
+      await createOffer(token, { propertyId, amount: numeric, message: rawMessage.trim() || undefined });
       setDone(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to submit offer");
@@ -53,6 +59,36 @@ export default function MakeOfferModal({
       setSubmitting(false);
     }
   }
+
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    submitOffer(amount, message);
+  }
+
+  // Resume an offer that was interrupted by a login redirect — reopens the
+  // modal with what was typed and submits it, right after the user lands
+  // back here authenticated. Deferred via microtask rather than called
+  // directly in the effect body, since setState synchronously in an effect
+  // risks cascading renders (same pattern as AuthContext.tsx). Only clears
+  // the stored intent once the resumed submit has actually completed —
+  // peeking (not consume-on-read) means this survives React Strict Mode's
+  // dev-only double-invoke of effects, where a throwaway first mount would
+  // otherwise delete it before the real, kept mount ever saw it.
+  useEffect(() => {
+    if (!isBuyer || !token || resumedRef.current) return;
+    const intent = peekPendingIntent(propertyId);
+    if (intent?.type === "OFFER") {
+      resumedRef.current = true;
+      queueMicrotask(async () => {
+        setAmount(intent.amount);
+        setMessage(intent.message);
+        setOpen(true);
+        await submitOffer(intent.amount, intent.message);
+        clearPendingIntent();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBuyer, token, propertyId]);
 
   function close() {
     setOpen(false);
@@ -98,7 +134,7 @@ export default function MakeOfferModal({
                 </button>
               </div>
             ) : (
-              <form onSubmit={submit}>
+              <form onSubmit={handleFormSubmit}>
                 <div className="flex items-center justify-between">
                   <p className="text-lg font-medium text-ink">Make an offer</p>
                   <button type="button" onClick={close} aria-label="Close" className="text-ink/40">

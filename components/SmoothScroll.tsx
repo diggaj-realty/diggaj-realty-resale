@@ -16,7 +16,15 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   return (
     <>
-      {!excluded && <LenisScroll />}
+      {/* `key={pathname}` forces a full destroy/recreate of the Lenis
+          instance on every route change. Without it, navigating between two
+          pages that both render LenisScroll (e.g. one property detail page
+          to another) keeps the SAME instance mounted — its internal virtual
+          scroll offset survives the navigation and fights Next's own
+          scroll-to-top, so the new page can render already scrolled down to
+          wherever the previous page's scroll happened to be (e.g. its
+          Locality/Map section). */}
+      {!excluded && <LenisScroll key={pathname} />}
       {children}
     </>
   );

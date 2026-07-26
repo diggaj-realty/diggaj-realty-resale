@@ -37,18 +37,26 @@ const fmtDateTime = (iso: string) =>
 
 /** Full negotiation history for one offer — same component/shape for both
  *  the buyer and seller view, since `GET /offers/:id` returns identical
- *  events on both sides. */
-export default function OfferTimeline({ offerId }: { offerId: string }) {
+ *  events on both sides.
+ *
+ *  Pass `events` directly when the caller already has them (e.g. the
+ *  transaction detail page's single aggregate fetch already includes
+ *  `acceptedOffer.events`) to skip a redundant `GET /offers/:id` round trip;
+ *  otherwise pass `offerId` and this fetches them itself (e.g. OfferCard,
+ *  which only ever has the bare offer). */
+export default function OfferTimeline({ offerId, events: providedEvents }: { offerId?: string; events?: OfferEvent[] }) {
   const { token } = useAuth();
-  const [events, setEvents] = useState<OfferEvent[] | null>(null);
+  const [fetchedEvents, setFetchedEvents] = useState<OfferEvent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (providedEvents || !token || !offerId) return;
     getOffer(token, offerId)
-      .then((o) => setEvents(o.events))
+      .then((o) => setFetchedEvents(o.events))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load history"));
-  }, [token, offerId]);
+  }, [token, offerId, providedEvents]);
+
+  const events = providedEvents ?? fetchedEvents;
 
   if (error) return <p className="text-sm text-red-700">{error}</p>;
   if (events === null) return <RowSkeleton />;

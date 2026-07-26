@@ -14,3 +14,13 @@ export function getCached<T>(key: string): T | undefined {
 export function setCached<T>(key: string, value: T): void {
   cache.set(key, value);
 }
+
+/** Drops every cached entry whose key starts with `prefix` — for when an
+ *  action on one panel (e.g. accepting an offer) makes another panel's
+ *  cached data stale (e.g. the deals list, which gains a new row) before
+ *  that panel's own route is ever visited. */
+export function invalidate(prefix: string): void {
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key);
+  }
+}
