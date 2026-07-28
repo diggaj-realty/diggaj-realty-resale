@@ -100,7 +100,7 @@ function CompareContent() {
               <td className="whitespace-nowrap px-3 py-3 text-xs text-body">{label}</td>
               {specsByProperty.map((specs, ci) => (
                 <td key={ci} className="px-3 py-3 text-sm font-medium text-ink">
-                  {specs.get(label) ?? "—"}
+                  {specs.get(label) ?? "-"}
                 </td>
               ))}
             </tr>
@@ -125,7 +125,7 @@ export default function ComparePage() {
       <div className="bg-cream pb-8">
         <Nav />
         <div className="px-8 pt-10 md:px-14">
-          <h1 className="text-4xl font-medium tracking-[-0.02em] text-ink md:text-5xl">Compare properties</h1>
+          <h1 className="text-section font-medium tracking-[-0.02em] text-ink">Compare properties</h1>
           <p className="mt-2 text-sm text-body">A side-by-side look at your shortlisted homes.</p>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { fmtDate } from "@/components/dashboard/shared";
 import { getMyKyc, submitKyc, uploadKycFile } from "@/lib/api/seller";
 import { ID_TYPE_LABEL, type IdType, type SellerKyc } from "@/types/seller";
 import { RowSkeleton } from "@/components/Skeleton";
@@ -15,7 +16,7 @@ function StatusCard({ kyc, onResubmit }: { kyc: SellerKyc; onResubmit: () => voi
       <div className="rounded-2xl bg-limepale p-6 ring-1 ring-lime/30">
         <p className="text-sm font-semibold text-ink">✓ KYC approved</p>
         <p className="mt-1 text-sm text-body">
-          You&apos;re verified — you can publish listings any time.
+          You&apos;re verified, so you can publish listings any time.
         </p>
       </div>
     );
@@ -39,8 +40,10 @@ function StatusCard({ kyc, onResubmit }: { kyc: SellerKyc; onResubmit: () => voi
       <p className="text-sm font-semibold text-amber-900">KYC pending review</p>
       <p className="mt-1 text-sm text-amber-800">
         Submitted{" "}
-        {new Date(kyc.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-        {" "}— our team usually reviews within 24 hours.
+        {/* Was formatting inline, which printed the literal "Invalid Date" to the
+            user whenever createdAt was absent or malformed. */}
+        {fmtDate(kyc.createdAt)}
+        . Our team usually reviews within 24 hours.
       </p>
     </div>
   );
@@ -186,11 +189,11 @@ export default function KycWizard({ onApproved }: { onApproved?: () => void }) {
               </div>
               <div className="flex justify-between">
                 <dt className="text-body">ID document</dt>
-                <dd className="font-medium text-ink">{idDocFile?.name ?? "—"}</dd>
+                <dd className="font-medium text-ink">{idDocFile?.name ?? "-"}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-body">Selfie</dt>
-                <dd className="font-medium text-ink">{selfieFile?.name ?? "—"}</dd>
+                <dd className="font-medium text-ink">{selfieFile?.name ?? "-"}</dd>
               </div>
             </dl>
             <p className="mt-3 text-xs text-body">

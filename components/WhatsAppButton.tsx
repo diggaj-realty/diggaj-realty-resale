@@ -1,7 +1,6 @@
 // Official WhatsApp branding (brand green #25D366 + the real WhatsApp glyph)
-// and a real `wa.me/<number>?text=` deep link — distinct from
-// components/listings/ShareButton.tsx, which is a generic "share this
-// listing to any contact" action, not a "chat with us" business CTA.
+// and a real `wa.me/<number>?text=` deep link — a "chat with us" business CTA,
+// not a generic share action.
 const DEFAULT_MESSAGE = "Hi! I'd like to know more about a property on Diggaj Realty.";
 
 export default function WhatsAppButton({

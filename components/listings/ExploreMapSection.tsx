@@ -15,8 +15,19 @@ const rise = {
   }),
 };
 
+// A fixed 3-column track leaves a lone card floating in two empty columns
+// whenever the catalog only covers one or two cities, which reads as a broken
+// layout rather than a sparse one. Match the track to what there is to show.
+const GRID_BY_COUNT: Record<number, string> = {
+  1: "grid-cols-1 max-w-xl",
+  2: "grid-cols-1 sm:grid-cols-2 max-w-4xl",
+};
+
 export default function ExploreMapSection({ places }: { places: CityGroup[] }) {
   if (places.length === 0) return null;
+
+  const gridCols =
+    GRID_BY_COUNT[places.length] ?? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   return (
     <section className="bg-white px-8 py-24 md:px-14">
@@ -28,7 +39,7 @@ export default function ExploreMapSection({ places }: { places: CityGroup[] }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.6 }}
             transition={{ duration: 0.6 }}
-            className="text-4xl font-medium tracking-[-0.02em] md:text-5xl"
+            className="text-section font-medium tracking-[-0.02em]"
           >
             Explore homes by city
           </motion.h2>
@@ -37,10 +48,10 @@ export default function ExploreMapSection({ places }: { places: CityGroup[] }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.6 }}
             transition={{ duration: 0.6, delay: 0.12 }}
-            className="mt-3 max-w-sm text-sm text-body"
+            className="mt-3 max-w-sm text-lead text-body"
           >
-            Browse active listings in the places buyers love most — every home
-            eligible for commission cash back.
+            Browse active listings in the places buyers love most, every home
+            verified and backed by a dedicated agent.
           </motion.p>
         </div>
         <motion.div
@@ -59,7 +70,7 @@ export default function ExploreMapSection({ places }: { places: CityGroup[] }) {
       </div>
 
       {/* city grid */}
-      <div className="mt-14 grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`mt-14 grid gap-5 ${gridCols}`}>
         {places.map((p, i) => (
           <motion.div
             key={p.city}

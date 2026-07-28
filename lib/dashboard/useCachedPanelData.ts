@@ -29,6 +29,12 @@ export function useCachedPanelData<T>(cacheKey: string | null, fetchFn: () => Pr
       .then((result) => {
         setCached(cacheKey, result);
         setItemsState(result);
+        // Clear on success. Without this a single transient failure was
+        // permanent: `error` stayed set forever, so every later successful
+        // refetch still rendered the error screen (Panel checks error before
+        // children), and TransactionDetail's "Refresh →" button could never
+        // recover — it called load() but nothing cleared the error.
+        setError(null);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"));
   }

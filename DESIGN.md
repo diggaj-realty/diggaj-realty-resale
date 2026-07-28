@@ -29,12 +29,36 @@ Common opacity variants: `text-ink/60`, `text-white/70`, `bg-ink/5`,
   numbers.
 - **Tracking:** global `-0.01em`; section titles `-0.02em`; hero/page H1
   `-0.03em`.
-- **Scale:**
-  - Hero H1 — `text-5xl md:text-7xl`
-  - Section H2 — `text-4xl md:text-5xl` (occasionally `md:text-6xl`)
-  - Card title — `text-lg` / `text-[15px]`
-  - Body — `text-sm` / `text-[15px]`, `leading-relaxed`
-  - Meta / labels — `text-xs`, `text-[11px]`, `text-[10px]`
+- **Scale — fluid.** Display sizes are `clamp()` tokens in `@theme`
+  (`app/globals.css`), not breakpoint jumps. Each treats its listed size as
+  the **ceiling reached at 2560px** and scales down to a floor at 390px, so
+  headings stay proportional at every width instead of snapping once at `md`
+  and freezing. Use the token; don't reintroduce `text-5xl md:text-7xl`
+  ladders.
+
+  | Token             | 390 → 2560 | Used for                          |
+  | ----------------- | ---------- | --------------------------------- |
+  | `text-display`    | 44 → 72    | Home hero H1                      |
+  | `text-display-sm` | 37 → 60    | Page H1s, Showcase H2             |
+  | `text-section`    | 29 → 48    | Section H2s                       |
+  | `text-feature`    | 27 → 44    | ValueProp scrubbed sentence       |
+  | `text-card-title` | 22 → 36    | Split-card H3s, auth H1s          |
+  | `text-subhead`    | 18 → 30    | Minor section headings            |
+  | `text-lead`       | 14 → 17    | Lead / intro paragraphs           |
+
+  The floor is ~0.61× the ceiling across all display tiers, which holds the
+  hierarchy between them constant at every width. `text-lead` is the
+  exception — body copy never drops below 14px.
+
+  Constrain headline measure in `em` (e.g. `max-w-[15em]`), not a fixed
+  `max-w-4xl`: a px cap stops matching the type once the size is fluid and
+  forces wrapping on wide screens.
+
+- **Fixed (density, not drama):** buttons, chips, badges and card meta stay on
+  `text-sm` / `text-xs` / `text-[11px]` / `text-[10px]` — they're UI furniture
+  and shouldn't inflate with the viewport.
+- **Footer wordmark:** viewport-relative by design, but clamped —
+  `clamp(3.5rem, 9vw, 11rem)`. Unbounded `9vw` reached 230px at 2560.
 
 ## Shape & elevation
 

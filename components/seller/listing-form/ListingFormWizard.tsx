@@ -105,7 +105,7 @@ export default function ListingFormWizard({ mapsApiKey }: { mapsApiKey?: string 
         </span>
         <p className="mt-5 text-xl font-medium text-ink">Listing submitted</p>
         <p className="mt-2 max-w-xs text-sm text-body">
-          It&apos;s saved as a draft and in our review queue — usually reviewed within 24 hours.
+          It&apos;s saved as a draft and in our review queue, usually reviewed within 24 hours.
         </p>
         <Link href="/dashboard/seller" className="mt-6 rounded-full bg-panel px-6 py-3 text-sm text-white">
           Back to dashboard →

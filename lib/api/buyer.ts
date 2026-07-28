@@ -17,6 +17,12 @@ import type {
 export const getShortlist = (token: string) =>
   authedGet<Paginated<ShortlistedProperty>>("/shortlists?pageSize=50", token);
 
+export const addShortlist = (token: string, propertyId: string) =>
+  authedSend<{ propertyId: string; shortlisted: boolean }>("/shortlists", token, {
+    method: "POST",
+    body: { propertyId },
+  });
+
 export const removeShortlist = (token: string, propertyId: string) =>
   authedSend<{ propertyId: string; shortlisted: boolean }>(`/shortlists/${propertyId}`, token, {
     method: "DELETE",

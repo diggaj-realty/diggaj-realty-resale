@@ -24,5 +24,10 @@ export async function askAi(
   if (!res.ok) {
     throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status);
   }
+  // A 200 with no `data` used to return undefined, and the caller's `res.reply`
+  // then threw an unhandled error that unmounted the whole chat panel — taking
+  // the conversation with it. Fail as a catchable ApiError instead, which the
+  // panel already renders inline while keeping the history on screen.
+  if (!json?.data) throw new ApiError("Malformed response from the assistant.", res.status);
   return json.data as AiChatResponse;
 }

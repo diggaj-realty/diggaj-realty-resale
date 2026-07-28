@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { me as fetchMe } from "@/lib/api/auth";
+import { clearAllChats } from "@/lib/ai/chatStore";
 import type { AuthUser } from "@/types/auth";
 
 const STORAGE_KEY = "diggaj_auth_token";
@@ -86,6 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     window.localStorage.removeItem(STORAGE_KEY);
     window.localStorage.removeItem(USER_STORAGE_KEY);
+    // Saved AI chats live in sessionStorage and are not per-account, so without
+    // this the next person to sign in on this tab would inherit the previous
+    // user's conversation — including their budget and shortlisted areas.
+    clearAllChats();
     setToken(null);
     setUser(null);
   }, []);

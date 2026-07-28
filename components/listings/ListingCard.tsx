@@ -166,11 +166,11 @@ export default function ListingCard({
 
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-body">
           <span className="flex items-center gap-1.5">
-            <BedIcon /> {property.bhk ?? "—"} BHK
+            <BedIcon /> {property.bhk ?? "-"} BHK
           </span>
           <span className="text-ink/25">·</span>
           <span className="flex items-center gap-1.5">
-            <BathIcon /> {property.bathrooms ?? "—"} Bath
+            <BathIcon /> {property.bathrooms ?? "-"} Bath
           </span>
           <span className="text-ink/25">·</span>
           <span>{property.areaSqft.toLocaleString("en-IN")} sqft</span>

@@ -15,8 +15,11 @@ const BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
  * discarded) so viewCount / "most viewed" stay meaningful. The API already
  * de-dupes a logged-in user's repeat views within 30 minutes server-side.
  *
- * Also records a lightweight "recently viewed" entry in localStorage — purely
- * client-side, since there's no API to list a buyer's own view history.
+ * Also records the full property in a "recently viewed" localStorage entry —
+ * purely client-side, since anonymous visitors (with no account to query)
+ * should get this too, not just logged-in buyers. Storing the whole object
+ * (not just a few fields) lets RecentlyViewed.tsx render it through the same
+ * ListingCard used everywhere else.
  */
 export default function ViewTracker({ property }: { property: Property }) {
   const { token, loading } = useAuth();
@@ -28,16 +31,7 @@ export default function ViewTracker({ property }: { property: Property }) {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     }).catch(() => {});
 
-    recordRecentlyViewed({
-      id: property.id,
-      title: property.title,
-      location: property.location,
-      cover: property.photos[0]?.url,
-      bhk: property.bhk,
-      areaSqft: property.areaSqft,
-      askingPrice: property.askingPrice,
-      plan: property.plan,
-    });
+    recordRecentlyViewed(property);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [property.id, loading]);
 

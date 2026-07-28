@@ -7,24 +7,24 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const FAQS = [
   {
-    q: "How does the cash back actually work?",
-    a: "When you buy, sell, or finance with Diggaj Realty, we share our commission with you. Bundle multiple services and your cash back stacks — up to 75% of the buyer's agent commission back at closing, an average of ₹5 Lakh.",
+    q: "How does the agent-assisted process work?",
+    a: "Express interest in a home, and a dedicated local agent reaches out to arrange a site visit and handle negotiation on your behalf, whether that's online or in person. Once a price is agreed, we track documentation, verification, and signing until the deal closes.",
   },
   {
     q: "Is there any cost to use Diggaj Realty?",
-    a: "No. Our platform is free to browse and use. You only ever pay standard closing costs for the services you choose — there are no hidden fees or subscriptions.",
+    a: "No. Our platform is free to browse and use. You only ever pay standard closing costs for the services you choose, and there are no hidden fees or subscriptions.",
   },
   {
-    q: "When do I receive my cash back?",
-    a: "Your cash back is applied directly at closing, reducing what you owe out of pocket. We can also pay it out by bank transfer or cheque shortly after the deal completes.",
+    q: "How are my documents and identity handled?",
+    a: "Every deal has its own document checklist and identity verification step, tracked from your dashboard. Documents are only ever shared with the other party once your agent has reviewed and approved the request.",
   },
   {
     q: "Can I use my own agent or lender?",
-    a: "Absolutely. Diggaj Realty works great end-to-end, but you're always free to bring your own agent, lender, or title company — you'll just unlock less of the bundled cash back.",
+    a: "Absolutely. Diggaj Realty works great end-to-end, but you're always free to bring your own agent, lender, or title company for any part of the transaction.",
   },
   {
     q: "Which cities are supported?",
-    a: "We currently operate across major Indian metros and are expanding every quarter. Search any city or locality on our listings page — if we're live there, you'll see verified resale listings and a dedicated agent instantly.",
+    a: "We currently operate across major Indian metros and are expanding every quarter. Search any city or locality on our listings page, and if we're live there, you'll see verified resale listings and a dedicated agent instantly.",
   },
   {
     q: "How do I get started?",
@@ -119,7 +119,7 @@ export default function Faq() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.6 }}
               transition={{ duration: 0.6 }}
-              className="text-4xl font-medium tracking-[-0.02em] md:text-5xl"
+              className="text-section font-medium tracking-[-0.02em]"
             >
               Questions?
               <br />

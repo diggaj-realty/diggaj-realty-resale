@@ -99,8 +99,8 @@ export default async function LocalityIntel({ property }: { property: Property }
       </div>
       <p className="mt-3 text-[11px] leading-relaxed text-ink/40">
         {data.live
-          ? "Live driving distances via Google Maps — actual time varies with traffic."
-          : "Indicative distances based on the locality — confirm exact travel times during your site visit."}
+          ? "Live driving distances via Google Maps. Actual time varies with traffic."
+          : "Indicative distances based on the locality. Confirm exact travel times during your site visit."}
       </p>
     </>
   );

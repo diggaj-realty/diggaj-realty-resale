@@ -3,7 +3,9 @@ import { ChevronRightIcon } from "@/components/dashboard/icons";
 import type { NavItem } from "@/lib/dashboard/nav";
 
 export default function SectionLinks({ items }: { items: NavItem[] }) {
-  const sections = items.filter((i) => !i.exact);
+  // `secondary` items (Add Listing, Verification) are nav-only destinations, not
+  // core sections, so they stay out of the Overview quick-links grid.
+  const sections = items.filter((i) => !i.exact && !i.secondary);
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {sections.map((item) => (

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 
-export const metadata: Metadata = { title: "Terms of Service — Diggaj Realty" };
+export const metadata: Metadata = { title: "Terms of Service | Diggaj Realty" };
 
 const SECTIONS = [
   {
@@ -10,8 +10,8 @@ const SECTIONS = [
     p: "By using our platform you agree to provide accurate information and use the service for personal, non-commercial real estate transactions. Listings are provided for informational purposes and are subject to change.",
   },
   {
-    h: "Cash-back rewards",
-    p: "Commission cash back is available where permitted by state law and requires closing your transaction with a participating Diggaj Realty agent. Reward amounts vary by service bundle and transaction value, and are paid at or shortly after closing.",
+    h: "Agent services",
+    p: "Every transaction is supported by a dedicated Diggaj Realty agent, from your first site visit through negotiation, documentation, and closing. Service terms and applicable fees are confirmed with your agent before you commit to a transaction.",
   },
   {
     h: "No warranty",
@@ -29,7 +29,7 @@ export default function TermsPage() {
       <div className="bg-cream pb-14">
         <Nav />
         <div className="px-8 pt-14 md:px-14">
-          <h1 className="text-5xl font-medium tracking-[-0.03em] text-ink md:text-6xl">Terms of Service</h1>
+          <h1 className="text-display-sm font-medium tracking-[-0.03em] text-ink">Terms of Service</h1>
           <p className="mt-4 text-sm text-ink/50">Last updated: July 2026</p>
         </div>
       </div>
@@ -37,7 +37,7 @@ export default function TermsPage() {
         {SECTIONS.map((s) => (
           <div key={s.h} className="mb-10">
             <h2 className="text-xl font-medium tracking-[-0.01em] text-ink">{s.h}</h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-body">{s.p}</p>
+            <p className="mt-3 text-lead text-body">{s.p}</p>
           </div>
         ))}
       </div>

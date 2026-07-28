@@ -25,18 +25,22 @@ const rise = {
 
 function ListingPin({
   property,
-  pos,
+  offset,
   delay,
+  reveal,
 }: {
   property: Property;
-  pos: string;
+  offset: string;
   delay: string;
+  reveal: string;
 }) {
   const cover = property.photos[0]?.url;
   const badge = badgeFor(property);
 
   return (
-    <div className={`absolute z-20 hidden lg:block ${pos}`}>
+    <div
+      className={`pointer-events-auto w-48 shrink-0 xl:w-56 2xl:w-60 ${offset} ${reveal || "block"}`}
+    >
       <div className="drift" style={{ animationDelay: delay }}>
         <div className="flex justify-center">
           <div
@@ -55,13 +59,13 @@ function ListingPin({
           initial={{ opacity: 0, y: 10, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5, delay: 1.1, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mt-2 w-60"
+          className="mt-2"
         >
           <Link
             href={propertyHref(property)}
             className="block overflow-hidden rounded-2xl bg-white p-2 shadow-2xl transition-transform hover:-translate-y-1"
           >
-            <div className="relative h-28 overflow-hidden rounded-xl bg-cream">
+            <div className="relative h-24 overflow-hidden rounded-xl bg-cream">
               {cover ? (
                 <Image src={cover} alt={property.title} fill sizes="240px" className="object-cover" />
               ) : (
@@ -82,8 +86,10 @@ function ListingPin({
             </div>
             <div className="px-2 pb-1.5 pt-2">
               <p className="truncate text-sm font-semibold text-ink">{property.title}</p>
-              <p className="mt-0.5 text-xs text-body">
-                {property.bhk ?? "—"} bed · {property.bathrooms ?? "—"} bath · {property.location}
+              {/* clamped so a long address can't make one pin twice the height
+                  of its neighbours in the row */}
+              <p className="mt-0.5 line-clamp-2 text-xs text-body">
+                {property.bhk ?? "-"} bed · {property.bathrooms ?? "-"} bath · {property.location}
               </p>
               <p className="mt-1.5 text-xs font-semibold text-ink">View home →</p>
             </div>
@@ -94,7 +100,7 @@ function ListingPin({
   );
 }
 
-type Pin = { property: Property; pos: string; delay: string };
+type Pin = { property: Property; offset: string; delay: string; reveal: string };
 
 export default function HeroSection({
   popularCities,
@@ -193,7 +199,10 @@ export default function HeroSection({
           initial="hidden"
           animate="show"
           custom={1}
-          className="max-w-4xl text-5xl font-medium tracking-[-0.03em] md:text-7xl"
+          // em-based rather than a fixed 4xl/896px: the measure has to grow with
+          // the now-fluid font size, or the headline starts wrapping on wide
+          // screens purely because the cap stopped matching the type.
+          className="max-w-[15em] text-display font-medium tracking-[-0.03em]"
         >
           Your Home &amp;{" "}
           <span className="relative inline-block">
@@ -211,10 +220,10 @@ export default function HeroSection({
           initial="hidden"
           animate="show"
           custom={2}
-          className="mt-6 max-w-md text-[15px] leading-relaxed text-white/85"
+          className="mt-6 max-w-md text-lead text-white/85"
         >
-          One platform from search to closing — with cash back for every
-          Diggaj Realty service you use.
+          One platform from search to closing, with a dedicated agent for every
+          home you buy through Diggaj Realty.
         </motion.p>
 
         {/* working search with live autocomplete */}
@@ -315,12 +324,25 @@ export default function HeroSection({
         )}
       </div>
 
-      {/* interactive listing pins */}
-      {pins.map((p) => (
-        <ListingPin key={p.property.id} property={p.property} pos={p.pos} delay={p.delay} />
-      ))}
+      {/* interactive listing pins — a bottom-anchored right-aligned row, so the
+          cards can never overlap each other or ride over the copy/stats no
+          matter how wide the viewport is. Hidden below lg (no room beside the
+          copy) and on short viewports, where they'd reach the search field. */}
+      {pins.length > 0 && (
+        <div className="pointer-events-none absolute bottom-24 right-8 z-20 hidden items-end gap-4 lg:flex md:right-14 xl:gap-5 [@media(max-height:640px)]:hidden">
+          {pins.map((p) => (
+            <ListingPin
+              key={p.property.id}
+              property={p.property}
+              offset={p.offset}
+              delay={p.delay}
+              reveal={p.reveal}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* bottom bar: stats (centered) + scroll cue */}
+      {/* bottom bar: stats (centered) */}
       <div className="absolute inset-x-0 bottom-0 z-20 flex items-end px-8 pb-7 text-white md:px-14">
         <motion.div
           variants={rise}
@@ -330,9 +352,9 @@ export default function HeroSection({
           className="absolute inset-x-0 bottom-7 flex justify-center divide-x divide-white/25"
         >
           {[
-            { n: "₹5L", l: "avg. cash back" },
             { n: "10L+", l: "listings" },
             { n: "4.9★", l: "rating" },
+            { n: "24/7", l: "agent support" },
           ].map((s) => (
             <div key={s.l} className="px-5 text-center first:pl-0">
               <p className="text-xl font-medium tracking-[-0.02em] md:text-2xl">{s.n}</p>
@@ -340,23 +362,6 @@ export default function HeroSection({
             </div>
           ))}
         </motion.div>
-
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.6, duration: 0.6 }}
-          onClick={() => window.scrollTo({ top: window.innerHeight, behavior: "smooth" })}
-          aria-label="Scroll down"
-          className="relative z-10 ml-auto hidden md:block"
-        >
-          <motion.span
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-ink shadow-lg backdrop-blur"
-          >
-            ↓
-          </motion.span>
-        </motion.button>
       </div>
     </section>
   );

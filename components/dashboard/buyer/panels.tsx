@@ -23,6 +23,7 @@ import {
   setSavedSearchAlerts,
   getDeals,
 } from "@/lib/api/buyer";
+import { getInterests } from "@/lib/api/interests";
 import type {
   Deal,
   Offer,
@@ -31,6 +32,8 @@ import type {
   SiteVisit,
   ShortlistedProperty,
 } from "@/types/buyer";
+import { TERMINAL_INTEREST_STATUSES } from "@/types/transaction";
+import type { PropertyInterest } from "@/types/transaction";
 
 // ── Saved properties ──────────────────────────────────────────
 const MAX_COMPARE = 3;
@@ -338,16 +341,16 @@ function BuyerDealCard({ deal }: { deal: Deal }) {
         </div>
         <div className="rounded-xl bg-cream px-3 py-2.5">
           <p className="text-[11px] text-body">Token paid</p>
-          <p className="text-sm font-semibold text-ink">{deal.tokenAmount != null ? price(deal.tokenAmount) : "—"}</p>
+          <p className="text-sm font-semibold text-ink">{deal.tokenAmount != null ? price(deal.tokenAmount) : "-"}</p>
         </div>
         <div className="rounded-xl bg-cream px-3 py-2.5">
           <p className="text-[11px] text-body">Final payment</p>
-          <p className="text-sm font-semibold text-ink">{deal.finalAmount != null ? price(deal.finalAmount) : "—"}</p>
+          <p className="text-sm font-semibold text-ink">{deal.finalAmount != null ? price(deal.finalAmount) : "-"}</p>
         </div>
       </div>
 
       <div className="mt-5 space-y-3">
-        <Step done label="Offer accepted — deal opened" detail={fmtDate(deal.createdAt)} />
+        <Step done label="Offer accepted, deal opened" detail={fmtDate(deal.createdAt)} />
         <Step
           done={deal.tokenAmount != null}
           label="Token payment recorded"
@@ -394,6 +397,50 @@ export function ClosingPanel() {
     >
       {items?.map((d) => (
         <BuyerDealCard key={d.id} deal={d} />
+      ))}
+    </Panel>
+  );
+}
+
+// ── Interests (pre-offer leads) ────────────────────────────────
+function InterestCard({ interest }: { interest: PropertyInterest }) {
+  const active = !TERMINAL_INTEREST_STATUSES.includes(interest.status);
+  return (
+    <Link
+      href={`/dashboard/buyer/interests/${interest.id}`}
+      className="block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5 hover:ring-ink/10"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-ink">{interest.propertyTitle ?? "Property"}</p>
+          <p className="truncate text-xs text-body">{interest.propertyLocation}</p>
+        </div>
+        <StatusBadge status={interest.status} />
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3 text-xs text-body">
+        <span>{active ? (interest.agentName ? `Agent: ${interest.agentName}` : "Awaiting agent assignment") : "Closed out"}</span>
+        <span className="text-ink/40">{fmtDate(interest.createdAt)}</span>
+      </div>
+    </Link>
+  );
+}
+
+export function InterestsPanel() {
+  const { token } = useAuth();
+  const cacheKey = token ? `buyerInterests:${token}` : null;
+  const { items, error } = useCachedPanelData<PropertyInterest[]>(cacheKey, () =>
+    getInterests(token!).then((r) => r.items)
+  );
+
+  return (
+    <Panel
+      loading={items === null && !error}
+      error={error}
+      empty={items?.length === 0}
+      emptyText="No interests yet. Tap “Interested in this property” on any listing to get connected with an agent."
+    >
+      {items?.map((i) => (
+        <InterestCard key={i.id} interest={i} />
       ))}
     </Panel>
   );

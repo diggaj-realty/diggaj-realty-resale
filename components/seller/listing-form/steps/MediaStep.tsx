@@ -17,7 +17,7 @@ export default function MediaStep({
 
       <SingleFileUploader
         label="Video tour"
-        hint="Optional — a short walkthrough video"
+        hint="Optional: a short walkthrough video"
         accept="video/*"
         url={value.videoUrl}
         onChange={(url) => update({ videoUrl: url })}
@@ -25,7 +25,7 @@ export default function MediaStep({
 
       <SingleFileUploader
         label="Floor plan"
-        hint="Optional — an image of the layout"
+        hint="Optional: an image of the layout"
         accept="image/*"
         url={value.floorPlanUrl}
         onChange={(url) => update({ floorPlanUrl: url })}

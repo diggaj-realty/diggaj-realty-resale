@@ -89,7 +89,7 @@ export default function RequestVisitForm({ propertyId }: { propertyId: string })
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-lime text-xl text-ink">✓</span>
         <p className="mt-4 text-sm font-medium text-white">Visit requested</p>
         <p className="mt-1 max-w-xs text-xs text-white/50">
-          We&apos;ll confirm a time with you shortly — track it under My Site Visits.
+          We&apos;ll confirm a time with you shortly. Track it under My Site Visits.
         </p>
       </div>
     );

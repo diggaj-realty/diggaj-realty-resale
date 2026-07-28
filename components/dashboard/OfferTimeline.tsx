@@ -70,7 +70,7 @@ export default function OfferTimeline({ offerId, events: providedEvents }: { off
           <div className="min-w-0">
             <p className="text-sm text-ink">
               {EVENT_LABEL[e.type]}
-              {e.amount != null && <span className="text-body"> — {price(e.amount)}</span>}
+              {e.amount != null && <span className="text-body">: {price(e.amount)}</span>}
             </p>
             <p className="text-xs text-body">
               {ACTOR_LABEL[e.actorRole]} · {fmtDateTime(e.createdAt)}

@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { UserIcon, LogoutIcon } from "@/components/dashboard/icons";
+import type { UserRole } from "@/types/auth";
 
-export default function AccountMenu() {
+export default function AccountMenu({ role }: { role: UserRole }) {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -33,7 +34,7 @@ export default function AccountMenu() {
             </div>
             <div className="my-1 h-px bg-ink/5" />
             <Link
-              href="/profile"
+              href={`/dashboard/${role.toLowerCase()}/profile`}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-ink/70 hover:bg-ink/5"
             >

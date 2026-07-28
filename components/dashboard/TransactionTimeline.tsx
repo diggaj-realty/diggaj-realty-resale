@@ -1,11 +1,25 @@
 import type { DealStage } from "@/types/buyer";
 
-// Collapses the backend's 10-value DealStage onto the 7 milestones this
+// Collapses the backend's 12-value DealStage onto the 9 milestones this
 // timeline shows — purely a display grouping, the underlying `stage` string
 // (computed server-side by computeDealProgress) is what's authoritative.
 // Site Visit / Negotiation may never light up for a given deal — both are
-// optional parts of a transaction, not guaranteed steps.
-const NODES = ["Offer Accepted", "Agent Assigned", "Site Visit", "Negotiation", "Documents", "Payment", "Closed"] as const;
+// optional parts of a transaction, not guaranteed steps. Note the backend's
+// own stage-check order can report a payment stage before identity/agreement
+// are done in some cases — that's a real backend ordering quirk, not
+// something to "fix" here: this table only maps each stage name to its
+// conceptual position, it never re-derives which stage is current.
+const NODES = [
+  "Offer Accepted",
+  "Agent Assigned",
+  "Site Visit",
+  "Negotiation",
+  "Documents",
+  "Identity Verification",
+  "Agreement",
+  "Payment",
+  "Closed",
+] as const;
 
 const STAGE_TO_NODE: Record<DealStage, number> = {
   OFFER_ACCEPTED: 0,
@@ -15,9 +29,11 @@ const STAGE_TO_NODE: Record<DealStage, number> = {
   NEGOTIATION_RECORDED: 3,
   DOCUMENTATION_IN_PROGRESS: 4,
   DOCUMENTATION_COMPLETE: 4,
-  PAYMENT_IN_PROGRESS: 5,
-  PAYMENT_COMPLETE: 5,
-  DEAL_CLOSED: 6,
+  IDENTITY_VERIFICATION: 5,
+  AGREEMENT_SIGNING: 6,
+  PAYMENT_IN_PROGRESS: 7,
+  PAYMENT_COMPLETE: 7,
+  DEAL_CLOSED: 8,
 };
 
 export default function TransactionTimeline({ stage, stageLabel }: { stage: DealStage; stageLabel: string }) {

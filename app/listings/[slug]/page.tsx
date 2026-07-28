@@ -8,11 +8,8 @@ import Footer from "@/components/Footer";
 import ListingCard from "@/components/listings/ListingCard";
 import Gallery from "@/components/listings/Gallery";
 import GatedPrice, { PriceUnlocked, PriceLocked } from "@/components/listings/GatedPrice";
-import ShortlistButton from "@/components/listings/ShortlistButton";
-import MakeOfferModal from "@/components/listings/MakeOfferModal";
-import ShareButton from "@/components/listings/ShareButton";
 import RequestVisitForm from "@/components/listings/RequestVisitForm";
-import AiSearchButton from "@/components/ai/AiSearchButton";
+import PropertyActionPanel from "@/components/listings/PropertyActionPanel";
 import ViewTracker from "@/components/listings/ViewTracker";
 import EmiCalculator from "@/components/listings/EmiCalculator";
 import ProjectInfo from "@/components/listings/ProjectInfo";
@@ -57,7 +54,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const l = await loadProperty(slug);
   if (!l) return {};
-  const title = `${l.title} — ${price(l.askingPrice)} | Diggaj Realty`;
+  const title = `${l.title} | ${price(l.askingPrice)} | Diggaj Realty`;
   const cover = [...l.photos].sort((a, b) => a.order - b.order)[0]?.url;
   const url = `/listings/${slug}`;
   return {
@@ -109,7 +106,6 @@ export default async function ListingDetail({
   const amenities = l.amenities ?? [];
   const specs = buildSpecs(l);
 
-  const cashBack = Math.round((l.askingPrice * 0.03 * 0.75) / 100) * 100;
   const perSqft = Math.round(l.askingPrice / l.areaSqft);
 
   // "Similar properties" (same city + type + BHK, widened if too few matches)
@@ -150,24 +146,15 @@ export default async function ListingDetail({
   }
 
   const stats = [
-    { icon: <BedIcon />, label: "Bedrooms", value: l.bhk != null ? `${l.bhk} BHK` : "—" },
+    { icon: <BedIcon />, label: "Bedrooms", value: l.bhk != null ? `${l.bhk} BHK` : "-" },
     {
       icon: <BathIcon />,
       label: "Bathrooms",
-      value: l.bathrooms != null ? `${l.bathrooms} bath` : "—",
+      value: l.bathrooms != null ? `${l.bathrooms} bath` : "-",
     },
     { icon: <AreaIcon />, label: "Area", value: sqft(l.areaSqft) },
     { icon: <TagIcon />, label: "Per sq. ft.", value: `${price(perSqft)}/sq ft` },
   ];
-
-  const aiPropertyContext = {
-    id: l.id,
-    title: l.title,
-    location: l.location,
-    askingPrice: l.askingPrice,
-    bhk: l.bhk,
-    areaSqft: l.areaSqft,
-  };
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -235,7 +222,7 @@ export default async function ListingDetail({
                   </span>
                 )}
               </div>
-              <h1 className="mt-4 max-w-2xl text-4xl font-medium tracking-[-0.03em] text-ink md:text-6xl">
+              <h1 className="mt-4 max-w-2xl text-display-sm font-medium tracking-[-0.03em] text-ink">
                 {l.title}
               </h1>
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink/60">
@@ -263,25 +250,18 @@ export default async function ListingDetail({
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-start lg:items-end">
+            {/* Fixed-width column so the price and every action below it share
+                one left and right edge. This used to be `items-start
+                lg:items-end` around auto-width children, which right-aligned the
+                price and the AI button but left the button rows to wrap at their
+                own content widths — three different alignments in one stack. */}
+            <div className="flex w-full flex-col lg:w-[300px] lg:shrink-0">
               <GatedPrice
                 property={l}
                 variant="hero"
-                className="text-4xl font-medium tracking-[-0.02em] text-ink md:text-5xl"
+                className="text-section font-medium tracking-[-0.02em] text-ink lg:text-right"
               />
-              <PriceUnlocked property={l}>
-                <p className="mt-2 inline-block rounded-full bg-lime px-4 py-1.5 text-xs font-semibold text-ink">
-                  ⌂ Est. {price(cashBack)} cash back
-                </p>
-              </PriceUnlocked>
-              <div className="mt-4 flex w-full items-center gap-3 sm:w-auto">
-                <div className="flex-1 sm:flex-none">
-                  <MakeOfferModal propertyId={l.id} askingPrice={l.askingPrice} />
-                </div>
-                <ShortlistButton propertyId={l.id} />
-                <ShareButton title={l.title} />
-                <AiSearchButton propertyContext={aiPropertyContext} />
-              </div>
+              <PropertyActionPanel property={l} />
             </div>
           </div>
         </div>
@@ -330,7 +310,7 @@ export default async function ListingDetail({
       <div className="grid gap-14 px-8 py-16 md:px-14 lg:grid-cols-[1.4fr_1fr]">
         <div>
           <h2 className="text-2xl font-medium tracking-[-0.02em] text-ink">About this home</h2>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-body">{l.description}</p>
+          <p className="mt-4 max-w-xl text-lead text-body">{l.description}</p>
 
           {specs.length > 0 && (
             <>
@@ -390,19 +370,14 @@ export default async function ListingDetail({
             </PriceUnlocked>
           )}
 
-          {/* cash-back explainer */}
+          {/* why buy with us */}
           <div className="mt-12 overflow-hidden rounded-[24px] bg-panel p-8 text-white">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-white/60">Your estimated cash back</p>
-                <PriceUnlocked property={l}>
-                  <p className="mt-1 text-4xl font-medium tracking-[-0.02em] text-lime">{price(cashBack)}</p>
-                </PriceUnlocked>
-                <PriceLocked property={l}>
-                  <p className="mt-1 text-4xl font-medium tracking-[-0.02em] text-lime/40">₹ •• •••</p>
-                </PriceLocked>
-                <p className="mt-2 max-w-xs text-xs leading-relaxed text-white/50">
-                  Up to 75% of the buyer&apos;s agent commission, returned at closing when you buy this home with Diggaj Realty.
+                <p className="text-lg font-medium tracking-[-0.01em] text-white">Why buy this home with Diggaj Realty</p>
+                <p className="mt-2 max-w-sm text-xs leading-relaxed text-white/50">
+                  A dedicated agent guides you from site visit to closing, every listing is verified before it goes
+                  live, and your documents, negotiation, and paperwork are all tracked in one place.
                 </p>
               </div>
               <Link href="/#buy-sell" className="w-fit shrink-0 rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink">
@@ -422,7 +397,7 @@ export default async function ListingDetail({
             <div className="rounded-[24px] bg-cream p-6 text-center">
               <p className="text-sm font-medium text-ink">Pricing is exclusive</p>
               <p className="mt-1 text-xs text-body">
-                This is an Elite listing. Log in as a buyer to see the price, payment estimate, and cash back.
+                This is an Elite listing. Log in as a buyer to see the price and payment estimate.
               </p>
               <div className="mt-4 flex justify-center">
                 <GatedPrice property={l} variant="hero" />
@@ -430,21 +405,24 @@ export default async function ListingDetail({
             </div>
           </PriceLocked>
 
-          {/* tour request */}
-          <div className="mt-4 rounded-[28px] bg-panel p-8 text-white">
-            <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15">
-                <Image src="/img/agent-avatar.jpg" alt="Listing agent" fill sizes="48px" className="object-cover" />
+          {/* tour request — not offered once a property is already under
+              contract with another buyer */}
+          {l.status !== "UNDER_CONTRACT" && (
+            <div className="mt-4 rounded-[28px] bg-panel p-8 text-white">
+              <div className="flex items-center gap-3">
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15">
+                  <Image src="/img/agent-avatar.jpg" alt="Listing agent" fill sizes="48px" className="object-cover" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Request a tour</p>
+                  <p className="text-xs text-white/50">Free · no obligation</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium">Request a tour</p>
-                <p className="text-xs text-white/50">Free · no obligation</p>
+              <div className="mt-6">
+                <RequestVisitForm propertyId={l.id} />
               </div>
             </div>
-            <div className="mt-6">
-              <RequestVisitForm propertyId={l.id} />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

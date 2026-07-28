@@ -35,6 +35,11 @@ export default function NavMobileMenu({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
+          // Lenis swallows wheel events document-wide, so without this the
+          // drawer's own scrolling silently scrolls the page behind it instead.
+          // Lenis checks the whole composedPath, so one attribute on the
+          // overlay root covers every child.
+          data-lenis-prevent
           className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm"
           onClick={onClose}
         >
@@ -44,7 +49,10 @@ export default function NavMobileMenu({
             exit={{ x: "100%" }}
             transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-panel p-8 text-white md:p-12"
+            // overflow-y-auto: the drawer is h-full but its content (nav links +
+            // account block) is taller than a short laptop viewport, so it needs
+            // its own scroll rather than being clipped.
+            className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain bg-panel p-8 text-white md:p-12"
           >
             <div className="flex items-center justify-between">
               <span className="text-lg font-semibold tracking-tight">
@@ -108,7 +116,7 @@ export default function NavMobileMenu({
               </div>
               <div>
                 <p className="text-sm font-medium">Talk to an agent</p>
-                <p className="text-xs text-white/50">Avg. ₹5L cash back</p>
+                <p className="text-xs text-white/50">Replies within a few hours</p>
               </div>
               <Link
                 href="/contact"

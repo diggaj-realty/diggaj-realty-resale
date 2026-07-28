@@ -9,6 +9,39 @@
   --color-body: #6f6f6f;
   --color-cream: #f4efe5;
   --font-sans: var(--font-inter), Helvetica, Arial, sans-serif;
+
+  /* Fluid type scale.
+   *
+   * Every display size used to be a single `md:` jump — 48px below 768px, then
+   * frozen from 768px all the way to 2560px. One headline had to serve a
+   * 9.4%-of-viewport role at 768px and a 2.8% one at 2560px: oversized on small
+   * laptops, lost on large monitors.
+   *
+   * These interpolate continuously instead. Each token treats its design value
+   * as the CEILING, reached at 2560px, and scales down from there to a floor at
+   * 390px — so the hero is 72px on a 2560px monitor rather than on a 1280px
+   * laptop, where 72px was crowding the copy beneath it. Both ends are clamped,
+   * so nothing collapses on phones or runs away on ultrawides.
+   *
+   * Each is a straight line through (390px, floor) and (2560px, ceiling); the
+   * floor is ~0.61x the ceiling throughout, which keeps the relative hierarchy
+   * between tiers identical at every width. */
+  --text-display: clamp(2.75rem, 2.4375rem + 1.29vw, 4.5rem); /* 44 → 72 */
+  --text-display--line-height: 1.05;
+  --text-display-sm: clamp(2.3125rem, 2.0625rem + 1.06vw, 3.75rem); /* 37 → 60 */
+  --text-display-sm--line-height: 1.08;
+  --text-section: clamp(1.8125rem, 1.6rem + 0.876vw, 3rem); /* 29 → 48 */
+  --text-section--line-height: 1.1;
+  --text-feature: clamp(1.6875rem, 1.5rem + 0.783vw, 2.75rem); /* 27 → 44 */
+  --text-feature--line-height: 1.3;
+  --text-card-title: clamp(1.375rem, 1.2188rem + 0.645vw, 2.25rem); /* 22 → 36 */
+  --text-card-title--line-height: 1.25;
+  --text-subhead: clamp(1.125rem, 1rem + 0.553vw, 1.875rem); /* 18 → 30 */
+  --text-subhead--line-height: 1.25;
+  /* Lead/body copy scales far more gently — readability, not drama. It also
+   * never drops below 14px, so it does not follow the 0.61x floor above. */
+  --text-lead: clamp(0.875rem, 0.8413rem + 0.138vw, 1.0625rem); /* 14 → 17 */
+  --text-lead--line-height: 1.65;
 }
 
 html.lenis {

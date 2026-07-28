@@ -44,7 +44,7 @@ export default function PlansPanel() {
   return (
     <div>
       <p className="text-sm text-body">
-        Upgrade your plan for more visibility. Pricing isn&apos;t self-serve yet — reach out and our team will set you
+        Upgrade your plan for more visibility. Pricing isn&apos;t self-serve yet. Reach out and our team will set you
         up.
       </p>
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -78,7 +78,7 @@ export default function PlansPanel() {
       </div>
       <div className="mt-6 flex flex-col items-start gap-3 rounded-2xl bg-cream p-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-ink">
-          Elite upgrades are requested per-property — head to My Listings and use &quot;Request Elite&quot; on the
+          Elite upgrades are requested per-property. Head to My Listings and use &quot;Request Elite&quot; on the
           listing you want boosted.
         </p>
         <Link

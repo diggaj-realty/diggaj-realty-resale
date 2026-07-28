@@ -17,7 +17,7 @@ const rise = {
 export default function ListingsSection({
   items,
   title = "Featured Listings",
-  subtitle = "Hand-picked homes on the market right now — every one eligible for commission cash back.",
+  subtitle = "Hand-picked homes on the market right now, every one verified and agent-supported.",
 }: {
   items: Property[];
   title?: string;
@@ -34,7 +34,7 @@ export default function ListingsSection({
             whileInView="show"
             viewport={{ once: true, amount: 0.6 }}
             custom={0}
-            className="text-4xl font-medium tracking-[-0.02em] md:text-5xl"
+            className="text-section font-medium tracking-[-0.02em]"
           >
             {title}
           </motion.h2>
@@ -44,7 +44,7 @@ export default function ListingsSection({
             whileInView="show"
             viewport={{ once: true, amount: 0.6 }}
             custom={1}
-            className="mt-3 max-w-sm text-sm text-body"
+            className="mt-3 max-w-sm text-lead text-body"
           >
             {subtitle}
           </motion.p>

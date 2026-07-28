@@ -84,7 +84,7 @@ export default function DealDocuments({
   if (loadError) return <p className="text-sm text-red-700">{loadError}</p>;
   if (docs === null) return <RowSkeleton />;
   if (docs.length === 0) {
-    return <p className="text-sm text-body">No documents requested yet — your agent will add these as the deal progresses.</p>;
+    return <p className="text-sm text-body">No documents requested yet. Your agent will add these as the deal progresses.</p>;
   }
 
   return (
@@ -110,7 +110,7 @@ export default function DealDocuments({
               <p className="mt-2 text-xs text-red-800">Reviewer note: {doc.remarks}</p>
             )}
 
-            {doc.fileUrl && (
+            {doc.fileUrl ? (
               <a
                 href={doc.fileUrl}
                 target="_blank"
@@ -119,6 +119,13 @@ export default function DealDocuments({
               >
                 View uploaded file →
               </a>
+            ) : (
+              !doc.canView &&
+              doc.status !== "PENDING" && (
+                <p className="mt-2 text-xs text-ink/40">
+                  Uploaded, but you don&apos;t have access to view it. Ask your agent to share it.
+                </p>
+              )
             )}
 
             {canUpload && (

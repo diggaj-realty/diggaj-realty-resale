@@ -5,15 +5,15 @@ import Footer from "@/components/Footer";
 import LeadForm from "@/components/LeadForm";
 
 export const metadata: Metadata = {
-  title: "Contact — Diggaj Realty",
+  title: "Contact | Diggaj Realty",
   description:
-    "Talk to a Diggaj Realty agent about buying, selling, or your commission cash back. Real humans, replies within a few hours.",
+    "Talk to a Diggaj Realty agent about buying or selling a home. Real humans, replies within a few hours.",
 };
 
 const POINTS = [
-  { t: "Buying a home", d: "Get matched with a local agent and unlock up to 75% commission cash back." },
+  { t: "Buying a home", d: "Get matched with a local agent and verified, AI-searched listings." },
   { t: "Selling your home", d: "Free valuation, AI pricing, and your listing in front of 10L+ buyers." },
-  { t: "Anything else", d: "Mortgage, title, cash back questions — one message reaches the right team." },
+  { t: "Anything else", d: "Mortgage, title, or documentation questions, one message reaches the right team." },
 ];
 
 export default function ContactPage() {
@@ -22,10 +22,10 @@ export default function ContactPage() {
       <div className="bg-cream pb-14">
         <Nav />
         <div className="px-8 pt-14 md:px-14">
-          <h1 className="max-w-3xl text-5xl font-medium tracking-[-0.03em] text-ink md:text-6xl">
+          <h1 className="max-w-3xl text-display-sm font-medium tracking-[-0.03em] text-ink">
             Talk to a human
           </h1>
-          <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ink/70">
+          <p className="mt-5 max-w-md text-lead text-ink/70">
             No bots, no call centers. A local agent reads every message and
             replies within a few hours.
           </p>
@@ -52,7 +52,7 @@ export default function ContactPage() {
                 </span>
                 <div>
                   <p className="text-sm font-medium text-ink">{p.t}</p>
-                  <p className="mt-1 max-w-sm text-sm leading-relaxed text-body">{p.d}</p>
+                  <p className="mt-1 max-w-sm text-lead text-body">{p.d}</p>
                 </div>
               </div>
             ))}

@@ -102,7 +102,7 @@ export default function MakeOfferModal({
     <>
       <button
         onClick={openModal}
-        className="w-full rounded-full bg-lime px-6 py-3.5 text-sm font-semibold text-ink transition-transform hover:-translate-y-px"
+        className="w-full rounded-full bg-panel px-6 py-3.5 text-sm font-medium text-white transition-transform hover:-translate-y-px"
       >
         Make an offer
       </button>
@@ -123,7 +123,7 @@ export default function MakeOfferModal({
                 </span>
                 <p className="mt-5 text-xl font-medium text-ink">Offer submitted</p>
                 <p className="mt-2 max-w-xs text-sm text-body">
-                  Our team reviews every offer before it reaches the seller — you&apos;ll be notified once it&apos;s
+                  Our team reviews every offer before it reaches the seller; you&apos;ll be notified once it&apos;s
                   forwarded.
                 </p>
                 <button
@@ -171,7 +171,7 @@ export default function MakeOfferModal({
                 {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 
                 <p className="mt-4 text-[11px] leading-relaxed text-ink/40">
-                  Every offer is reviewed by our team before it reaches the seller — usually within 24 hours.
+                  Every offer is reviewed by our team before it reaches the seller, usually within 24 hours.
                 </p>
 
                 <button

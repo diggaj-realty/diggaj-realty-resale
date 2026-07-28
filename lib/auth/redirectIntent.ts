@@ -10,7 +10,8 @@ const INTENT_KEY = "diggaj_pending_intent";
 export type PendingIntent =
   | { type: "SHORTLIST" }
   | { type: "OFFER"; amount: string; message: string }
-  | { type: "VISIT"; date: string; note: string };
+  | { type: "VISIT"; date: string; note: string }
+  | { type: "INTEREST"; note: string };
 
 type StoredIntent = PendingIntent & { propertyId: string; savedAt: number };
 

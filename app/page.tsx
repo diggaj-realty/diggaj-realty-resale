@@ -17,7 +17,7 @@ const ORG_JSON_LD = {
   name: "Diggaj Realty",
   url: "https://diggajrealty.com",
   description:
-    "All-in-one resale property platform — buy, sell, and get commission cash back on every Diggaj Realty service.",
+    "All-in-one resale property platform with verified listings and a dedicated agent to help you buy or sell.",
   areaServed: "IN",
 };
 

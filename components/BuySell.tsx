@@ -54,7 +54,7 @@ export default function BuySell() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 0.6 }}
-          className="text-4xl font-medium tracking-[-0.02em] md:text-5xl"
+          className="text-section font-medium tracking-[-0.02em]"
         >
           Built for both sides of the deal
         </motion.h2>
@@ -63,14 +63,14 @@ export default function BuySell() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.6 }}
           transition={{ duration: 0.6, delay: 0.15 }}
-          className="mx-auto mt-4 max-w-md text-sm text-body"
+          className="mx-auto mt-4 max-w-md text-lead text-body"
         >
           Whether you&apos;re finding your next home or selling your current
-          one, Diggaj Realty backs you with the same smart tools and rewards.
+          one, Diggaj Realty backs you with the same smart tools and dedicated agent support.
         </motion.p>
       </div>
 
-      {/* split cards — expand slightly on hover */}
+      {/* split cards, expand slightly on hover */}
       <div className="mt-14 flex flex-col gap-6 md:h-[540px] md:flex-row">
         {/* buyers */}
         <motion.div
@@ -84,14 +84,14 @@ export default function BuySell() {
             <span className="w-fit rounded-full bg-panel px-4 py-1.5 text-xs font-medium text-white">
               For Buyers
             </span>
-            <h3 className="mt-5 max-w-sm text-3xl font-medium leading-snug tracking-[-0.02em] md:text-4xl">
+            <h3 className="mt-5 max-w-sm text-card-title font-medium tracking-[-0.02em]">
               Find it, tour it, own it
             </h3>
             <Checklist
               items={[
                 "Verified resale listings, priced against real comps",
-                "Book a site visit in one tap — no phone tag",
-                "Up to 75% of agent commission back at closing",
+                "Book a site visit in one tap, no phone tag",
+                "A dedicated agent with you through closing",
               ]}
             />
             <div className="mt-auto pt-8">
@@ -124,7 +124,7 @@ export default function BuySell() {
             <span className="w-fit rounded-full bg-lime px-4 py-1.5 text-xs font-semibold text-ink">
               For Sellers
             </span>
-            <h3 className="mt-5 max-w-sm text-3xl font-medium leading-snug tracking-[-0.02em] md:text-4xl">
+            <h3 className="mt-5 max-w-sm text-card-title font-medium tracking-[-0.02em]">
               List smarter, sell faster
             </h3>
             <Checklist
@@ -132,7 +132,7 @@ export default function BuySell() {
               items={[
                 "Free AI valuation using real neighborhood comps",
                 "Your listing shown to 10L+ verified, active buyers",
-                "One flat fee — no surprises at closing",
+                "One flat fee, no surprises at closing",
               ]}
             />
             <div className="mt-auto pt-8">

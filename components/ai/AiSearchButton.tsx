@@ -47,44 +47,60 @@ export default function AiSearchButton({
   }
 
   return (
-    <div className={floating ? undefined : "relative"}>
+    <div className={floating ? undefined : "relative w-full"}>
       {showGreeting && (
         <div
           className={
             floating
-              ? "fixed bottom-24 right-6 z-40 w-64"
-              : "absolute right-0 top-full z-40 mt-3 w-64"
+              ? "fixed bottom-24 right-6 z-40 w-72"
+              : "absolute right-0 top-full z-40 mt-3 w-72"
           }
         >
-          <div className="relative rounded-2xl bg-white p-4 pr-8 shadow-2xl ring-1 ring-ink/10">
+          <div className="relative overflow-hidden rounded-2xl bg-panel p-4 pr-8 shadow-2xl ring-1 ring-white/10">
             {/* tail — a rotated square tucked behind the card's edge,
                 pointing at whichever button this bubble belongs to */}
             <div
               className={
                 floating
-                  ? "absolute -bottom-1.5 right-7 h-3 w-3 rotate-45 bg-white ring-1 ring-ink/10"
-                  : "absolute -top-1.5 right-7 h-3 w-3 rotate-45 bg-white ring-1 ring-ink/10"
+                  ? "absolute -bottom-1.5 right-7 h-3 w-3 rotate-45 bg-panel ring-1 ring-white/10"
+                  : "absolute -top-1.5 right-7 h-3 w-3 rotate-45 bg-panel ring-1 ring-white/10"
               }
             />
+            {/* ambient glow, echoes the header pill's lime accent */}
+            <div className="pointer-events-none absolute -left-6 -top-8 h-24 w-24 rounded-full bg-lime/20 blur-2xl" />
+
             <button
               onClick={() => setShowGreeting(false)}
               aria-label="Dismiss"
-              className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-ink/40 hover:bg-ink/5 hover:text-ink"
+              className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full text-white/40 hover:bg-white/10 hover:text-white"
             >
               <CloseIcon className="h-3.5 w-3.5" />
             </button>
-            <button onClick={openPanel} className="relative z-10 block w-full text-left">
-              {propertyContext ? (
-                <>
-                  <p className="text-sm font-medium text-ink">👋 Want the highlights?</p>
-                  <p className="mt-1 text-xs text-body">Ask our AI to summarize this property for you.</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm font-medium text-ink">👋 Looking for a home?</p>
-                  <p className="mt-1 text-xs text-body">Ask our AI — it searches real listings for you.</p>
-                </>
-              )}
+
+            <button onClick={openPanel} className="relative z-10 flex w-full items-start gap-3 text-left">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lime text-ink">
+                <SparkleIcon className="h-4 w-4" />
+              </span>
+              <span className="min-w-0">
+                {propertyContext ? (
+                  <>
+                    <p className="text-sm font-medium text-white">Want the highlights?</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/60">
+                      Our AI can summarize this home in a few seconds.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-white">Let AI find your home</p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/60">
+                      Tell it a city, budget, or vibe, and it searches real listings instantly.
+                    </p>
+                  </>
+                )}
+                <span className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-lime px-3 py-1.5 text-[11px] font-semibold text-ink">
+                  Try it now →
+                </span>
+              </span>
             </button>
           </div>
         </div>
@@ -97,7 +113,10 @@ export default function AiSearchButton({
             // Same dark-panel + lime + ring treatment as the Elite badge
             // (ListingCard), circular rather than a pill.
             ? "fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-panel text-lime shadow-2xl ring-1 ring-lime/30 transition-transform hover:-translate-y-1"
-            : "rounded-full bg-panel px-4 py-2.5 text-sm text-white transition-transform hover:-translate-y-px md:px-5"
+            : // Quiet tertiary, full width. This was a solid dark pill, which
+              // read as a third primary action next to "Make an offer" and gave
+              // the stack no hierarchy at all.
+              "w-full rounded-full bg-ink/5 px-5 py-3 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/10"
         }
       >
         {floating ? <SparkleIcon className="h-6 w-6" /> : propertyContext ? "✦ Ask AI about this home" : "✦ AI Search"}

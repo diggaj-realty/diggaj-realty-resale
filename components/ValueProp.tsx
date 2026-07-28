@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 
 const SENTENCE =
-  "Whether you're buying your first home, investing in your next one, or selling to move on — Diggaj Realty verifies every resale listing, negotiates on your behalf, and pays you back at closing.";
+  "Whether you're buying your first home, investing in your next one, or selling to move on, Diggaj Realty verifies every resale listing, negotiates on your behalf, and pays you back at closing.";
 
 function Word({
   progress,
@@ -57,7 +57,7 @@ export default function ValueProp() {
       {/* scroll-scrubbed word-by-word reveal */}
       <h2
         ref={textRef}
-        className="flex max-w-4xl flex-wrap gap-x-[0.28em] gap-y-1 text-3xl font-medium leading-snug tracking-[-0.02em] text-ink md:text-[44px] md:leading-[1.25]"
+        className="flex max-w-4xl flex-wrap gap-x-[0.28em] gap-y-1 text-feature font-medium tracking-[-0.02em] text-ink"
       >
         {words.map((word, i) => (
           <Word
@@ -109,10 +109,10 @@ export default function ValueProp() {
           whileInView="show"
           viewport={{ once: true, amount: 0.5 }}
           custom={3}
-          className="max-w-xs text-sm leading-relaxed text-body"
+          className="max-w-xs text-lead text-body"
         >
           Every listing is verified against real market comps and backed by
-          a dedicated agent — no juggling providers, no hidden fees at close.
+          a dedicated agent, with no juggling providers and no hidden fees at close.
         </motion.p>
       </div>
     </section>

@@ -25,7 +25,35 @@ export default function PropertyMap({
   const ref = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
 
+  // The Maps JS API is a few hundred KB of third-party script, and this map sits
+  // near the bottom of a long property page — most visitors never reach it. Wait
+  // until it's actually approaching the viewport before fetching anything.
+  // rootMargin gives it a head start so the map is usually ready on arrival.
+  const [shouldLoad, setShouldLoad] = useState(false);
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      // Deferred rather than set synchronously in the effect body, which risks
+      // cascading renders (same queueMicrotask pattern as AuthContext).
+      queueMicrotask(() => setShouldLoad(true));
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "400px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoad) return;
     let cancelled = false;
     // Google calls this if the key/project isn't authorized for Maps JS API —
     // fall back to the embed instead of showing Google's error overlay.
@@ -62,7 +90,7 @@ export default function PropertyMap({
     return () => {
       cancelled = true;
     };
-  }, [lat, lng, title, apiKey]);
+  }, [shouldLoad, lat, lng, title, apiKey]);
 
   // Fallback to the embed (red pin) only if the JS API can't load.
   if (failed) {

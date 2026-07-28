@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { askAi } from "@/lib/api/ai";
 import { ApiError } from "@/lib/api/client";
 import { CloseIcon } from "@/components/dashboard/icons";
+import { chatKey, clearChat, loadChat, saveChat } from "@/lib/ai/chatStore";
 import ListingCard from "@/components/listings/ListingCard";
 import type { AiMessage, AiPropertyContext } from "@/types/ai";
 import type { Property } from "@/types/api";
@@ -14,7 +15,7 @@ type ChatEntry = AiMessage & { properties?: Property[]; requiresLogin?: boolean 
 
 const GENERIC_GREETING: ChatEntry = {
   role: "assistant",
-  content: "Hey! What kind of place are you after? Toss me a city, a budget, whatever you've got — I'll go dig up some real listings.",
+  content: "Hey! What kind of place are you after? Toss me a city, a budget, whatever you've got, and I'll go dig up some real listings.",
 };
 
 function greetingFor(propertyContext?: AiPropertyContext): ChatEntry {
@@ -36,19 +37,41 @@ export default function AiSearchPanel({
   propertyContext?: AiPropertyContext;
 }) {
   const { token } = useAuth();
-  const [messages, setMessages] = useState<ChatEntry[]>([greetingFor(propertyContext)]);
+  // This panel is unmounted whenever it closes (see AiSearchButton), so state
+  // alone lost the whole conversation on close, navigation or reload. Restore
+  // from sessionStorage on mount instead. Safe to read during init: the panel is
+  // dynamically imported with ssr:false, so there's no server render to mismatch.
+  const storeKey = chatKey(propertyContext?.id);
+  const [restored] = useState(() => loadChat(storeKey));
+  const [messages, setMessages] = useState<ChatEntry[]>(
+    () => (restored?.messages as ChatEntry[]) ?? [greetingFor(propertyContext)]
+  );
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Once the server says the free anonymous preview is used up, the input
   // is replaced by an inline sign-in prompt — the gate lives in the chat
   // itself rather than a popup/redirect.
-  const [loginRequired, setLoginRequired] = useState(false);
+  const [loginRequired, setLoginRequired] = useState(restored?.loginRequired ?? false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
+
+  // Persist after every turn. Skipped while only the opening greeting is
+  // present, so merely opening and closing the panel doesn't write a "chat".
+  useEffect(() => {
+    if (messages.length <= 1) return;
+    saveChat(storeKey, { messages, loginRequired });
+  }, [messages, loginRequired, storeKey]);
+
+  function resetChat() {
+    clearChat(storeKey);
+    setMessages([greetingFor(propertyContext)]);
+    setLoginRequired(false);
+    setError(null);
+  }
 
   async function send() {
     const text = input.trim();
@@ -78,27 +101,47 @@ export default function AiSearchPanel({
 
   return (
     <>
+      {/* data-lenis-prevent on both: the backdrop and the panel are siblings, and
+          Lenis would otherwise translate wheel events over either one into
+          page scroll behind the panel. */}
       <button
         aria-label="Close AI search"
         onClick={onClose}
+        data-lenis-prevent
         className="fixed inset-0 z-[90] bg-ink/40 backdrop-blur-sm"
       />
-      <div className="fixed inset-y-0 right-0 z-[100] flex w-full max-w-md flex-col bg-white shadow-2xl">
+      <div
+        data-lenis-prevent
+        className="fixed inset-y-0 right-0 z-[100] flex w-full max-w-md flex-col bg-white shadow-2xl"
+      >
         <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
           <div>
             <p className="text-sm font-semibold text-ink">✦ AI Search</p>
             <p className="text-xs text-body">Find your next home by chatting</p>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Close AI search"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/5 text-ink/60 hover:bg-ink/10"
-          >
-            <CloseIcon />
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {/* The chat now survives closing the panel, so there has to be a way
+                to start over — otherwise a stale conversation is permanent for
+                the rest of the tab's life. */}
+            {messages.length > 1 && (
+              <button
+                onClick={resetChat}
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-ink/50 hover:bg-ink/5 hover:text-ink"
+              >
+                New chat
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              aria-label="Close AI search"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/5 text-ink/60 hover:bg-ink/10"
+            >
+              <CloseIcon />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
           <div className="flex flex-col gap-4">
             {messages.map((m, i) => (
               <div key={i} className="flex flex-col gap-3">

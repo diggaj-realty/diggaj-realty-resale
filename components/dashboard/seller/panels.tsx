@@ -11,8 +11,10 @@ import { Panel, Step, fmtDate } from "@/components/dashboard/shared";
 import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
 import { getOffers, getDeals, getSiteVisits } from "@/lib/api/buyer";
 import { getMyListings, requestPlanUpgrade } from "@/lib/api/seller";
+import { getInterests } from "@/lib/api/interests";
 import type { Deal, Offer, SiteVisit } from "@/types/buyer";
 import type { Property } from "@/types/api";
+import type { PropertyInterest } from "@/types/transaction";
 import { ApiError } from "@/lib/api/client";
 
 // ── My listings ────────────────────────────────────────────────
@@ -172,16 +174,16 @@ function SellerDealCard({ deal }: { deal: Deal }) {
         </div>
         <div className="rounded-xl bg-cream px-3 py-2.5">
           <p className="text-[11px] text-body">Token received</p>
-          <p className="text-sm font-semibold text-ink">{deal.tokenAmount != null ? price(deal.tokenAmount) : "—"}</p>
+          <p className="text-sm font-semibold text-ink">{deal.tokenAmount != null ? price(deal.tokenAmount) : "-"}</p>
         </div>
         <div className="rounded-xl bg-cream px-3 py-2.5">
           <p className="text-[11px] text-body">Final payment</p>
-          <p className="text-sm font-semibold text-ink">{deal.finalAmount != null ? price(deal.finalAmount) : "—"}</p>
+          <p className="text-sm font-semibold text-ink">{deal.finalAmount != null ? price(deal.finalAmount) : "-"}</p>
         </div>
       </div>
 
       <div className="mt-5 space-y-3">
-        <Step done label="Offer accepted — deal opened" detail={fmtDate(deal.createdAt)} />
+        <Step done label="Offer accepted, deal opened" detail={fmtDate(deal.createdAt)} />
         <Step
           done={deal.tokenAmount != null}
           label="Token payment received"
@@ -228,6 +230,53 @@ export function DealsPanel() {
     >
       {items?.map((d) => (
         <SellerDealCard key={d.id} deal={d} />
+      ))}
+    </Panel>
+  );
+}
+
+// ── Buyer interests on my properties ───────────────────────────
+function SellerInterestCard({ interest }: { interest: PropertyInterest }) {
+  // Wrapped in a Link: /dashboard/seller/interests/[id] existed but nothing
+  // anywhere linked to it, so the whole seller interest detail page — assigned
+  // agent, site visits, offline negotiation — was reachable only by typing the
+  // URL. The buyer equivalent has always been a link.
+  return (
+    <Link
+      href={`/dashboard/seller/interests/${interest.id}`}
+      className="block rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5 transition-all hover:-translate-y-0.5 hover:ring-ink/15"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-ink">{interest.propertyTitle ?? "Property"}</p>
+          {interest.buyerName && <p className="truncate text-xs text-body">Buyer: {interest.buyerName}</p>}
+        </div>
+        <StatusBadge status={interest.status} />
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3 text-xs text-body">
+        <span>{interest.agentName ? `Agent: ${interest.agentName}` : "Awaiting agent assignment"}</span>
+        <span className="text-ink/40">{fmtDate(interest.createdAt)}</span>
+      </div>
+    </Link>
+  );
+}
+
+export function InterestsPanel() {
+  const { token } = useAuth();
+  const cacheKey = token ? `sellerInterests:${token}` : null;
+  const { items, error } = useCachedPanelData<PropertyInterest[]>(cacheKey, () =>
+    getInterests(token!).then((r) => r.items)
+  );
+
+  return (
+    <Panel
+      loading={items === null && !error}
+      error={error}
+      empty={items?.length === 0}
+      emptyText="No buyer interests yet. They'll appear here as buyers engage with your listings."
+    >
+      {items?.map((i) => (
+        <SellerInterestCard key={i.id} interest={i} />
       ))}
     </Panel>
   );

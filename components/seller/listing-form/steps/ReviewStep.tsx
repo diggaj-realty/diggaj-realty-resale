@@ -51,7 +51,7 @@ export default function ReviewStep({ value }: { value: ListingFormState }) {
 
       <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-900 ring-1 ring-amber-200">
         Your listing will be submitted as a <strong>draft</strong> and reviewed by our team before it
-        goes live — usually within 24 hours. You&apos;ll be notified either way.
+        goes live, usually within 24 hours. You&apos;ll be notified either way.
       </div>
     </div>
   );

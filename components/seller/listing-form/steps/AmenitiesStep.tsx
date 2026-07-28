@@ -30,7 +30,7 @@ export default function AmenitiesStep({
   return (
     <div>
       <p className="text-sm font-medium text-ink">Amenities</p>
-      <p className="mt-1 text-xs text-body">Select everything that applies — buyers filter by these.</p>
+      <p className="mt-1 text-xs text-body">Select everything that applies; buyers filter by these.</p>
       {options === null ? (
         <p className="mt-4 text-sm text-body">Loading…</p>
       ) : (

@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 const SITE_URL = "https://diggajrealty.com";
-const SITE_TITLE = "Diggaj Realty — Your Home & Savings";
+const SITE_TITLE = "Diggaj Realty: Your Home & Savings";
 const SITE_DESCRIPTION =
-  "All-in-one platform that simplifies your homebuying journey and gives you cash back for every Diggaj Realty service you use.";
+  "All-in-one platform that simplifies your homebuying journey with verified listings and a dedicated agent at every step.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

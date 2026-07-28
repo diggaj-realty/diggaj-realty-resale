@@ -60,7 +60,7 @@ export default function AuthForm({ role }: { role: UserRole }) {
   return (
     <div className="mx-auto w-full max-w-md">
       <p className="text-xs font-medium uppercase tracking-wide text-body">{roleLabel} access</p>
-      <h1 className="mt-2 text-3xl font-medium tracking-[-0.02em] text-ink md:text-4xl">
+      <h1 className="mt-2 text-card-title font-medium tracking-[-0.02em] text-ink">
         {mode === "login" ? `Sign in as a ${roleLabel.toLowerCase()}` : `Create your ${roleLabel.toLowerCase()} account`}
       </h1>
       <p className="mt-3 text-sm text-body">

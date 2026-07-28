@@ -139,7 +139,7 @@ export default function EmiCalculator({
       </dl>
 
       <p className="mt-4 text-[11px] leading-relaxed text-ink/40">
-        Indicative only. Actual EMI depends on your bank, credit profile, and final rate — talk to a
+        Indicative only. Actual EMI depends on your bank, credit profile, and final rate; talk to a
         Diggaj lending partner for a precise quote.
       </p>
     </div>

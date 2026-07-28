@@ -898,7 +898,7 @@ export default function ListingsBrowser({
                 Amenities
                 {amenities.length > 0 && (
                   <span className="ml-1 font-normal text-body">
-                    (matches homes with <strong>all</strong> selected — fewer results the more you pick)
+                    (matches homes with <strong>all</strong> selected; fewer results the more you pick)
                   </span>
                 )}
               </p>

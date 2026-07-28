@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { propertyHref } from "@/lib/slug";
 import { isElite } from "@/lib/badge";
@@ -12,7 +12,7 @@ import type { Property } from "@/types/api";
 function Card({ home }: { home: Property }) {
   const cover = home.photos[0]?.url;
   const elite = isElite(home);
-  const meta = `${home.bhk ?? "—"} bed · ${home.bathrooms ?? "—"} bath · ${home.areaSqft.toLocaleString("en-IN")} sqft`;
+  const meta = `${home.bhk ?? "-"} bed · ${home.bathrooms ?? "-"} bath · ${home.areaSqft.toLocaleString("en-IN")} sqft`;
 
   return (
     <Link
@@ -68,8 +68,31 @@ export default function ShowcaseSection({ homes }: { homes: Property[] }) {
     offset: ["start start", "end end"],
   });
 
-  // the track glides left as you scroll down — scrubbed and reversible
-  const x = useTransform(scrollYProgress, [0.05, 0.95], ["0%", "-58%"]);
+  // The track glides left as you scroll down — scrubbed and reversible. The
+  // distance has to be measured rather than a fixed percentage: the cards are a
+  // fixed 460px while the viewport is not, so any hardcoded % overshoots on
+  // narrow screens (leaving the strip scrolled past its end) and undershoots on
+  // wide ones. Measuring makes the last card land flush with the right edge at
+  // every width.
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [travel, setTravel] = useState(0);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const measure = () =>
+      setTravel(Math.max(0, el.scrollWidth - document.documentElement.clientWidth + 24));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [homes.length]);
+
+  const x = useTransform(scrollYProgress, [0.05, 0.95], [0, -travel]);
   const counter = useTransform(scrollYProgress, (v) =>
     String(Math.min(homes.length, Math.max(1, Math.ceil(v * homes.length)))).padStart(2, "0")
   );
@@ -80,6 +103,7 @@ export default function ShowcaseSection({ homes }: { homes: Property[] }) {
       <div className="sticky top-0 flex h-screen flex-col justify-center overflow-clip">
         {/* track */}
         <motion.div
+          ref={trackRef}
           style={{ x }}
           className="flex w-max items-center gap-7 pl-8 will-change-transform md:pl-14"
         >
@@ -90,7 +114,7 @@ export default function ShowcaseSection({ homes }: { homes: Property[] }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.6 }}
               transition={{ duration: 0.6 }}
-              className="text-4xl font-medium tracking-[-0.02em] md:text-6xl"
+              className="text-display-sm font-medium tracking-[-0.02em]"
             >
               Homes worth the scroll
             </motion.h2>
@@ -99,9 +123,9 @@ export default function ShowcaseSection({ homes }: { homes: Property[] }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.6 }}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="mt-5 max-w-xs text-sm leading-relaxed text-body"
+              className="mt-5 max-w-xs text-lead text-body"
             >
-              A hand-picked strip of standout architecture — keep scrolling and
+              A hand-picked strip of standout architecture, keep scrolling and
               the collection glides by.
             </motion.p>
             <motion.span

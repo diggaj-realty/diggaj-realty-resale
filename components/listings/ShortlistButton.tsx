@@ -13,9 +13,9 @@ export default function ShortlistButton({
   compact = false,
 }: {
   propertyId: string;
-  /** Small fixed-size icon circle for overlaying a listing card's thumbnail,
-   *  instead of the default icon-on-mobile/labelled-pill-on-desktop button
-   *  meant for a standalone action row (the property detail page). */
+  /** Smaller, shadowed circle tuned for overlaying a listing card's photo,
+   *  instead of the slightly larger ringed circle used in the property page's
+   *  action stack. Both are icon-only. */
   compact?: boolean;
 }) {
   const { user, token } = useAuth();
@@ -61,7 +61,7 @@ export default function ShortlistButton({
       invalidateSharedShortlist();
     } catch {
       setSaved(!next); // revert
-      setError("Couldn't save — try again");
+      setError("Couldn't save, try again");
     } finally {
       setBusy(false);
     }
@@ -90,7 +90,7 @@ export default function ShortlistButton({
   }, [isBuyer, token, propertyId]);
 
   return (
-    <div className="relative inline-block">
+    <div className={compact ? "relative inline-block" : "relative w-full"}>
       <button
         onClick={(e) => {
           // Harmless when this button stands alone (property detail page);
@@ -103,14 +103,23 @@ export default function ShortlistButton({
         }}
         disabled={busy}
         aria-pressed={saved}
+        // Now that there's no visible label anywhere, `title` gives sighted
+        // users the same hover affordance aria-label gives screen readers.
+        title={isBuyer ? (saved ? "Saved" : "Save") : "Save to shortlist"}
         aria-label={isBuyer ? (saved ? "Saved" : "Save") : "Save to shortlist"}
         className={
           compact
             ? `flex h-9 w-9 items-center justify-center rounded-full shadow ring-1 transition-colors disabled:opacity-60 ${
                 saved ? "bg-lime text-ink ring-lime" : "bg-white/90 text-ink ring-ink/10 hover:bg-white"
               }`
-            : `inline-flex h-11 w-11 items-center justify-center gap-2 rounded-full ring-1 transition-colors disabled:opacity-60 sm:h-auto sm:w-auto sm:px-5 sm:py-2.5 sm:text-sm sm:font-medium ${
-                saved ? "bg-lime text-ink ring-lime" : "bg-white text-ink ring-ink/15 hover:bg-cream"
+            : // Icon-only circle on the property page: the heart alone carries
+              // the meaning (filled = saved), and dropping the label keeps this
+              // the quietest thing in the action stack. Saved uses the pale lime
+              // tint, not solid lime, which competed with the primary CTA.
+              `inline-flex h-11 w-11 items-center justify-center rounded-full ring-1 transition-colors disabled:opacity-60 ${
+                saved
+                  ? "bg-limepale text-ink ring-lime/50"
+                  : "bg-white text-ink ring-ink/15 hover:bg-cream"
               }`
         }
       >
@@ -121,9 +130,6 @@ export default function ShortlistButton({
         >
           <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
         </svg>
-        {!compact && (
-          <span className="hidden sm:inline">{isBuyer ? (saved ? "Saved" : "Save") : "Save to shortlist"}</span>
-        )}
       </button>
       {error && (
         <p className="absolute top-full left-1/2 mt-1.5 w-max max-w-[10rem] -translate-x-1/2 text-center text-[11px] text-red-600">

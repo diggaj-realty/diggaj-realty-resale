@@ -12,10 +12,18 @@ import TransactionTimeline from "@/components/dashboard/TransactionTimeline";
 import AgreedAmountSummary from "@/components/dashboard/AgreedAmountSummary";
 import SiteVisitSummary from "@/components/dashboard/SiteVisitSummary";
 import OfflineNegotiationList from "@/components/dashboard/OfflineNegotiationList";
+import DocumentRequestPanel from "@/components/dashboard/DocumentRequestPanel";
+import IdentityVerificationPanel from "@/components/dashboard/IdentityVerificationPanel";
+import AgreementPanel from "@/components/dashboard/AgreementPanel";
+import ClosureChecklistView from "@/components/dashboard/ClosureChecklistView";
 import { Panel, fmtDate } from "@/components/dashboard/shared";
 import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
 import { getTransactionDetail } from "@/lib/api/buyer";
+import { getDocumentRequests } from "@/lib/api/documentRequests";
+import { getIdentityVerification, getAgreements } from "@/lib/api/dealCompliance";
+import { deriveClosureChecklist } from "@/lib/dashboard/deriveClosureChecklist";
 import type { TransactionDetail as TransactionDetailData, TransactionParty } from "@/types/buyer";
+import type { DocumentRequest, IdentityVerificationSummary, DealAgreement } from "@/types/transaction";
 import type { UserRole } from "@/types/auth";
 
 function PartyCard({ role, party }: { role: string; party: TransactionParty | null }) {
@@ -35,8 +43,39 @@ function PartyCard({ role, party }: { role: string; party: TransactionParty | nu
   );
 }
 
-function TransactionBody({ data, viewerRole, onChanged }: { data: TransactionDetailData; viewerRole: UserRole; onChanged: () => void }) {
+function TransactionBody({
+  data,
+  viewerRole,
+  viewerId,
+  documentRequests,
+  identity,
+  agreements,
+  onChanged,
+  onDocumentRequestsChanged,
+  onIdentityChanged,
+  onAgreementsChanged,
+}: {
+  data: TransactionDetailData;
+  viewerRole: UserRole;
+  viewerId: string | undefined;
+  documentRequests: DocumentRequest[] | null;
+  identity: IdentityVerificationSummary | null;
+  agreements: DealAgreement[] | null;
+  onChanged: () => void;
+  onDocumentRequestsChanged: () => void;
+  onIdentityChanged: () => void;
+  onAgreementsChanged: () => void;
+}) {
   const cover = data.property.photos?.[0]?.url;
+  const latestAgreement = agreements?.[0] ?? null;
+
+  const checklist = deriveClosureChecklist({
+    deal: data.deal,
+    documentProgress: data.documentProgress,
+    identity,
+    latestAgreement,
+    paymentProgress: data.paymentProgress,
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -81,7 +120,7 @@ function TransactionBody({ data, viewerRole, onChanged }: { data: TransactionDet
             <OfferTimeline events={data.acceptedOffer.events} />
           </div>
         ) : (
-          <p className="text-sm text-body">This deal was agreed in person during a site visit — there&apos;s no online offer history.</p>
+          <p className="text-sm text-body">This deal was agreed in person during a site visit. There&apos;s no online offer history.</p>
         )}
       </section>
 
@@ -106,7 +145,75 @@ function TransactionBody({ data, viewerRole, onChanged }: { data: TransactionDet
             </span>
           )}
         </h2>
-        <DealDocuments dealId={data.dealId} viewerRole={viewerRole} initialDocuments={data.documents} onChanged={onChanged} />
+        {/* Deliberately NOT passing data.documents here: the aggregate
+            endpoint's copy doesn't apply the ownership/access-grant
+            filtering that GET /deals/:id/documents does, so it can expose a
+            counterparty's private fileUrl. Letting DealDocuments fetch for
+            itself uses the endpoint that actually enforces canView. */}
+        <DealDocuments dealId={data.dealId} viewerRole={viewerRole} onChanged={onChanged} />
+      </section>
+
+      {/* Cross-party document requests */}
+      <section>
+        <h2 className="mb-3 text-sm font-medium text-ink">Document requests</h2>
+        {documentRequests === null ? (
+          <p className="text-sm text-body">Loading…</p>
+        ) : (
+          <DocumentRequestPanel
+            dealId={data.dealId}
+            viewerRole={viewerRole}
+            viewerId={viewerId}
+            requests={documentRequests}
+            onChanged={onDocumentRequestsChanged}
+          />
+        )}
+      </section>
+
+      {/* Identity verification */}
+      <section>
+        <h2 className="mb-3 text-sm font-medium text-ink">Identity verification</h2>
+        {identity ? (
+          <IdentityVerificationPanel
+            dealId={data.dealId}
+            summary={identity}
+            viewerId={viewerId}
+            buyerId={data.buyer.id}
+            sellerId={data.seller.id}
+            onChanged={onIdentityChanged}
+          />
+        ) : (
+          <p className="text-sm text-body">Loading…</p>
+        )}
+      </section>
+
+      {/* Agreement + signatures */}
+      <section>
+        <h2 className="mb-3 text-sm font-medium text-ink">Agreement</h2>
+        {latestAgreement ? (
+          <>
+            <AgreementPanel
+              dealId={data.dealId}
+              agreement={latestAgreement}
+              viewerId={viewerId}
+              onChanged={onAgreementsChanged}
+            />
+            {agreements && agreements.length > 1 && (
+              <p className="mt-2 text-[11px] text-ink/40">
+                {agreements.length - 1} earlier version(s) superseded; only the current version above is signable.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-body">No agreement generated yet.</p>
+        )}
+      </section>
+
+      {/* Closure checklist */}
+      <section>
+        <h2 className="mb-3 text-sm font-medium text-ink">Closure</h2>
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
+          <ClosureChecklistView checklist={checklist} dealStatus={data.deal.status} />
+        </div>
       </section>
 
       {/* Payments */}
@@ -147,24 +254,62 @@ function TransactionBody({ data, viewerRole, onChanged }: { data: TransactionDet
 }
 
 export default function TransactionDetail({ dealId, viewerRole }: { dealId: string; viewerRole: UserRole }) {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const cacheKey = token ? `transaction:${dealId}:${token}` : null;
   const { items, error, load } = useCachedPanelData<TransactionDetailData>(cacheKey, () =>
     getTransactionDetail(token!, dealId)
   );
 
+  const requestsCacheKey = token ? `deal-doc-requests:${dealId}:${token}` : null;
+  const { items: documentRequests, load: loadDocumentRequests } = useCachedPanelData<DocumentRequest[]>(
+    requestsCacheKey,
+    () => getDocumentRequests(token!, dealId)
+  );
+
+  const identityCacheKey = token ? `deal-identity:${dealId}:${token}` : null;
+  const { items: identity, load: loadIdentity } = useCachedPanelData<IdentityVerificationSummary>(
+    identityCacheKey,
+    () => getIdentityVerification(token!, dealId)
+  );
+
+  const agreementsCacheKey = token ? `deal-agreements:${dealId}:${token}` : null;
+  const { items: agreements, load: loadAgreements } = useCachedPanelData<DealAgreement[]>(
+    agreementsCacheKey,
+    () => getAgreements(token!, dealId)
+  );
+
+  function refreshAll() {
+    load();
+    loadDocumentRequests();
+    loadIdentity();
+    loadAgreements();
+  }
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-end">
         <button
-          onClick={load}
+          onClick={refreshAll}
           className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10"
         >
           Refresh →
         </button>
       </div>
       <Panel loading={items === null && !error} error={error} empty={false} emptyText="">
-        {items && <TransactionBody data={items} viewerRole={viewerRole} onChanged={load} />}
+        {items && (
+          <TransactionBody
+            data={items}
+            viewerRole={viewerRole}
+            viewerId={user?.id}
+            documentRequests={documentRequests}
+            identity={identity}
+            agreements={agreements}
+            onChanged={load}
+            onDocumentRequestsChanged={loadDocumentRequests}
+            onIdentityChanged={loadIdentity}
+            onAgreementsChanged={loadAgreements}
+          />
+        )}
       </Panel>
     </div>
   );

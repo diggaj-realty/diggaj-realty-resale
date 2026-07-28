@@ -142,6 +142,13 @@ export type DealDocument = {
   uploadedBy: string | null;
   createdAt: string;
   updatedAt: string;
+  /** The party this document belongs to — distinct from `uploadedBy`.
+   *  `null` on older documents predating ownership tracking. */
+  ownerId: string | null;
+  /** Whether the current viewer may see `fileUrl` — the owner, the deal's
+   *  agent/staff, or a party holding an active DocumentAccessGrant. When
+   *  `false`, `fileUrl` is nulled out server-side regardless of `status`. */
+  canView: boolean;
 };
 
 /** What the buyer and seller agreed off-platform (in person, by phone, or
@@ -194,6 +201,8 @@ export type DealStage =
   | "NEGOTIATION_RECORDED"
   | "DOCUMENTATION_IN_PROGRESS"
   | "DOCUMENTATION_COMPLETE"
+  | "IDENTITY_VERIFICATION"
+  | "AGREEMENT_SIGNING"
   | "PAYMENT_IN_PROGRESS"
   | "PAYMENT_COMPLETE"
   | "DEAL_CLOSED";

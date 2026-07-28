@@ -98,7 +98,7 @@ export default function Gallery({
                 >
                   <Image
                     src={photo.url}
-                    alt={`${title} — photo ${i + 2}`}
+                    alt={`${title}, photo ${i + 2}`}
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
@@ -142,7 +142,7 @@ export default function Gallery({
           <div className="relative flex-1" onClick={close}>
             <Image
               src={photos[index].url}
-              alt={`${title} — photo ${index + 1}`}
+              alt={`${title}, photo ${index + 1}`}
               fill
               sizes="100vw"
               className="object-contain p-4"

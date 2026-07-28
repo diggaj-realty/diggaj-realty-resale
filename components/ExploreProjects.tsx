@@ -4,6 +4,12 @@ import { getHomeCatalog } from "@/lib/api/home";
 
 type ProjectCard = { project: string; builder?: string; count: number; cover?: string };
 
+// See ExploreMapSection — a lone card in a 3-column track reads as broken.
+const GRID_BY_COUNT: Record<number, string> = {
+  1: "grid-cols-1 max-w-xl",
+  2: "grid-cols-1 sm:grid-cols-2 max-w-4xl",
+};
+
 export default async function ExploreProjects() {
   const { items } = await getHomeCatalog();
 
@@ -25,15 +31,19 @@ export default async function ExploreProjects() {
     <section className="bg-cream px-8 py-24 md:px-14">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="text-4xl font-medium tracking-[-0.02em] md:text-5xl">Explore by project</h2>
-          <p className="mt-3 max-w-sm text-sm text-body">
-            Browse resale homes grouped by society and project — compare units within the community you
+          <h2 className="text-section font-medium tracking-[-0.02em]">Explore by project</h2>
+          <p className="mt-3 max-w-sm text-lead text-body">
+            Browse resale homes grouped by society and project, comparing units within the community you
             want.
           </p>
         </div>
       </div>
 
-      <div className="mt-14 grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        className={`mt-14 grid gap-5 ${
+          GRID_BY_COUNT[projects.length] ?? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        }`}
+      >
         {projects.map((p) => (
           <Link
             key={p.project}

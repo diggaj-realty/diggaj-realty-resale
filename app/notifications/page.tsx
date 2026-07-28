@@ -73,7 +73,7 @@ export default function NotificationsPage() {
         <Nav />
         <div className="flex flex-wrap items-center justify-between gap-4 px-8 pt-10 md:px-14">
           <div>
-            <h1 className="text-4xl font-medium tracking-[-0.02em] text-ink md:text-5xl">Notifications</h1>
+            <h1 className="text-section font-medium tracking-[-0.02em] text-ink">Notifications</h1>
             <p className="mt-2 text-sm text-body">Everything that&apos;s changed on your account.</p>
           </div>
           {unreadCount > 0 && (
@@ -95,7 +95,7 @@ export default function NotificationsPage() {
         )}
         {items?.length === 0 && (
           <p className="rounded-2xl bg-cream p-8 text-center text-sm text-body">
-            No notifications yet — you&apos;ll see updates here as things happen on your account.
+            No notifications yet. You&apos;ll see updates here as things happen on your account.
           </p>
         )}
         <div className="flex flex-col gap-2">

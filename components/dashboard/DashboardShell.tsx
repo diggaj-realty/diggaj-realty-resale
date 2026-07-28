@@ -11,7 +11,7 @@ import AccountMenu from "@/components/dashboard/AccountMenu";
 import DashboardNavList from "@/components/dashboard/DashboardNavList";
 import { DashboardSummaryProvider } from "@/components/dashboard/DashboardSummaryContext";
 import { MenuIcon, CloseIcon } from "@/components/dashboard/icons";
-import { BUYER_NAV, SELLER_NAV, PROFILE_NAV_ITEM } from "@/lib/dashboard/nav";
+import { BUYER_NAV, SELLER_NAV, getProfileNavItem } from "@/lib/dashboard/nav";
 import type { DashboardSummary } from "@/types/dashboard";
 import type { UserRole } from "@/types/auth";
 
@@ -27,14 +27,37 @@ export default function DashboardShell({
   const { user, token, loading } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Bumping this re-runs the summary fetch, so Overview can offer a real retry
+  // instead of the user having to reload the page.
+  const [summaryAttempt, setSummaryAttempt] = useState(0);
+
+  function loadSummary(t: string) {
+    authedGet<DashboardSummary>("/dashboard", t)
+      .then((s) => {
+        setSummary(s);
+        setError(null);
+      })
+      .catch((err) => setError(err.message ?? "Failed to load dashboard."));
+  }
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navItems = role === "BUYER" ? BUYER_NAV : SELLER_NAV;
+  const profileNavItem = getProfileNavItem(role);
   // Same boundary rule as DashboardNavList — a plain startsWith would match
-  // "/saved-searches" against the "/saved" item too.
-  const currentLabel = navItems.find(
-    (i) => pathname === i.href || (!i.exact && pathname.startsWith(`${i.href}/`))
-  )?.label;
+  // "/saved-searches" against the "/saved" item too. Longest match wins so
+  // "/listings/new" resolves to "Add Listing", not "My Listings".
+  //
+  // Profile is included explicitly and Deals falls back below: both are real
+  // pages that aren't in navItems, and they used to render the generic heading
+  // "Dashboard" with no sidebar item highlighted, leaving no positional cue.
+  const titleCandidates = [...navItems, profileNavItem];
+  const currentLabel = titleCandidates.reduce<string | null>((best, i) => {
+    const hit = pathname === i.href || (!i.exact && pathname.startsWith(`${i.href}/`));
+    if (!hit) return best;
+    return best === null || i.href.length > (titleCandidates.find((c) => c.label === best)?.href.length ?? 0)
+      ? i.label
+      : best;
+  }, null);
 
   // A dual-role account (roles: ["SELLER", "BUYER"]) can open either shell —
   // gate on membership in `roles`, not equality with the single legacy
@@ -53,11 +76,9 @@ export default function DashboardShell({
       router.replace(`/dashboard/${userRoles[0].toLowerCase()}`);
       return;
     }
-    authedGet<DashboardSummary>("/dashboard", token)
-      .then(setSummary)
-      .catch((err) => setError(err.message ?? "Failed to load dashboard."));
+    loadSummary(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, user, token, role, router]);
+  }, [loading, user, token, role, router, summaryAttempt]);
 
   // close the mobile drawer on route change — done during render (not an
   // effect) per react.dev's "adjusting state when a prop changes"
@@ -93,18 +114,21 @@ export default function DashboardShell({
     );
   }
 
-  if (error) {
-    return (
-      <main className="flex min-h-screen w-full items-center justify-center bg-cream px-8">
-        <p className="text-sm text-red-700">{error}</p>
-      </main>
-    );
-  }
+  // Deliberately NO early return for `error` here. The /dashboard summary only
+  // feeds the Overview page, but bailing out at the shell level meant one 5xx on
+  // that single endpoint replaced the sidebar, header and every child route with
+  // a bare red sentence — locking the user out of Listings, Offers and Deals
+  // even though those endpoints were healthy. The error now travels down via
+  // DashboardSummaryProvider so Overview alone degrades, with a retry.
 
   return (
     <div className="flex min-h-screen bg-cream">
-      {/* Desktop sidebar — pure navigation */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-ink/10 bg-white lg:flex">
+      {/* Desktop sidebar — pure navigation.
+          `sticky top-0 h-screen` is what makes the inner overflow-y-auto below
+          actually work: without a bounded height the aside just grew to its
+          content height, so the nav never scrolled on its own and the whole page
+          scrolled instead. Now the sidebar stays put while <main> scrolls. */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-ink/10 bg-white lg:flex">
         <Link href="/" className="px-6 pb-2 pt-6 text-lg font-semibold tracking-tight text-ink">
           Diggaj Realty
         </Link>
@@ -121,10 +145,12 @@ export default function DashboardShell({
             </Link>
           )}
         </div>
-        <div className="flex flex-1 flex-col overflow-y-auto px-4">
+        {/* overscroll-contain: once this list hits its top or bottom, the scroll
+            stops here instead of chaining on to the page behind it. */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4">
           <DashboardNavList items={navItems} />
           <div className="mt-auto border-t border-ink/10 pt-2">
-            <DashboardNavList items={[PROFILE_NAV_ITEM]} />
+            <DashboardNavList items={[profileNavItem]} />
           </div>
         </div>
       </aside>
@@ -158,10 +184,12 @@ export default function DashboardShell({
                 </Link>
               )}
             </div>
-            <div className="flex flex-1 flex-col overflow-y-auto">
+            {/* min-h-0 lets this flex child actually shrink so overflow engages;
+                overscroll-contain stops the scroll leaking to the page behind. */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
               <DashboardNavList items={navItems} onNavigate={() => setDrawerOpen(false)} />
               <div className="mt-auto border-t border-ink/10 pt-2">
-                <DashboardNavList items={[PROFILE_NAV_ITEM]} onNavigate={() => setDrawerOpen(false)} />
+                <DashboardNavList items={[profileNavItem]} onNavigate={() => setDrawerOpen(false)} />
               </div>
             </div>
           </div>
@@ -188,13 +216,19 @@ export default function DashboardShell({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <NotificationBell />
-            <AccountMenu />
+            <AccountMenu role={role} />
           </div>
         </header>
 
         <main className="flex-1 px-5 py-8 lg:px-10 lg:py-10">
           <div className="mx-auto max-w-5xl">
-            <DashboardSummaryProvider summary={summary}>{children}</DashboardSummaryProvider>
+            <DashboardSummaryProvider
+              summary={summary}
+              error={error}
+              reload={() => setSummaryAttempt((n) => n + 1)}
+            >
+              {children}
+            </DashboardSummaryProvider>
           </div>
         </main>
       </div>

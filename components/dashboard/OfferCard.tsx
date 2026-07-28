@@ -112,7 +112,7 @@ export default function OfferCard({
       {active && !myTurn && (
         <p className="mt-4 border-t border-ink/5 pt-4 text-xs text-body">
           Waiting for the {counterpartLabel} to respond
-          {offer.counterAmount != null ? ` — currently at ${price(offer.currentAmount)}.` : "."}
+          {offer.counterAmount != null ? `: currently at ${price(offer.currentAmount)}.` : "."}
         </p>
       )}
 

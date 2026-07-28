@@ -29,7 +29,7 @@ export default function SiteVisitSummary({ siteVisit }: { siteVisit: SiteVisit |
           <p>
             Outcome: <span className="font-medium text-ink">{OUTCOME_LABEL[siteVisit.outcome]}</span>
             {siteVisit.outcome === "INTERESTED" && siteVisit.interestedAmount != null && (
-              <span className="text-body"> — interested at {price(siteVisit.interestedAmount)}</span>
+              <span className="text-body">: interested at {price(siteVisit.interestedAmount)}</span>
             )}
           </p>
         ) : (

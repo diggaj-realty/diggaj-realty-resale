@@ -5,7 +5,7 @@ export default function LoginChooserPage() {
     <main className="flex min-h-screen w-full items-center justify-center bg-cream px-8 py-24">
       <div className="mx-auto w-full max-w-xl text-center">
         <p className="text-xs font-medium uppercase tracking-wide text-body">Sign in</p>
-        <h1 className="mt-2 text-3xl font-medium tracking-[-0.02em] text-ink md:text-4xl">
+        <h1 className="mt-2 text-card-title font-medium tracking-[-0.02em] text-ink">
           How would you like to continue?
         </h1>
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2">

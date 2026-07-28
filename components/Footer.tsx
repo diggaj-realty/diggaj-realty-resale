@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useInView } from "@/lib/useInView";
-import WhatsAppButton from "@/components/WhatsAppButton";
 
 // Placeholder domains until real profile URLs are provided — set the
 // matching NEXT_PUBLIC_SOCIAL_* env var per platform to swap one in.
@@ -33,7 +32,7 @@ export default function Footer() {
       <div className="flex flex-col gap-8 px-8 md:flex-row md:items-start md:justify-between md:px-14">
         <h2
           ref={headingRef}
-          className={`max-w-xl text-4xl font-medium leading-tight tracking-[-0.02em] transition-all duration-700 ease-out md:text-5xl ${
+          className={`max-w-xl text-section font-medium leading-tight tracking-[-0.02em] transition-all duration-700 ease-out ${
             headingInView ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
@@ -45,7 +44,7 @@ export default function Footer() {
             blurbInView ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <p className="text-sm leading-relaxed text-body">
+          <p className="text-lead text-body">
             Discover a smarter way to buy real estate with AI. Explore homes
             and experience next-gen homebuying.
           </p>
@@ -58,14 +57,19 @@ export default function Footer() {
       {/* footer brand block */}
       <div className="mt-20 px-8 pb-12 md:px-14">
         <div className="flex items-end gap-4 border-b border-ink/10 pb-6">
-          <span className="text-[11vw] font-medium leading-[0.9] tracking-[-0.04em] md:text-[9vw]">
+          {/* Deliberately viewport-relative so the wordmark keeps spanning the
+              page, but clamped at both ends — raw 9vw hit 230px on a 2560px
+              monitor. */}
+          <span className="text-[clamp(2.25rem,11vw,3.75rem)] font-medium leading-[0.9] tracking-[-0.04em] md:text-[clamp(3.5rem,9vw,11rem)]">
             Diggaj Realty
           </span>
           <div className="relative mb-2 hidden h-16 w-28 shrink-0 overflow-hidden rounded-full md:block">
             <Image src="/img/interior-living.jpg" alt="Interior" fill sizes="112px" className="object-cover" />
           </div>
         </div>
-        <div className="mt-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+        {/* pr reserves the bottom-right corner that the fixed floating AI button
+            occupies, so the last nav link isn't sitting underneath it */}
+        <div className="mt-6 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center md:pr-20">
           <div className="flex flex-wrap items-center gap-3">
             {socials.map((s) => (
               <a
@@ -79,9 +83,8 @@ export default function Footer() {
                 {s.label}
               </a>
             ))}
-            <WhatsAppButton className="ml-1" />
           </div>
-          <nav className="flex flex-wrap gap-x-8 gap-y-2 text-xs text-ink/70">
+          <nav className="flex min-w-0 flex-wrap gap-x-6 gap-y-2 text-xs text-ink/70 lg:gap-x-8">
             {links.map((l) => (
               <Link key={l.label} href={l.href} className="hover:text-ink">
                 {l.label}
