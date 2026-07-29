@@ -11,14 +11,14 @@ function Card({ home }: { home: Property }) {
   return (
     <Link
       href={propertyHref(home)}
-      className="group relative block h-72 w-80 shrink-0 snap-start overflow-hidden rounded-2xl bg-cream sm:h-80 sm:w-96"
+      className="group relative block h-72 w-80 shrink-0 snap-start overflow-hidden rounded-2xl bg-cream sm:h-80 sm:w-96 lg:h-96 lg:w-[26rem]"
     >
       {cover ? (
         <Image
           src={cover}
           alt={home.title}
           fill
-          sizes="384px"
+          sizes="(min-width: 1024px) 416px, (min-width: 640px) 384px, 320px"
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
       ) : (

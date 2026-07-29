@@ -38,6 +38,14 @@
   --text-card-title--line-height: 1.25;
   --text-subhead: clamp(1.125rem, 1rem + 0.553vw, 1.875rem); /* 18 → 30 */
   --text-subhead--line-height: 1.25;
+  /* One-off, above --text-display's own ceiling — reserved for the homepage
+   * hero H1, the single largest headline in the app. Floor is deliberately
+   * lower than the 0.61x ratio the rest of this scale holds to (40px, not
+   * ~59px), because at that size on a 360-375px phone with px-8 padding this
+   * is the only token wrapping a two-word phrase where a mistimed break reads
+   * badly — it needs the extra room to shrink that the others don't. */
+  --text-hero: clamp(2.5rem, 1.95rem + 2.5vw, 6rem); /* 40 → 96 */
+  --text-hero--line-height: 1.05;
   /* Lead/body copy scales far more gently — readability, not drama. It also
    * never drops below 14px, so it does not follow the 0.61x floor above. */
   --text-lead: clamp(0.875rem, 0.8413rem + 0.138vw, 1.0625rem); /* 14 → 17 */

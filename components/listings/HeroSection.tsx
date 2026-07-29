@@ -71,7 +71,10 @@ export default function HeroSection({
   const hasSuggestions = homes.length > 0 || cities.length > 0;
 
   return (
-    <section className="relative min-h-[560px] overflow-clip md:h-svh md:min-h-[640px]">
+    // min-h only (not a fixed h-svh) so a section shorter than its content —
+    // e.g. the elite strip pushing past a short/landscape viewport — grows to
+    // fit instead of getting cropped by overflow-clip.
+    <section className="relative min-h-[560px] overflow-clip md:min-h-[max(560px,100svh)]">
       {/* full-bleed house with slow Ken Burns drift */}
       <motion.div
         initial={{ scale: 1 }}
@@ -114,7 +117,7 @@ export default function HeroSection({
       )}
 
       {/* copy */}
-      <div className="relative z-30 px-8 pt-10 text-white md:px-14 md:pt-16">
+      <div className="relative z-30 px-8 pt-10 text-white md:px-14 md:pt-16 lg:px-16 2xl:px-24">
         <motion.h1
           variants={rise}
           initial="hidden"
@@ -123,7 +126,7 @@ export default function HeroSection({
           // em-based rather than a fixed 4xl/896px: the measure has to grow with
           // the now-fluid font size, or the headline starts wrapping on wide
           // screens purely because the cap stopped matching the type.
-          className="max-w-[16em] text-[clamp(3.25rem,2.7rem+2.4vw,6rem)] font-medium tracking-[-0.03em]"
+          className="max-w-[16em] text-hero font-medium tracking-[-0.03em]"
         >
           Your Home &amp;{" "}
           <span className="relative inline-block">
@@ -252,35 +255,11 @@ export default function HeroSection({
           initial="hidden"
           animate="show"
           custom={5}
-          className="relative z-20 mt-6 px-8 md:px-14"
+          className="relative z-20 mt-6 px-8 pb-8 md:px-14 md:pb-10 lg:px-16 2xl:px-24"
         >
           <EliteStripSection homes={eliteHomes} />
         </motion.div>
       )}
-
-      {/* bottom bar: stats (centered) — in-flow on mobile so it doesn't get
-          clipped or overlap the taller stacked content; pinned to the hero's
-          bottom edge again once the fixed-height layout kicks in at md+ */}
-      <div className="relative z-20 mt-8 flex items-end px-8 pb-7 text-white md:absolute md:inset-x-0 md:bottom-0 md:mt-0 md:px-14">
-        <motion.div
-          variants={rise}
-          initial="hidden"
-          animate="show"
-          custom={5}
-          className="relative flex justify-center divide-x divide-white/25 md:absolute md:inset-x-0 md:bottom-7"
-        >
-          {[
-            { n: "10L+", l: "listings" },
-            { n: "4.9★", l: "rating" },
-            { n: "24/7", l: "agent support" },
-          ].map((s) => (
-            <div key={s.l} className="px-5 text-center first:pl-0">
-              <p className="text-card-title font-medium tracking-[-0.02em]">{s.n}</p>
-              <p className="mt-0.5 text-sm text-white/65">{s.l}</p>
-            </div>
-          ))}
-        </motion.div>
-      </div>
     </section>
   );
 }
