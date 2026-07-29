@@ -71,7 +71,7 @@ export default function HeroSection({
   const hasSuggestions = homes.length > 0 || cities.length > 0;
 
   return (
-    <section className="relative h-svh min-h-[560px] overflow-clip sm:min-h-[640px]">
+    <section className="relative min-h-[560px] overflow-clip md:h-svh md:min-h-[640px]">
       {/* full-bleed house with slow Ken Burns drift */}
       <motion.div
         initial={{ scale: 1 }}
@@ -258,14 +258,16 @@ export default function HeroSection({
         </motion.div>
       )}
 
-      {/* bottom bar: stats (centered) */}
-      <div className="absolute inset-x-0 bottom-0 z-20 flex items-end px-8 pb-7 text-white md:px-14">
+      {/* bottom bar: stats (centered) — in-flow on mobile so it doesn't get
+          clipped or overlap the taller stacked content; pinned to the hero's
+          bottom edge again once the fixed-height layout kicks in at md+ */}
+      <div className="relative z-20 mt-8 flex items-end px-8 pb-7 text-white md:absolute md:inset-x-0 md:bottom-0 md:mt-0 md:px-14">
         <motion.div
           variants={rise}
           initial="hidden"
           animate="show"
           custom={5}
-          className="absolute inset-x-0 bottom-7 flex justify-center divide-x divide-white/25"
+          className="relative flex justify-center divide-x divide-white/25 md:absolute md:inset-x-0 md:bottom-7"
         >
           {[
             { n: "10L+", l: "listings" },
@@ -273,7 +275,7 @@ export default function HeroSection({
             { n: "24/7", l: "agent support" },
           ].map((s) => (
             <div key={s.l} className="px-5 text-center first:pl-0">
-              <p className="text-2xl font-medium tracking-[-0.02em] md:text-3xl">{s.n}</p>
+              <p className="text-card-title font-medium tracking-[-0.02em]">{s.n}</p>
               <p className="mt-0.5 text-sm text-white/65">{s.l}</p>
             </div>
           ))}

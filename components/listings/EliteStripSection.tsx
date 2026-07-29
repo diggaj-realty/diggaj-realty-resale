@@ -43,7 +43,7 @@ export default function EliteStripSection({ homes }: { homes: Property[] }) {
       <div className="flex items-end justify-between gap-6">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-lime">Elite</p>
-          <h2 className="mt-0.5 text-base font-medium tracking-[-0.02em] text-white sm:text-lg">
+          <h2 className="mt-0.5 text-subhead font-medium tracking-[-0.02em] text-white">
             Elite properties
           </h2>
         </div>
