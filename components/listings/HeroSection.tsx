@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Nav from "@/components/Nav";
+import EliteStripSection from "@/components/listings/EliteStripSection";
 import { price } from "@/lib/listings";
 import { getProperties } from "@/lib/api/properties";
 import { propertyHref } from "@/lib/slug";
-import { badgeFor, isElite } from "@/lib/badge";
-import GatedPrice from "@/components/listings/GatedPrice";
+import { isElite } from "@/lib/badge";
 import { useAuth } from "@/lib/auth/AuthContext";
 import type { Property } from "@/types/api";
 
@@ -23,91 +23,12 @@ const rise = {
   }),
 };
 
-function ListingPin({
-  property,
-  offset,
-  delay,
-  reveal,
-}: {
-  property: Property;
-  offset: string;
-  delay: string;
-  reveal: string;
-}) {
-  const cover = property.photos[0]?.url;
-  const badge = badgeFor(property);
-
-  return (
-    <div
-      className={`pointer-events-auto w-48 shrink-0 xl:w-56 2xl:w-60 ${offset} ${reveal || "block"}`}
-    >
-      <div className="drift" style={{ animationDelay: delay }}>
-        <div className="flex justify-center">
-          <div
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <GatedPrice property={property} variant="chip" className="text-sm font-medium text-ink shadow-lg" />
-          </div>
-        </div>
-        <div className="mx-auto h-3 w-px bg-white/90" />
-
-        {/* peek card — always visible */}
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.92 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5, delay: 1.1, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mt-2"
-        >
-          <Link
-            href={propertyHref(property)}
-            className="block overflow-hidden rounded-2xl bg-white p-2 shadow-2xl transition-transform hover:-translate-y-1"
-          >
-            <div className="relative h-24 overflow-hidden rounded-xl bg-cream">
-              {cover ? (
-                <Image src={cover} alt={property.title} fill sizes="240px" className="object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-body">
-                  No photo yet
-                </div>
-              )}
-              <div className="absolute left-2 top-2 flex items-center gap-1.5">
-                {isElite(property) && (
-                  <span className="rounded-full bg-panel px-2.5 py-1 text-[10px] font-semibold text-lime ring-1 ring-lime/30">
-                    ✦ Elite
-                  </span>
-                )}
-                <span className="rounded-full bg-lime px-2.5 py-1 text-[10px] font-semibold text-ink">
-                  {badge}
-                </span>
-              </div>
-            </div>
-            <div className="px-2 pb-1.5 pt-2">
-              <p className="truncate text-sm font-semibold text-ink">{property.title}</p>
-              {/* clamped so a long address can't make one pin twice the height
-                  of its neighbours in the row */}
-              <p className="mt-0.5 line-clamp-2 text-xs text-body">
-                {property.bhk ?? "-"} bed · {property.bathrooms ?? "-"} bath · {property.location}
-              </p>
-              <p className="mt-1.5 text-xs font-semibold text-ink">View home →</p>
-            </div>
-          </Link>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
-type Pin = { property: Property; offset: string; delay: string; reveal: string };
-
 export default function HeroSection({
   popularCities,
-  pins,
+  eliteHomes,
 }: {
   popularCities: string[];
-  pins: Pin[];
+  eliteHomes: Property[];
 }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -193,7 +114,7 @@ export default function HeroSection({
       )}
 
       {/* copy */}
-      <div className="relative z-20 px-8 pt-10 text-white md:px-14 md:pt-16">
+      <div className="relative z-30 px-8 pt-10 text-white md:px-14 md:pt-16">
         <motion.h1
           variants={rise}
           initial="hidden"
@@ -202,7 +123,7 @@ export default function HeroSection({
           // em-based rather than a fixed 4xl/896px: the measure has to grow with
           // the now-fluid font size, or the headline starts wrapping on wide
           // screens purely because the cap stopped matching the type.
-          className="max-w-[15em] text-display font-medium tracking-[-0.03em]"
+          className="max-w-[16em] text-[clamp(3.25rem,2.7rem+2.4vw,6rem)] font-medium tracking-[-0.03em]"
         >
           Your Home &amp;{" "}
           <span className="relative inline-block">
@@ -220,7 +141,7 @@ export default function HeroSection({
           initial="hidden"
           animate="show"
           custom={2}
-          className="mt-6 max-w-md text-lead text-white/85"
+          className="mt-6 max-w-lg text-lg text-white/85 md:text-xl"
         >
           One platform from search to closing, with a dedicated agent for every
           home you buy through Diggaj Realty.
@@ -240,9 +161,9 @@ export default function HeroSection({
               onChange={(e) => setQ(e.target.value)}
               onFocus={() => setFocused(true)}
               placeholder="Search city, address, or home…"
-              className="min-w-0 flex-1 bg-transparent px-4 text-sm text-ink placeholder:text-ink/40 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent px-4 text-base text-ink placeholder:text-ink/40 focus:outline-none"
             />
-            <button type="submit" className="shrink-0 rounded-full bg-panel px-6 py-3 text-sm text-white">
+            <button type="submit" className="shrink-0 rounded-full bg-panel px-6 py-3.5 text-base text-white">
               Search
             </button>
           </form>
@@ -310,12 +231,12 @@ export default function HeroSection({
             custom={4}
             className="mt-4 flex flex-wrap items-center gap-2"
           >
-            <span className="text-xs text-white/60">Popular:</span>
+            <span className="text-sm text-white/60">Popular:</span>
             {popularCities.map((c) => (
               <Link
                 key={c}
                 href={`/listings?city=${encodeURIComponent(c)}`}
-                className="rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-lime hover:text-ink hover:ring-lime"
+                className="rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/20 backdrop-blur transition-colors hover:bg-lime hover:text-ink hover:ring-lime"
               >
                 {c}
               </Link>
@@ -324,22 +245,17 @@ export default function HeroSection({
         )}
       </div>
 
-      {/* interactive listing pins — a bottom-anchored right-aligned row, so the
-          cards can never overlap each other or ride over the copy/stats no
-          matter how wide the viewport is. Hidden below lg (no room beside the
-          copy) and on short viewports, where they'd reach the search field. */}
-      {pins.length > 0 && (
-        <div className="pointer-events-none absolute bottom-24 right-8 z-20 hidden items-end gap-4 lg:flex md:right-14 xl:gap-5 [@media(max-height:640px)]:hidden">
-          {pins.map((p) => (
-            <ListingPin
-              key={p.property.id}
-              property={p.property}
-              offset={p.offset}
-              delay={p.delay}
-              reveal={p.reveal}
-            />
-          ))}
-        </div>
+      {/* elite properties — stacked in the hero, full width, below the search/chips */}
+      {eliteHomes.length > 0 && (
+        <motion.div
+          variants={rise}
+          initial="hidden"
+          animate="show"
+          custom={5}
+          className="relative z-20 mt-6 px-8 md:px-14"
+        >
+          <EliteStripSection homes={eliteHomes} />
+        </motion.div>
       )}
 
       {/* bottom bar: stats (centered) */}
@@ -357,8 +273,8 @@ export default function HeroSection({
             { n: "24/7", l: "agent support" },
           ].map((s) => (
             <div key={s.l} className="px-5 text-center first:pl-0">
-              <p className="text-xl font-medium tracking-[-0.02em] md:text-2xl">{s.n}</p>
-              <p className="mt-0.5 text-[11px] text-white/65">{s.l}</p>
+              <p className="text-2xl font-medium tracking-[-0.02em] md:text-3xl">{s.n}</p>
+              <p className="mt-0.5 text-sm text-white/65">{s.l}</p>
             </div>
           ))}
         </motion.div>
