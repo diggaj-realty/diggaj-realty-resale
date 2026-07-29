@@ -18,6 +18,9 @@ import {
   getOffers,
   getSiteVisits,
   cancelSiteVisit,
+  proposeSiteVisit,
+  acceptSiteVisit,
+  declineSiteVisit,
   getSavedSearches,
   deleteSavedSearch,
   setSavedSearchAlerts,
@@ -152,26 +155,148 @@ export function OffersPanel() {
 }
 
 // ── Site visits ───────────────────────────────────────────────
+// Mutual date agreement lives between buyer and agent only (sellers just
+// watch, read-only). When the agent proposes/re-proposes a time, this card
+// shows accept/decline; a buyer can also always propose their own time.
+function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (updated: SiteVisit) => void }) {
+  const { token } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [proposing, setProposing] = useState(false);
+  const [proposedDate, setProposedDate] = useState("");
+
+  const active = visit.status === "REQUESTED" || visit.status === "SCHEDULED";
+  const awaitingBuyer = visit.awaitingResponseFrom === "BUYER";
+
+  async function run(action: () => Promise<SiteVisit>) {
+    if (!token) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await action();
+      onChanged(updated);
+      setProposing(false);
+      setProposedDate("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Action failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function submitPropose() {
+    if (!token || !proposedDate) return;
+    run(() => proposeSiteVisit(token, visit.id, new Date(proposedDate).toISOString()));
+  }
+
+  function cancel() {
+    if (!token) return;
+    run(() => cancelSiteVisit(token, visit.id));
+  }
+
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <Link href={`/listings/x--${visit.propertyId}`} className="block truncate text-sm font-medium text-ink hover:underline">
+            {visit.propertyTitle ?? "Property"}
+          </Link>
+          <p className="truncate text-xs text-body">{visit.propertyLocation}</p>
+        </div>
+        <StatusBadge status={visit.status} />
+      </div>
+      <div className="mt-3 space-y-1 text-xs text-body">
+        <p>Requested for {fmtDate(visit.requestedDate)}</p>
+        {visit.proposedDate && (
+          <p>
+            {visit.proposedBy === "BUYER" ? "You proposed" : "Agent proposed"} {fmtDate(visit.proposedDate)}
+            {awaitingBuyer && " — awaiting your response"}
+          </p>
+        )}
+        {visit.scheduledDate && <p>Scheduled for {fmtDate(visit.scheduledDate)}</p>}
+        {visit.agentName && <p>Agent: {visit.agentName}</p>}
+        {visit.buyerNote && <p className="text-ink/70">Your note: “{visit.buyerNote}”</p>}
+        {visit.feedback && <p className="text-ink/70">Agent feedback: “{visit.feedback}”</p>}
+      </div>
+
+      {error && <p className="mt-3 text-xs text-red-700">{error}</p>}
+
+      {active && (
+        <div className="mt-4 border-t border-ink/5 pt-4">
+          {proposing ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input
+                type="datetime-local"
+                value={proposedDate}
+                onChange={(e) => setProposedDate(e.target.value)}
+                className="rounded-xl border border-ink/10 bg-white px-4 py-2 text-sm outline-none focus:border-ink/30"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setProposing(false)}
+                  className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitPropose}
+                  disabled={busy || !proposedDate}
+                  className="rounded-full bg-panel px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+                >
+                  {busy ? "Sending…" : "Send"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-2">
+                {awaitingBuyer && (
+                  <>
+                    <button
+                      onClick={() => token && run(() => declineSiteVisit(token, visit.id))}
+                      disabled={busy}
+                      className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => token && run(() => acceptSiteVisit(token, visit.id))}
+                      disabled={busy}
+                      className="rounded-full bg-panel px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+                    >
+                      {busy ? "Working…" : "Accept"}
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => setProposing(true)}
+                  disabled={busy}
+                  className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50"
+                >
+                  {visit.status === "SCHEDULED" ? "Reschedule" : "Propose a time"}
+                </button>
+              </div>
+              <button
+                onClick={cancel}
+                disabled={busy}
+                className="text-xs font-medium text-red-700 underline underline-offset-2 disabled:opacity-50"
+              >
+                Cancel visit
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function VisitsPanel() {
   const { token } = useAuth();
   const cacheKey = token ? `buyerVisits:${token}` : null;
-  const { items, error, setError, load } = useCachedPanelData<SiteVisit[]>(cacheKey, () =>
+  const { items, setItems, error } = useCachedPanelData<SiteVisit[]>(cacheKey, () =>
     getSiteVisits(token!, "buyer").then((r) => r.items)
   );
-  const [busy, setBusy] = useState<string | null>(null);
-
-  async function cancel(id: string) {
-    if (!token) return;
-    setBusy(id);
-    try {
-      await cancelSiteVisit(token, id);
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to cancel");
-    } finally {
-      setBusy(null);
-    }
-  }
 
   return (
     <Panel
@@ -180,40 +305,13 @@ export function VisitsPanel() {
       empty={items?.length === 0}
       emptyText="No site visits requested. Request a tour from any listing to schedule a visit."
     >
-      {items?.map((v) => {
-        const cancellable = v.status === "REQUESTED" || v.status === "SCHEDULED";
-        return (
-          <div key={v.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <Link href={`/listings/x--${v.propertyId}`} className="block truncate text-sm font-medium text-ink hover:underline">
-                  {v.propertyTitle ?? "Property"}
-                </Link>
-                <p className="truncate text-xs text-body">{v.propertyLocation}</p>
-              </div>
-              <StatusBadge status={v.status} />
-            </div>
-            <div className="mt-3 space-y-1 text-xs text-body">
-              <p>Requested for {fmtDate(v.requestedDate)}</p>
-              {v.scheduledDate && <p>Scheduled for {fmtDate(v.scheduledDate)}</p>}
-              {v.agentName && <p>Agent: {v.agentName}</p>}
-              {v.buyerNote && <p className="text-ink/70">Your note: “{v.buyerNote}”</p>}
-              {v.feedback && <p className="text-ink/70">Agent feedback: “{v.feedback}”</p>}
-            </div>
-            {cancellable && (
-              <div className="mt-4 flex justify-end border-t border-ink/5 pt-4">
-                <button
-                  onClick={() => cancel(v.id)}
-                  disabled={busy === v.id}
-                  className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50"
-                >
-                  {busy === v.id ? "Cancelling…" : "Cancel visit"}
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {items?.map((v) => (
+        <SiteVisitCard
+          key={v.id}
+          visit={v}
+          onChanged={(updated) => setItems((prev) => prev?.map((x) => (x.id === updated.id ? updated : x)) ?? null)}
+        />
+      ))}
     </Panel>
   );
 }

@@ -99,6 +99,12 @@ export type SiteVisit = {
   status: SiteVisitStatus;
   requestedDate: string;
   scheduledDate: string | null;
+  /** A time put forward but not yet agreed, and by whom — only set while
+   *  status is REQUESTED and a propose/accept/decline round is in progress. */
+  proposedDate: string | null;
+  proposedBy: "BUYER" | "AGENT" | null;
+  /** Whose response the visit is waiting on; null once it's SCHEDULED/CANCELLED/COMPLETED. */
+  awaitingResponseFrom: "BUYER" | "AGENT" | null;
   buyerNote: string | null;
   feedback: string | null;
   createdAt: string;

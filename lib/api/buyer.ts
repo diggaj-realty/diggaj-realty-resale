@@ -77,6 +77,27 @@ export const cancelSiteVisit = (token: string, id: string) =>
     body: { action: "cancel" },
   });
 
+// Mutual date agreement (buyer <-> agent): either side proposes a time, the
+// other accepts, declines, or proposes a different one. Only callable by the
+// visit's buyer or its assigned agent — sellers are read-only on site visits.
+export const proposeSiteVisit = (token: string, id: string, proposedDate: string) =>
+  authedSend<SiteVisit>(`/site-visits/${id}`, token, {
+    method: "PATCH",
+    body: { action: "propose", proposedDate },
+  });
+
+export const acceptSiteVisit = (token: string, id: string) =>
+  authedSend<SiteVisit>(`/site-visits/${id}`, token, {
+    method: "PATCH",
+    body: { action: "accept" },
+  });
+
+export const declineSiteVisit = (token: string, id: string, reason?: string) =>
+  authedSend<SiteVisit>(`/site-visits/${id}`, token, {
+    method: "PATCH",
+    body: { action: "decline", ...(reason ? { reason } : {}) },
+  });
+
 /** Buyer requests a site visit. Auto-assigns the property's agent, if any.
  *  403s with a clear message if AppConfig.siteVisitsEnabled is off. */
 export const createSiteVisit = (
