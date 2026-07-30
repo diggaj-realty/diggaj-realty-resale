@@ -21,11 +21,13 @@ import {
   proposeSiteVisit,
   acceptSiteVisit,
   declineSiteVisit,
+  disputeScheduledSiteVisit,
   getSavedSearches,
   deleteSavedSearch,
   setSavedSearchAlerts,
   getDeals,
 } from "@/lib/api/buyer";
+import { ApiError } from "@/lib/api/client";
 import { getInterests } from "@/lib/api/interests";
 import type {
   Deal,
@@ -164,9 +166,14 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
   const [error, setError] = useState<string | null>(null);
   const [proposing, setProposing] = useState(false);
   const [proposedDate, setProposedDate] = useState("");
+  const [disputing, setDisputing] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
 
   const active = visit.status === "REQUESTED" || visit.status === "SCHEDULED";
   const awaitingBuyer = visit.awaitingResponseFrom === "BUYER";
+  // Staff booked this directly from a call — the buyer never confirmed it
+  // in-app, so it gets a "dispute" action instead of "reschedule".
+  const bookedOffline = visit.status === "SCHEDULED" && visit.scheduledVia === "AGREED_OFFLINE";
 
   async function run(action: () => Promise<SiteVisit>) {
     if (!token) return;
@@ -177,8 +184,14 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
       onChanged(updated);
       setProposing(false);
       setProposedDate("");
+      setDisputing(false);
+      setDisputeReason("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed");
+      if (e instanceof ApiError && e.status === 409) {
+        setError("This booking has already changed — refresh to see the latest.");
+      } else {
+        setError(e instanceof Error ? e.message : "Action failed");
+      }
     } finally {
       setBusy(false);
     }
@@ -192,6 +205,11 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
   function cancel() {
     if (!token) return;
     run(() => cancelSiteVisit(token, visit.id));
+  }
+
+  function submitDispute() {
+    if (!token) return;
+    run(() => disputeScheduledSiteVisit(token, visit.id, disputeReason.trim() || undefined));
   }
 
   return (
@@ -213,7 +231,16 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
             {awaitingBuyer && " — awaiting your response"}
           </p>
         )}
-        {visit.scheduledDate && <p>Scheduled for {fmtDate(visit.scheduledDate)}</p>}
+        {visit.scheduledDate && (
+          <p>
+            Scheduled for {fmtDate(visit.scheduledDate)}
+            {bookedOffline && (
+              <span className="ml-1.5 inline-block rounded-full bg-ink/5 px-2 py-0.5 text-[10px] font-medium text-ink/60 ring-1 ring-ink/10">
+                booked following a call
+              </span>
+            )}
+          </p>
+        )}
         {visit.agentName && <p>Agent: {visit.agentName}</p>}
         {visit.buyerNote && <p className="text-ink/70">Your note: “{visit.buyerNote}”</p>}
         {visit.feedback && <p className="text-ink/70">Agent feedback: “{visit.feedback}”</p>}
@@ -247,6 +274,31 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
                 </button>
               </div>
             </div>
+          ) : disputing ? (
+            <div className="flex flex-col gap-2">
+              <textarea
+                rows={2}
+                value={disputeReason}
+                onChange={(e) => setDisputeReason(e.target.value)}
+                placeholder="What did you actually agree to? (optional)"
+                className="resize-none rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm outline-none focus:border-ink/30"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDisputing(false)}
+                  className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitDispute}
+                  disabled={busy}
+                  className="rounded-full bg-red-700 px-4 py-2 text-xs font-medium text-white disabled:opacity-50"
+                >
+                  {busy ? "Sending…" : "Submit dispute"}
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap gap-2">
@@ -268,13 +320,23 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
                     </button>
                   </>
                 )}
-                <button
-                  onClick={() => setProposing(true)}
-                  disabled={busy}
-                  className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50"
-                >
-                  {visit.status === "SCHEDULED" ? "Reschedule" : "Propose a time"}
-                </button>
+                {bookedOffline ? (
+                  <button
+                    onClick={() => setDisputing(true)}
+                    disabled={busy}
+                    className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-red-700 hover:bg-ink/10 disabled:opacity-50"
+                  >
+                    Dispute this booking
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setProposing(true)}
+                    disabled={busy}
+                    className="rounded-full bg-ink/5 px-4 py-2 text-xs font-medium text-ink/70 hover:bg-ink/10 disabled:opacity-50"
+                  >
+                    {visit.status === "SCHEDULED" ? "Reschedule" : "Propose a time"}
+                  </button>
+                )}
               </div>
               <button
                 onClick={cancel}

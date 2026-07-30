@@ -2,9 +2,11 @@ const BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
 export class ApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -36,7 +38,7 @@ export async function api<T>(
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status);
+    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status, json?.error?.code);
   }
   return json.data as T;
 }

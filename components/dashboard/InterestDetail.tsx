@@ -8,6 +8,7 @@ import { getInterest, cancelInterest } from "@/lib/api/interests";
 import { getNegotiationSessions, getNegotiationSession } from "@/lib/api/negotiationSessions";
 import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
 import { Panel, fmtDate } from "@/components/dashboard/shared";
+import { formatPhone, telHref } from "@/lib/phone";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import NegotiationSessionView from "@/components/dashboard/NegotiationSessionView";
@@ -107,7 +108,11 @@ export default function InterestDetail({ interestId, viewerRole }: { interestId:
               <div className="flex items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-ink">{interest.agentName}</p>
-                  {interest.agentPhone && <p className="text-xs text-body">{interest.agentPhone}</p>}
+                  {interest.agentPhone && (
+                    <a href={telHref(interest.agentPhone)} className="text-xs text-body underline underline-offset-2">
+                      {formatPhone(interest.agentPhone)}
+                    </a>
+                  )}
                 </div>
                 <WhatsAppButton
                   message={`Hi, I'm reaching out about ${interest.propertyTitle ?? "a property"} on Diggaj Realty.`}

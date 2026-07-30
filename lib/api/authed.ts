@@ -10,7 +10,7 @@ export async function authedGet<T>(path: string, token: string): Promise<T> {
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status);
+    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status, json?.error?.code);
   }
   return json.data as T;
 }
@@ -31,7 +31,7 @@ export async function authedSend<T>(
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status);
+    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status, json?.error?.code);
   }
   return json.data as T;
 }
@@ -56,7 +56,7 @@ export async function authedUpload(
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new ApiError(json?.error?.message ?? `Upload failed (${res.status})`, res.status);
+    throw new ApiError(json?.error?.message ?? `Upload failed (${res.status})`, res.status, json?.error?.code);
   }
   return json.data as { url: string };
 }

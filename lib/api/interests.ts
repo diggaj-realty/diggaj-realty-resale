@@ -9,7 +9,7 @@ import type { InterestStatus, PropertyInterest, PropertyInterestDetail } from "@
 export const expressInterest = (
   token: string,
   propertyId: string,
-  input?: { source?: string; buyerNote?: string }
+  input?: { source?: string; buyerNote?: string; buyerPhone?: string }
 ) => authedSend<PropertyInterest>("/interests", token, { method: "POST", body: { propertyId, ...input } });
 
 /** Role-scoped list: buyer sees their own, agent sees leads assigned to

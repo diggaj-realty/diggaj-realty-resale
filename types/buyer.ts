@@ -91,6 +91,13 @@ export type SiteVisitStatus = "REQUESTED" | "SCHEDULED" | "COMPLETED" | "CANCELL
  *  picks them up the moment that changes, but expect `undefined`/`null` today. */
 export type SiteVisitOutcome = "INTERESTED" | "NOT_INTERESTED";
 
+/** How the current/most recent SCHEDULED date was set. AGREED_OFFLINE means
+ *  staff booked it directly from a phone call and asserted the buyer's
+ *  agreement — the buyer never confirmed it in-app, and can dispute it.
+ *  BUYER_ACCEPTED means the buyer confirmed it themselves via acceptSiteVisit,
+ *  and is rescheduled rather than disputed. */
+export type SiteVisitScheduledVia = "AGREED_OFFLINE" | "BUYER_ACCEPTED";
+
 export type SiteVisit = {
   id: string;
   propertyId: string;
@@ -105,6 +112,9 @@ export type SiteVisit = {
   proposedBy: "BUYER" | "AGENT" | null;
   /** Whose response the visit is waiting on; null once it's SCHEDULED/CANCELLED/COMPLETED. */
   awaitingResponseFrom: "BUYER" | "AGENT" | null;
+  /** Only meaningful once status is (or was) SCHEDULED — older visits and
+   *  ones never scheduled won't have it. */
+  scheduledVia?: SiteVisitScheduledVia | null;
   buyerNote: string | null;
   feedback: string | null;
   createdAt: string;

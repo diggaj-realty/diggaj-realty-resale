@@ -14,7 +14,7 @@ async function authApi<T>(path: string, body: unknown, token?: string): Promise<
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status);
+    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status, json?.error?.code);
   }
   return json.data as T;
 }
@@ -27,7 +27,7 @@ export function register(input: {
   name: string;
   email: string;
   password: string;
-  phone?: string;
+  phone: string;
   role: UserRole;
 }) {
   return authApi<LoginResponse>("/auth/register", input);
@@ -53,7 +53,7 @@ export async function me(token: string): Promise<AuthUser> {
   });
   const json = await res.json();
   if (!res.ok) {
-    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status);
+    throw new ApiError(json?.error?.message ?? `Request failed (${res.status})`, res.status, json?.error?.code);
   }
   return json.data as AuthUser;
 }

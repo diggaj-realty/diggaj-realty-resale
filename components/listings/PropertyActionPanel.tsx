@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hasRole } from "@/lib/auth/roles";
 import { getInterests } from "@/lib/api/interests";
+import { agentAssignedMessage } from "@/lib/interestMessages";
 import { TERMINAL_INTEREST_STATUSES } from "@/types/transaction";
 import type { PropertyInterest } from "@/types/transaction";
 import type { Property } from "@/types/api";
@@ -91,6 +92,9 @@ export default function PropertyActionPanel({ property }: { property: Property }
           <div className="flex justify-center">
             <StatusBadge status={activeInterest.status} />
           </div>
+          {agentAssignedMessage(activeInterest) && (
+            <p className="text-center text-xs text-body">{agentAssignedMessage(activeInterest)}</p>
+          )}
         </>
       ) : (
         !underContract && (

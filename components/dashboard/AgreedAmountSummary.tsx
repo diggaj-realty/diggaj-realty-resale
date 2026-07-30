@@ -1,6 +1,7 @@
 import { price } from "@/lib/listings";
 import { fmtDate } from "@/components/dashboard/shared";
-import type { Deal, OfferWithEvents, OfflineNegotiation } from "@/types/buyer";
+import type { Deal, OfferWithEvents } from "@/types/buyer";
+import type { OfflineNegotiationRecord } from "@/types/transaction";
 
 /** Distinguishes every amount that can be on the table for a deal, since
  *  "the price" silently means four different things depending on when you
@@ -14,9 +15,12 @@ export default function AgreedAmountSummary({
 }: {
   acceptedOffer: OfferWithEvents | null;
   deal: Deal;
-  offlineNegotiations: OfflineNegotiation[];
+  offlineNegotiations: OfflineNegotiationRecord[];
 }) {
-  const latestOffline = offlineNegotiations[0] ?? null;
+  // isCurrent, not index 0, is the only reliable way to find the live
+  // figure — a newer record superseding an older one doesn't guarantee
+  // ordering in the array.
+  const latestOffline = offlineNegotiations.find((n) => n.isCurrent) ?? null;
   const currentAmount = latestOffline?.agreedAmount ?? deal.agreedPrice;
 
   return (
@@ -25,7 +29,9 @@ export default function AgreedAmountSummary({
       <p className="mt-1 text-3xl font-semibold tracking-[-0.02em]">{price(currentAmount)}</p>
       {latestOffline && (
         <p className="mt-1 text-xs text-white/60">
-          Updated by an offline negotiation on {fmtDate(latestOffline.createdAt)}
+          {latestOffline.bothConfirmed
+            ? `Confirmed by both parties on ${fmtDate(latestOffline.updatedAt)}`
+            : "Recorded by your agent — awaiting confirmation from both parties"}
         </p>
       )}
 

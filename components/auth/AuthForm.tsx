@@ -4,11 +4,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import { login, register } from "@/lib/api/auth";
+import { updateProfile } from "@/lib/api/profile";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hasRole } from "@/lib/auth/roles";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
-import type { UserRole } from "@/types/auth";
+import InlinePhoneCapture from "@/components/shared/InlinePhoneCapture";
+import type { GoogleAuthResponse, UserRole } from "@/types/auth";
 
 export default function AuthForm({ role }: { role: UserRole }) {
   const router = useRouter();
@@ -21,12 +23,36 @@ export default function AuthForm({ role }: { role: UserRole }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Google sign-in never returns a phone number. When the backend flags
+  // needsPhone, we hold the result here (never call setSession) until the
+  // buyer supplies one — so no lead-creating action is possible in between.
+  const [pendingGoogleUser, setPendingGoogleUser] = useState<GoogleAuthResponse | null>(null);
+  const [googlePhoneError, setGooglePhoneError] = useState<string | null>(null);
+  const [googlePhoneSubmitting, setGooglePhoneSubmitting] = useState(false);
 
   const roleLabel = role === "BUYER" ? "Buyer" : "Seller";
   const dashboardPath = role === "BUYER" ? "/dashboard/buyer" : "/dashboard/seller";
   // Whatever page sent the user here (e.g. a property detail page they were
   // trying to like/offer/tour from) — falls back to the role's dashboard.
   const redirectTarget = searchParams.get("redirect") || dashboardPath;
+
+  async function submitGooglePhone(phone: string) {
+    if (!pendingGoogleUser) return;
+    setGooglePhoneError(null);
+    setGooglePhoneSubmitting(true);
+    try {
+      const updatedUser = await updateProfile(pendingGoogleUser.token, {
+        name: pendingGoogleUser.user.name,
+        phone,
+      });
+      setSession(pendingGoogleUser.token, updatedUser);
+      router.push(redirectTarget);
+    } catch (err) {
+      setGooglePhoneError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+    } finally {
+      setGooglePhoneSubmitting(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +62,7 @@ export default function AuthForm({ role }: { role: UserRole }) {
       const result =
         mode === "login"
           ? await login(email, password)
-          : await register({ name, email, password, phone: phone || undefined, role });
+          : await register({ name, email, password, phone, role });
 
       // A dual-role account (e.g. a seller who's also added buyer access)
       // can log in from either page — only reject if it holds neither role
@@ -69,93 +95,118 @@ export default function AuthForm({ role }: { role: UserRole }) {
           : "Log in to manage your listings, offers, and deals."}
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
-        {mode === "register" && (
-          <label className="flex flex-col gap-1.5 text-sm text-ink">
-            Full name
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
-              placeholder="Ananya Sharma"
+      {pendingGoogleUser ? (
+        <div className="mt-8">
+          <p className="text-sm text-ink">
+            One more thing — we need a number an agent can reach you on.
+          </p>
+          <div className="mt-4">
+            <InlinePhoneCapture
+              prompt="Add your phone number to continue."
+              submitting={googlePhoneSubmitting}
+              error={googlePhoneError}
+              onSubmit={submitGooglePhone}
             />
-          </label>
-        )}
-        <label className="flex flex-col gap-1.5 text-sm text-ink">
-          Email
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
-            placeholder="you@example.com"
-          />
-        </label>
-        {mode === "register" && (
-          <label className="flex flex-col gap-1.5 text-sm text-ink">
-            Phone <span className="text-body">(optional)</span>
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
-              placeholder="98765 43210"
-            />
-          </label>
-        )}
-        <label className="flex flex-col gap-1.5 text-sm text-ink">
-          Password
-          <input
-            required
-            type="password"
-            minLength={mode === "register" ? 8 : undefined}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
-            placeholder="••••••••"
-          />
-        </label>
-
-        {error && (
-          <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className="mt-2 rounded-full bg-panel px-6 py-3.5 text-sm font-medium text-white transition-transform hover:-translate-y-px disabled:opacity-60"
-        >
-          {submitting ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
-        </button>
-      </form>
-
-      {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
-        <>
-          <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-wide text-ink/35">
-            <span className="h-px flex-1 bg-ink/10" /> or <span className="h-px flex-1 bg-ink/10" />
           </div>
-          <GoogleSignInButton role={role} redirectTo={redirectTarget} onError={setError} />
+        </div>
+      ) : (
+        <>
+          <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
+            {mode === "register" && (
+              <label className="flex flex-col gap-1.5 text-sm text-ink">
+                Full name
+                <input
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
+                  placeholder="Ananya Sharma"
+                />
+              </label>
+            )}
+            <label className="flex flex-col gap-1.5 text-sm text-ink">
+              Email
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
+                placeholder="you@example.com"
+              />
+            </label>
+            {mode === "register" && (
+              <label className="flex flex-col gap-1.5 text-sm text-ink">
+                Phone
+                <input
+                  required
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
+                  placeholder="98765 43210"
+                />
+              </label>
+            )}
+            <label className="flex flex-col gap-1.5 text-sm text-ink">
+              Password
+              <input
+                required
+                type="password"
+                minLength={mode === "register" ? 8 : undefined}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
+                placeholder="••••••••"
+              />
+            </label>
+
+            {error && (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-2 rounded-full bg-panel px-6 py-3.5 text-sm font-medium text-white transition-transform hover:-translate-y-px disabled:opacity-60"
+            >
+              {submitting ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
+            </button>
+          </form>
+
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-wide text-ink/35">
+                <span className="h-px flex-1 bg-ink/10" /> or <span className="h-px flex-1 bg-ink/10" />
+              </div>
+              <GoogleSignInButton
+                role={role}
+                redirectTo={redirectTarget}
+                onError={setError}
+                onNeedsPhone={setPendingGoogleUser}
+              />
+            </>
+          )}
+
+          <button
+            onClick={() => {
+              setError(null);
+              setMode(mode === "login" ? "register" : "login");
+            }}
+            className="mt-6 text-sm text-body underline underline-offset-4"
+          >
+            {mode === "login" ? `New ${roleLabel.toLowerCase()}? Create an account` : "Already have an account? Sign in"}
+          </button>
+
+          <p className="mt-8 text-xs text-body">
+            {role === "BUYER" ? (
+              <>Selling a property instead? <Link href="/login/seller" className="underline underline-offset-4">Seller login →</Link></>
+            ) : (
+              <>Looking to buy instead? <Link href="/login/buyer" className="underline underline-offset-4">Buyer login →</Link></>
+            )}
+          </p>
         </>
       )}
-
-      <button
-        onClick={() => {
-          setError(null);
-          setMode(mode === "login" ? "register" : "login");
-        }}
-        className="mt-6 text-sm text-body underline underline-offset-4"
-      >
-        {mode === "login" ? `New ${roleLabel.toLowerCase()}? Create an account` : "Already have an account? Sign in"}
-      </button>
-
-      <p className="mt-8 text-xs text-body">
-        {role === "BUYER" ? (
-          <>Selling a property instead? <Link href="/login/seller" className="underline underline-offset-4">Seller login →</Link></>
-        ) : (
-          <>Looking to buy instead? <Link href="/login/buyer" className="underline underline-offset-4">Buyer login →</Link></>
-        )}
-      </p>
     </div>
   );
 }

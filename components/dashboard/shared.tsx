@@ -90,6 +90,28 @@ export function Panel({
   );
 }
 
+/** A dispute, an open query, or a fallen-through deal — states that stop the
+ *  clock rather than just waiting on someone. Deliberately louder than the
+ *  red error banner in `Panel` above (a block, not a line), so it reads as
+ *  fundamentally different from "awaiting your confirmation." */
+export function BlockedNotice({
+  title,
+  note,
+  meta,
+}: {
+  title: string;
+  note?: string | null;
+  meta?: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-red-50 p-4 ring-1 ring-red-200">
+      <p className="text-sm font-medium text-red-800">{title}</p>
+      {note && <p className="mt-1 text-xs text-red-700">&ldquo;{note}&rdquo;</p>}
+      {meta && <p className="mt-1 text-[11px] text-red-700/70">{meta}</p>}
+    </div>
+  );
+}
+
 export function Step({ done, label, detail }: { done: boolean; label: string; detail?: string }) {
   return (
     <div className="flex items-start gap-3">

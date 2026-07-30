@@ -12,6 +12,13 @@ import type {
   ShortlistedProperty,
   TransactionDetail,
 } from "@/types/buyer";
+import type {
+  CostSheet,
+  CostSheetRespondAction,
+  DealProgress,
+  OfflineNegotiationRecord,
+  OfflineNegotiationRespondAction,
+} from "@/types/transaction";
 
 // ── Saved properties (shortlist) ──
 export const getShortlist = (token: string) =>
@@ -98,6 +105,22 @@ export const declineSiteVisit = (token: string, id: string, reason?: string) =>
     body: { action: "decline", ...(reason ? { reason } : {}) },
   });
 
+/** Buyer disputes a visit staff booked directly from a phone call
+ *  (`scheduledVia: "AGREED_OFFLINE"`) rather than proposing and waiting for
+ *  in-app acceptance — only available on that path, not on a slot the buyer
+ *  already accepted themselves (that's rescheduled via `proposeSiteVisit`
+ *  instead). Reverts the visit to a proposal, keeping the date, so neither
+ *  side restarts from scratch.
+ *  UNVERIFIED: this action isn't confirmed to exist on the backend yet —
+ *  the spec that requested this flagged it might need to be added. If this
+ *  404s/400s unexpectedly in testing, confirm the actual contract with the
+ *  backend owner before assuming the frontend wiring is at fault. */
+export const disputeScheduledSiteVisit = (token: string, id: string, reason?: string) =>
+  authedSend<SiteVisit>(`/site-visits/${id}`, token, {
+    method: "PATCH",
+    body: { action: "dispute", ...(reason ? { reason } : {}) },
+  });
+
 /** Buyer requests a site visit. Auto-assigns the property's agent, if any.
  *  403s with a clear message if AppConfig.siteVisitsEnabled is off. */
 export const createSiteVisit = (
@@ -162,3 +185,36 @@ export const initiatePayment = (token: string, dealId: string, requestId: string
     method: "PATCH",
     body: { action: "initiate" },
   });
+
+// ── Recorded price confirm/dispute — the buyer/seller each confirm the
+// figure staff recorded themselves; staff cannot confirm on their behalf. ──
+export const getOfflineNegotiations = (token: string, dealId: string) =>
+  authedGet<OfflineNegotiationRecord[]>(`/deals/${dealId}/offline-negotiation`, token);
+
+export const respondToOfflineNegotiation = (
+  token: string,
+  dealId: string,
+  negotiationId: string,
+  action: OfflineNegotiationRespondAction
+) =>
+  authedSend<OfflineNegotiationRecord>(
+    `/deals/${dealId}/offline-negotiation/${negotiationId}/respond`,
+    token,
+    { method: "POST", body: action }
+  );
+
+// ── Cost sheet acknowledge/query — buyer-only; sellers get nothing back. ──
+export const getCostSheet = (token: string, dealId: string) =>
+  authedGet<CostSheet | null>(`/deals/${dealId}/cost-sheet`, token);
+
+export const respondToCostSheet = (
+  token: string,
+  dealId: string,
+  sheetId: string,
+  action: CostSheetRespondAction
+) => authedSend<CostSheet>(`/deals/${dealId}/cost-sheet/${sheetId}/respond`, token, { method: "POST", body: action });
+
+// ── Deal progress ladder — for buyer AND seller, replaces the client-side
+// stage-lookup TransactionTimeline used to do on its own. ──
+export const getDealProgress = (token: string, dealId: string) =>
+  authedGet<DealProgress>(`/deals/${dealId}/progress`, token);

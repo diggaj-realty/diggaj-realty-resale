@@ -4,9 +4,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hasRole } from "@/lib/auth/roles";
-import { authedSend } from "@/lib/api/authed";
+import { addShortlist, removeShortlist } from "@/lib/api/buyer";
+import { expressInterest } from "@/lib/api/interests";
 import { getSharedShortlistIds, invalidateSharedShortlist } from "@/lib/api/shortlistCache";
 import { savePendingIntent, peekPendingIntent, clearPendingIntent, loginHrefWithReturn } from "@/lib/auth/redirectIntent";
+import { ApiError } from "@/lib/api/client";
+import { isBuyerPhoneRequired } from "@/lib/api/errorCodes";
+import { agentAssignedMessage } from "@/lib/interestMessages";
+import InlinePhoneCapture from "@/components/shared/InlinePhoneCapture";
 
 export default function ShortlistButton({
   propertyId,
@@ -15,7 +20,9 @@ export default function ShortlistButton({
   propertyId: string;
   /** Smaller, shadowed circle tuned for overlaying a listing card's photo,
    *  instead of the slightly larger ringed circle used in the property page's
-   *  action stack. Both are icon-only. */
+   *  action stack. Both are icon-only. The post-save "contact me?" follow-up
+   *  only renders in the non-compact (property page) context — there's no
+   *  room for it inside a card-grid thumbnail. */
   compact?: boolean;
 }) {
   const { user, token } = useAuth();
@@ -25,7 +32,18 @@ export default function ShortlistButton({
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Saving now 400s if the property isn't LIVE anymore — once that happens,
+  // stop letting the user retry against a listing that's gone.
+  const [stale, setStale] = useState(false);
   const resumedRef = useRef(false);
+
+  // Post-save "want an agent to call you?" prompt — the only path that turns
+  // a silent bookmark into an actionable lead. Not shown in compact mode.
+  const [showContactPrompt, setShowContactPrompt] = useState(false);
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [contactPhonePrompt, setContactPhonePrompt] = useState<string | null>(null);
+  const [contactPhoneError, setContactPhoneError] = useState<string | null>(null);
+  const [contactMessage, setContactMessage] = useState<string | null>(null);
 
   // hydrate current membership for logged-in buyers — shared/deduped across
   // every ShortlistButton mounted at once (a grid of cards), so this doesn't
@@ -54,16 +72,44 @@ export default function ShortlistButton({
     const next = !saved;
     setSaved(next); // optimistic
     try {
-      await authedSend(`/shortlists${next ? "" : `/${propertyId}`}`, token, {
-        method: next ? "POST" : "DELETE",
-        body: next ? { propertyId } : undefined,
-      });
+      await (next ? addShortlist(token, propertyId) : removeShortlist(token, propertyId));
       invalidateSharedShortlist();
-    } catch {
+      if (next && !compact) setShowContactPrompt(true);
+    } catch (err) {
       setSaved(!next); // revert
-      setError("Couldn't save, try again");
+      if (err instanceof ApiError && err.status === 400) {
+        // "This property is no longer available" — verbatim, and stop
+        // letting the button be retried against a listing that's gone.
+        setError(err.message);
+        setStale(true);
+      } else {
+        setError("Couldn't save, try again");
+      }
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function requestContact(buyerPhone?: string) {
+    if (!token) return;
+    setContactSubmitting(true);
+    if (buyerPhone) setContactPhoneError(null);
+    try {
+      const interest = await expressInterest(token, propertyId, { source: "CONTACT_REQUEST", buyerPhone });
+      setContactMessage(agentAssignedMessage(interest) ?? "An agent will be in touch.");
+      setContactPhonePrompt(null);
+    } catch (err) {
+      if (isBuyerPhoneRequired(err)) {
+        setContactPhonePrompt(err.message);
+        return;
+      }
+      if (buyerPhone && err instanceof ApiError && err.status === 400) {
+        setContactPhoneError(err.message);
+        return;
+      }
+      setContactMessage(err instanceof ApiError ? err.message : "Couldn't reach an agent right now.");
+    } finally {
+      setContactSubmitting(false);
     }
   }
 
@@ -101,7 +147,7 @@ export default function ShortlistButton({
           e.stopPropagation();
           toggle();
         }}
-        disabled={busy}
+        disabled={busy || stale}
         aria-pressed={saved}
         // Now that there's no visible label anywhere, `title` gives sighted
         // users the same hover affordance aria-label gives screen readers.
@@ -135,6 +181,40 @@ export default function ShortlistButton({
         <p className="absolute top-full left-1/2 mt-1.5 w-max max-w-[10rem] -translate-x-1/2 text-center text-[11px] text-red-600">
           {error}
         </p>
+      )}
+
+      {showContactPrompt && (
+        <div className="absolute top-full left-1/2 z-20 mt-2 w-64 -translate-x-1/2 rounded-2xl bg-white p-4 text-left shadow-lg ring-1 ring-ink/10">
+          {contactMessage ? (
+            <p className="text-sm text-ink">{contactMessage}</p>
+          ) : contactPhonePrompt ? (
+            <InlinePhoneCapture
+              prompt={contactPhonePrompt}
+              submitting={contactSubmitting}
+              error={contactPhoneError}
+              onSubmit={(phone) => requestContact(phone)}
+            />
+          ) : (
+            <>
+              <p className="text-sm text-ink">Saved. Want an agent to call you about this one?</p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => requestContact()}
+                  disabled={contactSubmitting}
+                  className="rounded-full bg-panel px-4 py-2 text-xs font-medium text-white disabled:opacity-60"
+                >
+                  {contactSubmitting ? "Please wait…" : "Yes, contact me"}
+                </button>
+                <button
+                  onClick={() => setShowContactPrompt(false)}
+                  className="rounded-full px-4 py-2 text-xs font-medium text-body underline underline-offset-4"
+                >
+                  Not now
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
   );

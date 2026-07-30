@@ -6,7 +6,7 @@ import { googleAuth } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hasRole } from "@/lib/auth/roles";
 import { ApiError } from "@/lib/api/client";
-import type { UserRole } from "@/types/auth";
+import type { GoogleAuthResponse, UserRole } from "@/types/auth";
 
 declare global {
   interface Window {
@@ -66,12 +66,18 @@ export default function GoogleSignInButton({
   role,
   redirectTo,
   onError,
+  onNeedsPhone,
 }: {
   role: UserRole;
   /** Where to send the user after a successful sign-in — the page they were
    *  on before being sent to log in, or the role's dashboard as a fallback. */
   redirectTo: string;
   onError: (message: string) => void;
+  /** Google never returns a phone number. When the backend flags
+   *  `needsPhone: true`, the caller must collect one before the session is
+   *  established — this hands the raw result back instead of completing
+   *  sign-in itself. */
+  onNeedsPhone: (result: GoogleAuthResponse) => void;
 }) {
   const router = useRouter();
   const { setSession } = useAuth();
@@ -92,6 +98,10 @@ export default function GoogleSignInButton({
               result.user.role === "BUYER" ? "buyer" : "seller"
             } login instead.`
           );
+          return;
+        }
+        if (result.needsPhone) {
+          onNeedsPhone(result);
           return;
         }
         setSession(result.token, result.user);

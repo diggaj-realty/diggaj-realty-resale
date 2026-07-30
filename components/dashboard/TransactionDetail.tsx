@@ -8,22 +8,36 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import OfferTimeline from "@/components/dashboard/OfferTimeline";
 import DealDocuments from "@/components/dashboard/DealDocuments";
 import PaymentRequests from "@/components/dashboard/PaymentRequests";
-import TransactionTimeline from "@/components/dashboard/TransactionTimeline";
+import DealProgress from "@/components/dashboard/DealProgress";
 import AgreedAmountSummary from "@/components/dashboard/AgreedAmountSummary";
 import SiteVisitSummary from "@/components/dashboard/SiteVisitSummary";
 import OfflineNegotiationList from "@/components/dashboard/OfflineNegotiationList";
+import CostSheet from "@/components/dashboard/CostSheet";
 import DocumentRequestPanel from "@/components/dashboard/DocumentRequestPanel";
 import IdentityVerificationPanel from "@/components/dashboard/IdentityVerificationPanel";
 import AgreementPanel from "@/components/dashboard/AgreementPanel";
 import ClosureChecklistView from "@/components/dashboard/ClosureChecklistView";
 import { Panel, fmtDate } from "@/components/dashboard/shared";
+import { formatPhone, telHref } from "@/lib/phone";
 import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
-import { getTransactionDetail } from "@/lib/api/buyer";
+import {
+  getTransactionDetail,
+  getOfflineNegotiations,
+  getCostSheet,
+  getDealProgress,
+} from "@/lib/api/buyer";
 import { getDocumentRequests } from "@/lib/api/documentRequests";
 import { getIdentityVerification, getAgreements } from "@/lib/api/dealCompliance";
 import { deriveClosureChecklist } from "@/lib/dashboard/deriveClosureChecklist";
 import type { TransactionDetail as TransactionDetailData, TransactionParty } from "@/types/buyer";
-import type { DocumentRequest, IdentityVerificationSummary, DealAgreement } from "@/types/transaction";
+import type {
+  DocumentRequest,
+  IdentityVerificationSummary,
+  DealAgreement,
+  OfflineNegotiationRecord,
+  CostSheet as CostSheetData,
+  DealProgress as DealProgressData,
+} from "@/types/transaction";
 import type { UserRole } from "@/types/auth";
 
 function PartyCard({ role, party }: { role: string; party: TransactionParty | null }) {
@@ -33,7 +47,11 @@ function PartyCard({ role, party }: { role: string; party: TransactionParty | nu
       {party ? (
         <>
           <p className="mt-1 text-sm font-medium text-ink">{party.name}</p>
-          {party.phone && <p className="text-xs text-body">{party.phone}</p>}
+          {party.phone && (
+            <a href={telHref(party.phone)} className="text-xs text-body underline underline-offset-2">
+              {formatPhone(party.phone)}
+            </a>
+          )}
           {party.email && <p className="truncate text-xs text-body">{party.email}</p>}
         </>
       ) : (
@@ -50,10 +68,15 @@ function TransactionBody({
   documentRequests,
   identity,
   agreements,
+  offlineNegotiations,
+  costSheet,
+  progress,
   onChanged,
   onDocumentRequestsChanged,
   onIdentityChanged,
   onAgreementsChanged,
+  onOfflineNegotiationsChanged,
+  onCostSheetChanged,
 }: {
   data: TransactionDetailData;
   viewerRole: UserRole;
@@ -61,10 +84,18 @@ function TransactionBody({
   documentRequests: DocumentRequest[] | null;
   identity: IdentityVerificationSummary | null;
   agreements: DealAgreement[] | null;
+  offlineNegotiations: OfflineNegotiationRecord[] | null;
+  /** Wrapped so "hasn't loaded yet" (`null`) is distinguishable from "loaded,
+   *  no sheet sent yet" (`{ sheet: null }`) — the endpoint's own empty result
+   *  is `null` too, which the cache hook can't otherwise tell apart. */
+  costSheet: { sheet: CostSheetData | null } | null;
+  progress: DealProgressData | null;
   onChanged: () => void;
   onDocumentRequestsChanged: () => void;
   onIdentityChanged: () => void;
   onAgreementsChanged: () => void;
+  onOfflineNegotiationsChanged: () => void;
+  onCostSheetChanged: () => void;
 }) {
   const cover = data.property.photos?.[0]?.url;
   const latestAgreement = agreements?.[0] ?? null;
@@ -106,11 +137,19 @@ function TransactionBody({
       {/* Transaction stage */}
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-ink/5">
         <p className="mb-4 text-sm font-medium text-ink">Transaction progress</p>
-        <TransactionTimeline stage={data.stage} stageLabel={data.stageLabel} />
+        {progress ? (
+          <DealProgress progress={progress} />
+        ) : (
+          <p className="text-sm text-body">Loading…</p>
+        )}
       </div>
 
       {/* Amounts */}
-      <AgreedAmountSummary acceptedOffer={data.acceptedOffer} deal={data.deal} offlineNegotiations={data.offlineNegotiations} />
+      <AgreedAmountSummary
+        acceptedOffer={data.acceptedOffer}
+        deal={data.deal}
+        offlineNegotiations={offlineNegotiations ?? []}
+      />
 
       {/* Accepted offer / negotiation history */}
       <section>
@@ -130,11 +169,37 @@ function TransactionBody({
         <SiteVisitSummary siteVisit={data.siteVisit} />
       </section>
 
-      {/* Offline negotiation */}
+      {/* Offline negotiation — the recorded price, confirmed or disputed by
+          both parties themselves; staff cannot confirm on their behalf. */}
       <section>
-        <h2 className="mb-3 text-sm font-medium text-ink">Offline negotiation</h2>
-        <OfflineNegotiationList records={data.offlineNegotiations} />
+        <h2 className="mb-3 text-sm font-medium text-ink">Recorded price</h2>
+        {offlineNegotiations === null ? (
+          <p className="text-sm text-body">Loading…</p>
+        ) : (
+          <OfflineNegotiationList
+            dealId={data.dealId}
+            records={offlineNegotiations}
+            buyerId={data.buyer.id}
+            sellerId={data.seller.id}
+            viewerId={viewerId}
+            onChanged={onOfflineNegotiationsChanged}
+          />
+        )}
       </section>
+
+      {/* Cost sheet — buyer-only; sellers get nothing back from the endpoint. */}
+      {viewerRole === "BUYER" && (
+        <section>
+          <h2 className="mb-3 text-sm font-medium text-ink">Cost breakdown</h2>
+          {costSheet === null ? (
+            <p className="text-sm text-body">Loading…</p>
+          ) : costSheet.sheet ? (
+            <CostSheet dealId={data.dealId} sheet={costSheet.sheet} onChanged={onCostSheetChanged} />
+          ) : (
+            <p className="text-sm text-body">No cost sheet has been sent to you yet.</p>
+          )}
+        </section>
+      )}
 
       {/* Documents */}
       <section>
@@ -278,11 +343,36 @@ export default function TransactionDetail({ dealId, viewerRole }: { dealId: stri
     () => getAgreements(token!, dealId)
   );
 
+  const negotiationsCacheKey = token ? `deal-offline-negotiations:${dealId}:${token}` : null;
+  const { items: offlineNegotiations, load: loadOfflineNegotiations } = useCachedPanelData<OfflineNegotiationRecord[]>(
+    negotiationsCacheKey,
+    () => getOfflineNegotiations(token!, dealId)
+  );
+
+  // Sellers get nothing from this endpoint, and a buyer with no sheet sent
+  // yet gets a genuine `null` — wrapped in an object so that's
+  // distinguishable from "hasn't loaded yet" (which the cache hook also
+  // represents as `null`).
+  const costSheetCacheKey = viewerRole === "BUYER" && token ? `deal-cost-sheet:${dealId}:${token}` : null;
+  const { items: costSheetResult, load: loadCostSheet } = useCachedPanelData<{ sheet: CostSheetData | null }>(
+    costSheetCacheKey,
+    () => getCostSheet(token!, dealId).then((sheet) => ({ sheet }))
+  );
+
+  const progressCacheKey = token ? `deal-progress:${dealId}:${token}` : null;
+  const { items: progress, load: loadProgress } = useCachedPanelData<DealProgressData>(
+    progressCacheKey,
+    () => getDealProgress(token!, dealId)
+  );
+
   function refreshAll() {
     load();
     loadDocumentRequests();
     loadIdentity();
     loadAgreements();
+    loadOfflineNegotiations();
+    loadCostSheet();
+    loadProgress();
   }
 
   return (
@@ -304,10 +394,15 @@ export default function TransactionDetail({ dealId, viewerRole }: { dealId: stri
             documentRequests={documentRequests}
             identity={identity}
             agreements={agreements}
+            offlineNegotiations={offlineNegotiations}
+            costSheet={costSheetResult}
+            progress={progress}
             onChanged={load}
             onDocumentRequestsChanged={loadDocumentRequests}
             onIdentityChanged={loadIdentity}
             onAgreementsChanged={loadAgreements}
+            onOfflineNegotiationsChanged={loadOfflineNegotiations}
+            onCostSheetChanged={loadCostSheet}
           />
         )}
       </Panel>

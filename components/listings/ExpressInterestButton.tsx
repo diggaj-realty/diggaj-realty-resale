@@ -8,7 +8,9 @@ import { expressInterest } from "@/lib/api/interests";
 import { addShortlist } from "@/lib/api/buyer";
 import { invalidateSharedShortlist } from "@/lib/api/shortlistCache";
 import { ApiError } from "@/lib/api/client";
+import { isBuyerPhoneRequired } from "@/lib/api/errorCodes";
 import { HeartIcon } from "@/components/dashboard/icons";
+import InlinePhoneCapture from "@/components/shared/InlinePhoneCapture";
 import { savePendingIntent, peekPendingIntent, clearPendingIntent, loginHrefWithReturn } from "@/lib/auth/redirectIntent";
 import type { PropertyInterest } from "@/types/transaction";
 
@@ -36,9 +38,14 @@ export default function ExpressInterestButton({
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set once the backend responds 422 BUYER_PHONE_REQUIRED — the prompt is
+  // the server's own message, shown verbatim. A subsequent 400 (bad format)
+  // on the retry gets its own slot so it doesn't overwrite that prompt.
+  const [phonePrompt, setPhonePrompt] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const resumedRef = useRef(false);
 
-  async function submitInterest(rawNote: string) {
+  async function submitInterest(rawNote: string, buyerPhone?: string) {
     if (!isBuyer || !token) {
       savePendingIntent(propertyId, { type: "INTEREST", note: rawNote });
       router.push(loginHrefWithReturn("/login/buyer", pathname));
@@ -46,10 +53,12 @@ export default function ExpressInterestButton({
     }
     setSubmitting(true);
     setError(null);
+    if (buyerPhone) setPhoneError(null);
     try {
       const interest = await expressInterest(token, propertyId, {
         source: "GENERAL_INTEREST",
         buyerNote: rawNote.trim() || undefined,
+        buyerPhone,
       });
 
       // Saving is a deliberate side effect of showing interest, so there's no
@@ -68,6 +77,16 @@ export default function ExpressInterestButton({
       onExpressed?.(interest);
       setOpen(false);
     } catch (err) {
+      if (isBuyerPhoneRequired(err)) {
+        setPhonePrompt(err.message);
+        return;
+      }
+      if (buyerPhone && err instanceof ApiError && err.status === 400) {
+        // The number they just typed on retry is unusable — keep the phone
+        // step open with its own error, don't fall back to the generic one.
+        setPhoneError(err.message);
+        return;
+      }
       setError(err instanceof ApiError ? err.message : "Failed to record your interest");
     } finally {
       setSubmitting(false);
@@ -118,39 +137,50 @@ export default function ExpressInterestButton({
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-md rounded-t-[28px] bg-white p-6 sm:rounded-[28px]"
           >
-            <form onSubmit={handleFormSubmit}>
-              <div className="flex items-center justify-between">
-                <p className="text-lg font-medium text-ink">Show interest</p>
-                <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="text-ink/40">
-                  ✕
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-body">
-                We&apos;ll connect you with the assigned agent and save this home to your
-                properties. No offer or commitment yet.
-              </p>
-
-              <label className="mt-5 flex flex-col gap-1.5 text-sm text-ink">
-                Anything the agent should know? <span className="font-normal text-body">(optional)</span>
-                <textarea
-                  rows={3}
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Preferred contact time, questions…"
-                  className="resize-none rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
-                />
-              </label>
-
-              {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-5 w-full rounded-full bg-panel px-6 py-3.5 text-sm font-medium text-white disabled:opacity-60"
-              >
-                {submitting ? "Sending…" : "Confirm interest"}
+            <div className="flex items-center justify-between">
+              <p className="text-lg font-medium text-ink">Show interest</p>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="text-ink/40">
+                ✕
               </button>
-            </form>
+            </div>
+            <p className="mt-1 text-xs text-body">
+              We&apos;ll connect you with the assigned agent and save this home to your
+              properties. No offer or commitment yet.
+            </p>
+
+            {phonePrompt ? (
+              <div className="mt-5">
+                <InlinePhoneCapture
+                  prompt={phonePrompt}
+                  submitting={submitting}
+                  error={phoneError}
+                  onSubmit={(phone) => submitInterest(note, phone)}
+                />
+              </div>
+            ) : (
+              <form onSubmit={handleFormSubmit}>
+                <label className="mt-5 flex flex-col gap-1.5 text-sm text-ink">
+                  Anything the agent should know? <span className="font-normal text-body">(optional)</span>
+                  <textarea
+                    rows={3}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Preferred contact time, questions…"
+                    className="resize-none rounded-xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none focus:border-ink/30"
+                  />
+                </label>
+
+                {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="mt-5 w-full rounded-full bg-panel px-6 py-3.5 text-sm font-medium text-white disabled:opacity-60"
+                >
+                  {submitting ? "Sending…" : "Confirm interest"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}

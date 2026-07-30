@@ -48,6 +48,9 @@ export type PropertyInterest = {
   agentName?: string;
   agentEmail?: string;
   agentPhone?: string;
+  /** True in almost all cases — an agent is auto-assigned the moment a lead
+   *  is created, and the platform makes an SLA promise on their behalf. */
+  agentAssigned?: boolean;
 };
 
 /** GET /interests/:id adds the site visits linked to this lead. */
@@ -234,4 +237,96 @@ export type DealAgreement = {
   sellerSigned: boolean;
   fullyExecuted: boolean;
   signatures: DealSignature[];
+};
+
+// ── Recorded price confirm/dispute — GET/POST /deals/:id/offline-negotiation ──
+// Distinct from the legacy `OfflineNegotiation` embedded in TransactionDetail
+// (types/buyer.ts), which lacks bothConfirmed/isDisputeOpen/isCurrent — this
+// is the richer, dedicated-endpoint shape and should be the sole rendering
+// source once fetched.
+
+export type OfflineNegotiationRecord = {
+  id: string;
+  dealId: string;
+  agreedAmount: number;
+  buyerConfirmed: boolean;
+  sellerConfirmed: boolean;
+  /** The figure becomes the deal's real price only once this is true —
+   *  staff cannot set it, only the buyer's and seller's own confirmations do. */
+  bothConfirmed: boolean;
+  isDisputeOpen: boolean;
+  /** False once a newer figure supersedes this one — always respond to the
+   *  record where this is true, never an older one. */
+  isCurrent: boolean;
+  disputedBy: "BUYER" | "SELLER" | null;
+  disputedNote: string | null;
+  recordedByName?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type OfflineNegotiationRespondAction =
+  | { action: "confirm" }
+  | { action: "dispute"; note: string };
+
+// ── Cost sheet acknowledge/query — GET/POST /deals/:id/cost-sheet (buyer-only) ──
+
+export type CostSheetLineCategory = "CHARGE" | "DEDUCTION" | string;
+
+export type CostSheetLine = {
+  id: string;
+  label: string;
+  amount: number;
+  category: CostSheetLineCategory;
+  note: string | null;
+  /** Stamp duty and registration move with circle rates and the
+   *  sub-registrar office — must be visibly labeled as an estimate, not
+   *  presented as a firm number. */
+  isEstimate: boolean;
+};
+
+export type CostSheet = {
+  id: string;
+  dealId: string;
+  version: number;
+  /** Recomputed server-side from exactly the rows returned — never
+   *  recompute this client-side. */
+  total: number;
+  acknowledgedAt: string | null;
+  isQueryOpen: boolean;
+  queriedLineId: string | null;
+  lines: CostSheetLine[];
+};
+
+export type CostSheetRespondAction =
+  | { action: "acknowledge" }
+  | { action: "query"; lineId: string; note: string };
+
+// ── Deal progress ladder — GET /deals/:id/progress, buyer AND seller ──
+
+export type ProgressStep = {
+  stage: string;
+  label: string;
+  reached: boolean;
+  current: boolean;
+};
+
+/** `source` must not be flattened: DERIVED is a fact the platform observed
+ *  from its own records; DECLARED is a staff member's claim, and can move
+ *  backward — the two must render distinctly, not as one uniform bar. */
+export type ProgressSource = "DERIVED" | "DECLARED";
+
+export type DealProgress = {
+  status?: "FELL_THROUGH";
+  failureCode?: string;
+  failedAt?: string;
+  stage: string;
+  stageLabel: string;
+  source: ProgressSource;
+  steps: ProgressStep[];
+  priceConfirmed: boolean;
+  documents: { approved: number; total: number };
+  /** Buyer-only — omitted entirely for a seller viewer. */
+  payments?: unknown;
+  costSheet?: unknown;
 };

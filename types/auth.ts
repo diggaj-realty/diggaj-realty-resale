@@ -21,4 +21,5 @@ export type LoginResponse = {
 
 export type GoogleAuthResponse = LoginResponse & {
   isNewUser: boolean;
+  needsPhone: boolean;
 };
