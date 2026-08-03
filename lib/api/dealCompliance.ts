@@ -25,7 +25,7 @@ export const initiateIdentityVerification = (
 ) =>
   authedSend<DealIdentityVerificationRecord>(`/deals/${dealId}/identity-verification`, token, {
     method: "POST",
-    body: method ? { method } : undefined,
+    body: method ? { method } : {},
   });
 
 // ── Agreements + signatures ──

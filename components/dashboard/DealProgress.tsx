@@ -42,49 +42,58 @@ export default function DealProgress({ progress }: { progress: DealProgressData 
     );
   }
 
+  const reachedCount = progress.steps.filter((s) => s.reached).length;
+
   return (
     <div>
-      <div className="flex items-start justify-between gap-1 overflow-x-auto pb-1">
+      <div className="flex items-center justify-between text-xs text-body">
+        <span>
+          Step {Math.max(reachedCount, 1)} of {progress.steps.length}
+        </span>
+        <span className="font-medium text-ink">{progress.stageLabel}</span>
+      </div>
+
+      <div className="mt-3 flex items-start justify-between gap-1 overflow-x-auto pb-1">
         {progress.steps.map((step, i) => (
-          <div key={step.stage} className="flex min-w-[72px] flex-1 flex-col items-center text-center">
+          <div key={step.stage} className="flex min-w-[76px] flex-1 flex-col items-center text-center">
             <div className="flex w-full items-center">
-              <span className={`h-px flex-1 ${i === 0 ? "opacity-0" : step.reached ? "bg-lime" : "bg-ink/10"}`} />
+              <span className={`h-[3px] flex-1 rounded-full ${i === 0 ? "opacity-0" : step.reached ? "bg-lime" : "bg-ink/10"}`} />
               <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ring-1 ${
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold transition-shadow ${
                   step.current
-                    ? "bg-panel text-white ring-panel"
+                    ? "bg-panel text-white ring-4 ring-panel/15"
                     : step.reached
-                    ? "bg-lime text-ink ring-lime"
-                    : "bg-white text-ink/30 ring-ink/10"
+                    ? "bg-lime text-ink ring-1 ring-lime"
+                    : "bg-white text-ink/30 ring-1 ring-ink/10"
                 }`}
               >
                 {step.reached && !step.current ? "✓" : i + 1}
               </span>
               <span
-                className={`h-px flex-1 ${
+                className={`h-[3px] flex-1 rounded-full ${
                   i === progress.steps.length - 1 ? "opacity-0" : step.reached ? "bg-lime" : "bg-ink/10"
                 }`}
               />
             </div>
-            <p className={`mt-2 text-[11px] leading-tight ${step.reached ? "font-medium text-ink" : "text-ink/40"}`}>
+            <p
+              className={`mt-2 min-h-[2.4em] text-[11px] leading-tight ${
+                step.current ? "font-semibold text-ink" : step.reached ? "font-medium text-ink" : "text-ink/40"
+              }`}
+            >
               {step.label}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="mt-3 flex flex-col items-center gap-1.5">
-        <p className="text-center text-xs text-body">
-          Current stage: <span className="font-medium text-ink">{progress.stageLabel}</span>
-        </p>
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
         <SourceTag source={progress.source} />
+        {progress.documents.total > 0 && (
+          <span className="text-xs text-body">
+            Documents: {progress.documents.approved}/{progress.documents.total} approved
+          </span>
+        )}
       </div>
-
-      {progress.documents.total > 0 && (
-        <p className="mt-3 text-center text-xs text-body">
-          Documents: {progress.documents.approved}/{progress.documents.total} approved
-        </p>
-      )}
     </div>
   );
 }

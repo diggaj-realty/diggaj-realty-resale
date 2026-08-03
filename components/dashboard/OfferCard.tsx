@@ -9,6 +9,7 @@ import OfferTimeline from "@/components/dashboard/OfferTimeline";
 import { fmtDate } from "@/components/dashboard/shared";
 import { invalidate } from "@/lib/dashboard/panelCache";
 import { acceptOffer, rejectOffer, counterOffer, closeNegotiation } from "@/lib/api/buyer";
+import { propertyHref } from "@/lib/slug";
 import type { Offer } from "@/types/buyer";
 import type { UserRole } from "@/types/auth";
 
@@ -87,7 +88,7 @@ export default function OfferCard({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <Link
-            href={`/listings/x--${offer.propertyId}`}
+            href={propertyHref({ id: offer.propertyId, title: offer.propertyTitle ?? "" })}
             className="block truncate text-sm font-medium text-ink hover:underline"
           >
             {offer.propertyTitle ?? "Property"}

@@ -12,6 +12,7 @@ import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
 import { getOffers, getDeals, getSiteVisits } from "@/lib/api/buyer";
 import { getMyListings, requestPlanUpgrade } from "@/lib/api/seller";
 import { getInterests } from "@/lib/api/interests";
+import { propertyHref } from "@/lib/slug";
 import type { Deal, Offer, SiteVisit } from "@/types/buyer";
 import type { Property } from "@/types/api";
 import type { PropertyInterest } from "@/types/transaction";
@@ -135,7 +136,7 @@ export function VisitsPanel() {
         <div key={v.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <Link href={`/listings/x--${v.propertyId}`} className="block truncate text-sm font-medium text-ink hover:underline">
+              <Link href={propertyHref({ id: v.propertyId, title: v.propertyTitle ?? "" })} className="block truncate text-sm font-medium text-ink hover:underline">
                 {v.propertyTitle ?? "Property"}
               </Link>
               <p className="truncate text-xs text-body">{v.propertyLocation}</p>

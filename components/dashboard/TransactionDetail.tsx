@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { propertyHref } from "@/lib/slug";
+import { price } from "@/lib/listings";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import OfferTimeline from "@/components/dashboard/OfferTimeline";
 import DealDocuments from "@/components/dashboard/DealDocuments";
@@ -20,6 +21,7 @@ import ClosureChecklistView from "@/components/dashboard/ClosureChecklistView";
 import { Panel, fmtDate } from "@/components/dashboard/shared";
 import { formatPhone, telHref } from "@/lib/phone";
 import { useCachedPanelData } from "@/lib/dashboard/useCachedPanelData";
+import { getCached } from "@/lib/dashboard/panelCache";
 import {
   getTransactionDetail,
   getOfflineNegotiations,
@@ -29,7 +31,7 @@ import {
 import { getDocumentRequests } from "@/lib/api/documentRequests";
 import { getIdentityVerification, getAgreements } from "@/lib/api/dealCompliance";
 import { deriveClosureChecklist } from "@/lib/dashboard/deriveClosureChecklist";
-import type { TransactionDetail as TransactionDetailData, TransactionParty } from "@/types/buyer";
+import type { TransactionDetail as TransactionDetailData, TransactionParty, Deal } from "@/types/buyer";
 import type {
   DocumentRequest,
   IdentityVerificationSummary,
@@ -41,21 +43,35 @@ import type {
 import type { UserRole } from "@/types/auth";
 
 function PartyCard({ role, party }: { role: string; party: TransactionParty | null }) {
+  const initial = party?.name?.trim()?.[0]?.toUpperCase() ?? "?";
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
-      <p className="text-[11px] text-body">{role}</p>
-      {party ? (
-        <>
-          <p className="mt-1 text-sm font-medium text-ink">{party.name}</p>
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+            party ? "bg-limepale text-ink" : "bg-ink/5 text-ink/30"
+          }`}
+        >
+          {initial}
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] text-body">{role}</p>
+          {party ? (
+            <p className="truncate text-sm font-medium text-ink">{party.name}</p>
+          ) : (
+            <p className="text-sm text-ink/40">Not yet assigned</p>
+          )}
+        </div>
+      </div>
+      {party && (party.phone || party.email) && (
+        <div className="mt-3 space-y-0.5 border-t border-ink/5 pt-3">
           {party.phone && (
-            <a href={telHref(party.phone)} className="text-xs text-body underline underline-offset-2">
+            <a href={telHref(party.phone)} className="block text-xs text-body underline underline-offset-2">
               {formatPhone(party.phone)}
             </a>
           )}
           {party.email && <p className="truncate text-xs text-body">{party.email}</p>}
-        </>
-      ) : (
-        <p className="mt-1 text-sm text-ink/40">Not yet assigned</p>
+        </div>
       )}
     </div>
   );
@@ -116,10 +132,20 @@ function TransactionBody({
           {cover && <Image src={cover} alt={data.property.title} fill sizes="112px" className="object-cover" />}
         </Link>
         <div className="min-w-0 flex-1">
-          <Link href={propertyHref(data.property)} className="block truncate text-lg font-medium text-ink hover:underline">
-            {data.property.title}
-          </Link>
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+            <Link href={propertyHref(data.property)} className="block truncate text-lg font-medium text-ink hover:underline">
+              {data.property.title}
+            </Link>
+            <p className="shrink-0 text-lg font-semibold text-ink">{price(data.property.askingPrice)}</p>
+          </div>
           <p className="truncate text-sm text-body">{data.property.location}</p>
+          {(data.property.bhk || data.property.areaSqft) && (
+            <p className="mt-0.5 text-xs text-ink/50">
+              {data.property.bhk ? `${data.property.bhk} BHK` : null}
+              {data.property.bhk && data.property.areaSqft ? " · " : null}
+              {data.property.areaSqft ? `${data.property.areaSqft.toLocaleString("en-IN")} sqft` : null}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge status={data.property.status} />
             <StatusBadge status={data.deal.status} />
@@ -325,6 +351,19 @@ export default function TransactionDetail({ dealId, viewerRole }: { dealId: stri
     getTransactionDetail(token!, dealId)
   );
 
+  // The full transaction fetch is the slowest of the calls on this page (it's
+  // the richest payload). The deal list (Closing & Documents / Deals) the
+  // user almost always arrives from already fetched this deal's basics —
+  // read that cache directly rather than waiting on a duplicate network
+  // round trip just to paint a title, location and price while everything
+  // else loads underneath.
+  const dealsListCacheKey = token
+    ? `${viewerRole === "BUYER" ? "buyerDeals" : "sellerDeals"}:${token}`
+    : null;
+  const cachedPreview = dealsListCacheKey
+    ? getCached<Deal[]>(dealsListCacheKey)?.find((d) => d.id === dealId) ?? null
+    : null;
+
   const requestsCacheKey = token ? `deal-doc-requests:${dealId}:${token}` : null;
   const { items: documentRequests, load: loadDocumentRequests } = useCachedPanelData<DocumentRequest[]>(
     requestsCacheKey,
@@ -385,6 +424,18 @@ export default function TransactionDetail({ dealId, viewerRole }: { dealId: stri
           Refresh →
         </button>
       </div>
+      {items === null && !error && cachedPreview && (
+        <div className="mb-6 flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-ink/5">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-medium text-ink">{cachedPreview.propertyTitle ?? "Property"}</p>
+            <p className="truncate text-sm text-body">{cachedPreview.propertyLocation}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <StatusBadge status={cachedPreview.status} />
+            </div>
+          </div>
+          <p className="shrink-0 text-lg font-semibold text-ink">{price(cachedPreview.agreedPrice)}</p>
+        </div>
+      )}
       <Panel loading={items === null && !error} error={error} empty={false} emptyText="">
         {items && (
           <TransactionBody

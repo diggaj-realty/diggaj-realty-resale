@@ -14,7 +14,7 @@ export default function PropertyRow({
    *  the navigation link so they don't nest interactive elements inside it. */
   actions?: React.ReactNode;
 }) {
-  const cover = property.photos[0]?.url;
+  const cover = property.photos?.[0]?.url;
   return (
     <div className="rounded-2xl bg-white shadow-sm ring-1 ring-ink/5">
       <Link

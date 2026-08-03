@@ -204,8 +204,12 @@ export const respondToOfflineNegotiation = (
   );
 
 // ── Cost sheet acknowledge/query — buyer-only; sellers get nothing back. ──
+// The endpoint returns every version as an array (empty when none has been
+// sent yet) rather than a single object or null — take the latest version.
 export const getCostSheet = (token: string, dealId: string) =>
-  authedGet<CostSheet | null>(`/deals/${dealId}/cost-sheet`, token);
+  authedGet<CostSheet[]>(`/deals/${dealId}/cost-sheet`, token).then(
+    (sheets) => sheets.reduce<CostSheet | null>((latest, s) => (!latest || s.version > latest.version ? s : latest), null)
+  );
 
 export const respondToCostSheet = (
   token: string,

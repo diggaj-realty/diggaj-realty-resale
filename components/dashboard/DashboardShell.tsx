@@ -88,11 +88,17 @@ export default function DashboardShell({
     if (drawerOpen) setDrawerOpen(false);
   }
 
-  // `!user` must gate this too, not just `!summary` — on logout (or a role
-  // change) `user` clears to null immediately but `summary` from a prior
-  // successful fetch lingers until the redirect effect above actually
-  // navigates away, which would otherwise fall through to `user!.name` below.
-  if (loading || !user || (!error && !summary)) {
+  // Gated on `user` alone, NOT on `summary`/`error` — the /dashboard summary
+  // only feeds the Overview page (which already renders fine with a null
+  // summary, see BuyerOverviewPage/SellerOverviewPage). Blocking the whole
+  // shell on it meant every route — Listings, Offers, a specific deal's
+  // TransactionDetail — waited on an extra network round trip they never
+  // needed, on top of their own panels' fetches. `!user` still gates this:
+  // on logout (or a role change) `user` clears to null immediately but a
+  // prior successful `summary` fetch lingers until the redirect effect above
+  // actually navigates away, which would otherwise fall through to
+  // `user!.name` below.
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen bg-cream">
         <div className="hidden w-64 shrink-0 border-r border-ink/10 bg-white lg:block" />

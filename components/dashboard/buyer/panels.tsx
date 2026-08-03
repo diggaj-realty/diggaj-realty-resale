@@ -216,7 +216,7 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <Link href={`/listings/x--${visit.propertyId}`} className="block truncate text-sm font-medium text-ink hover:underline">
+          <Link href={propertyHref({ id: visit.propertyId, title: visit.propertyTitle ?? "" })} className="block truncate text-sm font-medium text-ink hover:underline">
             {visit.propertyTitle ?? "Property"}
           </Link>
           <p className="truncate text-xs text-body">{visit.propertyLocation}</p>
