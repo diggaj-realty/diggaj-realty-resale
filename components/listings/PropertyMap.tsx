@@ -16,11 +16,15 @@ export default function PropertyMap({
   lng,
   title,
   apiKey,
+  className = "h-[40vh] w-full bg-cream",
 }: {
   lat: number;
   lng: number;
   title: string;
   apiKey: string;
+  /** Overrides the default light-page sizing/background for callers embedded
+   *  in a differently themed section (e.g. a dark panel). */
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -99,11 +103,11 @@ export default function PropertyMap({
         title={`Map of ${title}`}
         loading="lazy"
         allowFullScreen
-        className="h-[40vh] w-full border-0"
+        className={`${className} border-0`}
         src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${lat},${lng}&zoom=15`}
       />
     );
   }
 
-  return <div ref={ref} className="h-[40vh] w-full bg-cream" />;
+  return <div ref={ref} className={className} />;
 }

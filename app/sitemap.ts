@@ -7,6 +7,11 @@ const SITE_URL = "https://diggajrealty.com";
 const STATIC_ROUTES: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
   { path: "", priority: 1, changeFrequency: "daily" },
   { path: "/listings", priority: 0.9, changeFrequency: "daily" },
+  // Standalone project microsite — static, not part of the resale catalog, so
+  // it needs a hand-written entry rather than coming from getProperties below.
+  { path: "/brigade-granada", priority: 0.7, changeFrequency: "weekly" },
+  { path: "/sobha-one-world-hoskote", priority: 0.7, changeFrequency: "weekly" },
+  { path: "/myhna-vistara", priority: 0.7, changeFrequency: "weekly" },
   { path: "/contact", priority: 0.5, changeFrequency: "monthly" },
   { path: "/login/buyer", priority: 0.3, changeFrequency: "yearly" },
   { path: "/login/seller", priority: 0.3, changeFrequency: "yearly" },

@@ -9,10 +9,14 @@ export default function LeadForm({
   dark,
   subject = "General inquiry",
   cta = "Send message",
+  endpoint = "/api/leads",
+  requirePhone = false,
 }: {
   dark?: boolean;
   subject?: string;
   cta?: string;
+  endpoint?: string;
+  requirePhone?: boolean;
 }) {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +30,7 @@ export default function LeadForm({
     setState("sending");
     setError(null);
     try {
-      await submitLead(input);
+      await submitLead(input, endpoint);
       setLastInput(input);
       setState("sent");
     } catch (e) {
@@ -45,6 +49,8 @@ export default function LeadForm({
       phone: String(form.get("phone") ?? "").trim() || undefined,
       message: String(form.get("message") ?? "").trim(),
       subject,
+      page: typeof window !== "undefined" ? window.location.href : undefined,
+      referrer: typeof document !== "undefined" ? document.referrer || undefined : undefined,
     });
   }
 
@@ -147,7 +153,8 @@ export default function LeadForm({
             <input
               name="phone"
               type="tel"
-              placeholder="Phone (optional)"
+              required={requirePhone}
+              placeholder={requirePhone ? "Phone number" : "Phone (optional)"}
               defaultValue={lastInput?.phone}
               className={field}
             />
