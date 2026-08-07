@@ -37,7 +37,7 @@ const BODY = "#6f6f6f";
 const FONT =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-export function escapeHtml(s: string): string {
+function escapeHtml(s: string): string {
   return s.replace(
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)

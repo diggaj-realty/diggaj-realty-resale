@@ -34,7 +34,7 @@ export type NavItem = {
 export type NavGroup = "Overview" | "Pipeline" | "Property" | "Account";
 
 /** Fixed render order for sidebar groups. */
-export const NAV_GROUP_ORDER: NavGroup[] = ["Overview", "Pipeline", "Property", "Account"];
+const NAV_GROUP_ORDER: NavGroup[] = ["Overview", "Pipeline", "Property", "Account"];
 
 /** Groups items in the declared group order, dropping empty buckets. */
 export function groupNav(items: NavItem[]): { group: NavGroup; items: NavItem[] }[] {
