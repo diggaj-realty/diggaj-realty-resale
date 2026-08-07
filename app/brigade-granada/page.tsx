@@ -184,7 +184,7 @@ export default function BrigadeGranadaPage() {
               href="#enquire"
               className="rounded-full bg-lime px-6 py-3 text-sm font-semibold text-ink shadow-lg transition-transform hover:-translate-y-px"
             >
-              Register your EOI
+              Enquire
             </a>
             <a
               href="#pricing"
