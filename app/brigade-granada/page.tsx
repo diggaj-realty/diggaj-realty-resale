@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import LeadForm from "@/components/LeadForm";
 import { price } from "@/lib/listings";
@@ -130,12 +129,14 @@ export default function BrigadeGranadaPage() {
 
       {/* ── Hero ─────────────────────────────────────────────────────────
           Full-bleed, same construction as the site's own HeroSection: image
-          under two legibility gradients, Nav overlaid with its wordmark forced
-          white. The render is sourced from a third-party project marketing
-          microsite, not from Brigade Group's own domain — Brigade Granada
-          does not appear in Brigade's official project listing, and this
-          render's authenticity is unverified. Captioned as such bottom-right;
-          see GALLERY in data.ts and the DISCLAIMER block below. */}
+          under two legibility gradients. No site Nav — this is a standalone
+          lead-capture microsite, not a page meant to send visitors back into
+          the main Diggaj Realty site. The render is sourced from a
+          third-party project marketing microsite, not from Brigade Group's
+          own domain — Brigade Granada does not appear in Brigade's official
+          project listing, and this render's authenticity is unverified.
+          Captioned as such bottom-right; see GALLERY in data.ts and the
+          DISCLAIMER block below. */}
       <section className="relative flex min-h-[640px] flex-col overflow-clip md:min-h-[max(640px,100svh)]">
         <div className="absolute inset-0">
           <Image
@@ -150,10 +151,6 @@ export default function BrigadeGranadaPage() {
           <div className="absolute inset-0 bg-panel/45" />
           <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/70 via-black/25 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-        </div>
-
-        <div className="relative z-30 [&_a:first-child]:text-white">
-          <Nav />
         </div>
 
         {/* Extra bottom padding below lg keeps the stat tiles and the RERA line

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import LeadForm from "@/components/LeadForm";
 import { price } from "@/lib/listings";
@@ -152,10 +151,6 @@ export default function MyhnaVistaraPage() {
           <div className="absolute inset-0 bg-panel/45" />
           <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/70 via-black/25 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-        </div>
-
-        <div className="relative z-30 [&_a:first-child]:text-white">
-          <Nav />
         </div>
 
         <div className="relative z-20 flex flex-1 flex-col justify-end px-8 pb-28 pt-20 md:px-14 lg:pb-14">
