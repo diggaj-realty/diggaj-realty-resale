@@ -54,7 +54,10 @@ export async function POST(req: NextRequest) {
   }
 
   const from = process.env.LEAD_FROM_EMAIL || "Diggaj Realty <onboarding@resend.dev>";
-  const to = process.env.BRIGADE_GRANADA_LEAD_TO_EMAIL || "it@diggajrealty.com";
+  const to = (process.env.BRIGADE_GRANADA_LEAD_TO_EMAIL || "it@diggajrealty.com,abhishek@diggajrealty.com")
+    .split(",")
+    .map((addr) => addr.trim())
+    .filter(Boolean);
 
   const mail = buildLeadEmail({
     name,
