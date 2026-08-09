@@ -8,10 +8,12 @@ import {
   PROJECT,
   FACTS,
   HERO_STATS,
+  HERO_POINTS,
   FROM_PRICE,
   TOP_PRICE,
   CONFIGS,
   MAX_SQFT,
+  BHK_SUMMARY,
   perSqft,
   MIXED_USE,
   AMENITIES,
@@ -158,7 +160,10 @@ export default function SobhaOneWorldPage() {
             <span className="rounded-full bg-lime px-4 py-2 text-xs font-semibold text-ink">
               {PROJECT.status}
             </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/80 ring-1 ring-white/15 backdrop-blur">
+            {/* Location is the chip that matters most to a buyer scanning the
+                hero, so it gets the solid treatment while the developer chip
+                stays glass. Lime is reserved for the status chip. */}
+            <span className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-semibold text-ink shadow-sm">
               <PinIcon className="h-3.5 w-3.5" />
               {PROJECT.locality} · {PROJECT.city}
             </span>
@@ -170,11 +175,16 @@ export default function SobhaOneWorldPage() {
           <h1 className="mt-7 max-w-[12em] text-display font-medium tracking-[-0.03em] text-white">
             {PROJECT.name}
           </h1>
-          <p className="mt-5 max-w-[34em] text-lead text-white/70">
-            A 300-acre township on Old Madras Road, Hoskote: fourteen towers of up to 46
-            storeys, roughly 3,484 apartments in Phase 1, a 120,000 sqft clubhouse and a
-            retail boulevard. One to four bedrooms, RERA registered and booking open now.
-          </p>
+          {/* The project summary, as scannable points rather than a prose
+              standfirst — HERO_POINTS in data.ts is the single source. */}
+          <ul className="mt-6 flex max-w-[42em] flex-wrap gap-x-6 gap-y-2.5">
+            {HERO_POINTS.map((p) => (
+              <li key={p} className="flex items-start gap-2.5 text-sm text-white/70">
+                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-lime" />
+                {p}
+              </li>
+            ))}
+          </ul>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <a
@@ -625,7 +635,7 @@ export default function SobhaOneWorldPage() {
       <section id="enquire" className="scroll-mt-8 px-3 py-3">
         <div className="rounded-[28px] bg-panel px-8 py-16 md:px-14">
           <div className="grid gap-14 lg:grid-cols-2">
-            <div>
+            <div className="order-2 lg:order-1">
               <SectionHead
                 dark
                 eyebrow="Booking"
@@ -655,12 +665,27 @@ export default function SobhaOneWorldPage() {
               </p>
             </div>
 
-            <div>
+            <div className="order-1 lg:order-2">
+              {/* On mobile the form is hoisted above the booking steps, so it
+                  needs its own heading — the SectionHead in the other column
+                  now renders below it. */}
+              <div className="mb-8 lg:hidden">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-lime">
+                  Booking
+                </span>
+                <h2 className="mt-3 text-section font-medium tracking-[-0.02em] text-white">
+                  Reserve your unit
+                </h2>
+                <p className="mt-3 text-sm text-white/60">
+                  RERA registered and booking open. The steps are set out below.
+                </p>
+              </div>
               <LeadForm
                 dark
                 subject="Sobha One World: booking enquiry"
                 cta="Request project details"
                 endpoint="/api/leads/sobha-one-world-hoskote"
+                source="sobha-one-world-hoskote-inline"
                 requirePhone
               />
             </div>
@@ -720,8 +745,14 @@ export default function SobhaOneWorldPage() {
       <Footer />
 
       <div className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-4 rounded-full bg-panel/95 px-5 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur lg:hidden">
-        <span className="text-xs text-white/60">
-          From <span className="font-semibold text-white">{price(FROM_PRICE)}</span>
+        {/* Two lines: what's on sale, then what it starts at. The bar used to
+            show only the price, which told a scanner the cost without ever
+            saying what configurations that price bought. */}
+        <span className="min-w-0 flex-1 text-xs leading-tight text-white/60">
+          <span className="block truncate font-semibold text-white">{BHK_SUMMARY}</span>
+          <span className="block">
+            From <span className="font-semibold text-white/90">{price(FROM_PRICE)}</span>
+          </span>
         </span>
         <a
           href="#enquire"

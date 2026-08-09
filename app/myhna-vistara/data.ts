@@ -69,6 +69,14 @@ export const CONFIGS: { label: string; sqft: number; from: number }[] = [
 
 export const MAX_SQFT = Math.max(...CONFIGS.map((c) => c.sqft));
 
+/** Distinct bedroom counts across CONFIGS, e.g. "3 · 4 BHK". Shown beside the
+ *  starting price in the mobile sticky bar — the price alone said what it
+ *  costs but not what you get for it. Derived from CONFIGS rather than written
+ *  out, so it can't drift from the layouts actually on sale. */
+export const BHK_SUMMARY = `${Array.from(
+  new Set(CONFIGS.flatMap((c) => c.label.match(/(\d+)\s*(?:BHK|Bed)/)?.[1] ?? []))
+).join(" · ")} BHK`;
+
 /** Cheapest layout — drives the hero stat and the sticky CTA's "from" price. */
 export const FROM_PRICE = Math.min(...CONFIGS.map((c) => c.from));
 /** Dearest layout. Derived rather than read off the last row, so reordering
@@ -85,6 +93,18 @@ export const HERO_STATS: { value: string; label: string }[] = [
   { value: "G+31", label: "Floors" },
   { value: "1,120", label: "Homes" },
   { value: price(FROM_PRICE), label: "Starting price" },
+];
+
+/** The hero paragraph broken into scannable points. Same facts as the prose
+ *  above it — kept as one list so the two never drift apart. */
+export const HERO_POINTS: string[] = [
+  "14 acres on the 150-ft CDP Road, Gunjur",
+  "Six towers of G+31 floors",
+  "1,120 apartments with zero common walls",
+  "45,000 sqft clubhouse",
+  "1 lakh sqft commercial block",
+  "Three and four bedrooms",
+  "RERA registered and booking open",
 ];
 
 export const MIXED_USE: { title: string; body: string; Icon: Icon }[] = [

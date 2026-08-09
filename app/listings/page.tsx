@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ListingsBrowser, { PAGE_SIZE } from "@/components/listings/ListingsBrowser";
+import LeadSection from "@/components/LeadSection";
+import StickyLeadBar from "@/components/StickyLeadBar";
 import { ListingGridSkeleton } from "@/components/Skeleton";
 import { getProperties } from "@/lib/api/properties";
 import { parseFilterSearchParams } from "@/lib/filters";
@@ -64,7 +66,22 @@ export default async function ListingsPage({
       >
         <ListingsBrowser initialData={initialData} />
       </Suspense>
+      {/* Catches the two cases the grid above can't: filters that returned
+          nothing, and "close, but not quite". Both currently dead-end. */}
+      <LeadSection
+        eyebrow="Nothing quite right?"
+        title="We'll send you matches as they land"
+        lead="Off-market and just-listed homes don't always reach the grid first. Tell us the brief and we'll come to you."
+        subject="Listings page enquiry"
+        source="listings-index"
+        cta="Send me matches"
+      />
       <Footer />
+      <StickyLeadBar
+        label="Can't find the right home?"
+        cta="Send us your brief"
+        storageKey="listings-sticky-lead-dismissed"
+      />
     </main>
   );
 }

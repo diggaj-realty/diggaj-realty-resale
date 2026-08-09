@@ -2,8 +2,12 @@ export type LeadInput = {
   name: string;
   email: string;
   phone?: string;
+  /** Optional: the compact form variant has no message field. */
   message: string;
   subject?: string;
+  /** Which surface the form was on ("home-inline", "sticky-bar", …), so
+   *  placements can be compared rather than guessed at. */
+  source?: string;
   page?: string;
   referrer?: string;
 };

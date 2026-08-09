@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import LeadSection from "@/components/LeadSection";
 import { getProperty } from "@/lib/api/properties";
 import { propertyHref } from "@/lib/slug";
 import { sqft, buildSpecs } from "@/lib/property";
@@ -132,6 +133,17 @@ export default function ComparePage() {
       <Suspense fallback={<p className="mx-8 mt-10 text-sm text-body md:mx-14">Loading…</p>}>
         <CompareContent />
       </Suspense>
+      {/* Someone comparing two or three homes is as far down the funnel as
+          this site gets, and the page previously offered them nothing but a
+          link back to the shortlist. */}
+      <LeadSection
+        eyebrow="Still deciding?"
+        title="Get a second opinion before you commit"
+        lead="Send us the shortlist and an agent will talk you through the trade-offs — pricing, locality, resale, and what the listing doesn't say."
+        subject="Compare page enquiry"
+        source="compare"
+        cta="Talk it through"
+      />
       <Footer />
     </main>
   );

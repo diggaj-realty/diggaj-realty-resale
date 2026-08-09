@@ -19,16 +19,29 @@ const POINTS = [
 export default function ContactPage() {
   return (
     <main className="min-h-screen overflow-x-clip bg-white">
+      {/* The form used to sit below the intro block, which pushed it under the
+          fold on most laptops on the one page whose entire job is the form.
+          It now shares the header band, so it's visible on arrival. */}
       <div className="bg-cream pb-14">
         <Nav />
-        <div className="px-8 pt-14 md:px-14">
-          <h1 className="max-w-3xl text-display-sm font-medium tracking-[-0.03em] text-ink">
-            Talk to a human
-          </h1>
-          <p className="mt-5 max-w-md text-lead text-ink/70">
-            No bots, no call centers. A local agent reads every message and
-            replies within a few hours.
-          </p>
+        <div className="grid items-start gap-12 px-8 pt-14 md:px-14 lg:grid-cols-2">
+          <div>
+            <h1 className="max-w-3xl text-display-sm font-medium tracking-[-0.03em] text-ink">
+              Talk to a human
+            </h1>
+            <p className="mt-5 max-w-md text-lead text-ink/70">
+              No bots, no call centers. A local agent reads every message and
+              replies within a few hours.
+            </p>
+          </div>
+
+          <div className="h-fit rounded-[28px] bg-panel p-8 text-white md:p-10">
+            <p className="text-xl font-medium tracking-[-0.01em]">Send us a message</p>
+            <p className="mt-1.5 text-sm text-white/50">We&apos;ll route it to the right agent.</p>
+            <div className="mt-7">
+              <LeadForm dark subject="Contact page inquiry" source="contact-page" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -66,13 +79,6 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="h-fit rounded-[28px] bg-panel p-8 text-white md:p-10">
-          <p className="text-xl font-medium tracking-[-0.01em]">Send us a message</p>
-          <p className="mt-1.5 text-sm text-white/50">We&apos;ll route it to the right agent.</p>
-          <div className="mt-7">
-            <LeadForm dark subject="Contact page inquiry" />
-          </div>
-        </div>
       </div>
 
       <Footer />

@@ -8,10 +8,12 @@ import {
   PROJECT,
   FACTS,
   HERO_STATS,
+  HERO_POINTS,
   FROM_PRICE,
   TOP_PRICE,
   CONFIGS,
   MAX_SQFT,
+  BHK_SUMMARY,
   perSqft,
   MIXED_USE,
   AMENITIES,
@@ -160,7 +162,10 @@ export default function BrigadeGranadaPage() {
             <span className="rounded-full bg-lime px-4 py-2 text-xs font-semibold text-ink">
               {PROJECT.status}
             </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/80 ring-1 ring-white/15 backdrop-blur">
+            {/* Location is the chip that matters most to a buyer scanning the
+                hero, so it gets the solid treatment while the developer chip
+                stays glass. Lime is reserved for the status chip. */}
+            <span className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-semibold text-ink shadow-sm">
               <PinIcon className="h-3.5 w-3.5" />
               {PROJECT.locality} · {PROJECT.city}
             </span>
@@ -172,12 +177,16 @@ export default function BrigadeGranadaPage() {
           <h1 className="mt-7 max-w-[12em] text-display font-medium tracking-[-0.03em] text-white">
             {PROJECT.name}
           </h1>
-          <p className="mt-5 max-w-[34em] text-lead text-white/70">
-            Forty acres on the Whitefield–Kadugodi Main Road, planned as a township rather
-            than a cluster of towers: roughly 2,000 apartments alongside a 400-key hotel, a
-            35-floor office tower and a retail high street. One to four bedrooms, and the
-            Purple Line terminal a short drive out.
-          </p>
+          {/* The project summary, as scannable points rather than a prose
+              standfirst — HERO_POINTS in data.ts is the single source. */}
+          <ul className="mt-6 flex max-w-[42em] flex-wrap gap-x-6 gap-y-2.5">
+            {HERO_POINTS.map((p) => (
+              <li key={p} className="flex items-start gap-2.5 text-sm text-white/70">
+                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-lime" />
+                {p}
+              </li>
+            ))}
+          </ul>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <a
@@ -584,7 +593,7 @@ export default function BrigadeGranadaPage() {
       <section id="enquire" className="scroll-mt-8 px-3 py-3">
         <div className="rounded-[28px] bg-panel px-8 py-16 md:px-14">
           <div className="grid gap-14 lg:grid-cols-2">
-            <div>
+            <div className="order-2 lg:order-1">
               <SectionHead
                 dark
                 eyebrow="EOI"
@@ -614,12 +623,28 @@ export default function BrigadeGranadaPage() {
               </p>
             </div>
 
-            <div>
+            <div className="order-1 lg:order-2">
+              {/* On mobile the form is hoisted above the EOI steps, so it needs
+                  its own heading — the SectionHead in the other column now
+                  renders below it. Hidden on lg, where that heading is
+                  alongside and the form doesn't need repeating. */}
+              <div className="mb-8 lg:hidden">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-lime">
+                  EOI
+                </span>
+                <h2 className="mt-3 text-section font-medium tracking-[-0.02em] text-white">
+                  Get in the queue before launch
+                </h2>
+                <p className="mt-3 text-sm text-white/60">
+                  Refundable, no purchase commitment. How it works is set out below.
+                </p>
+              </div>
               <LeadForm
                 dark
                 subject="Brigade Granada: EOI enquiry"
                 cta="Request project details"
                 endpoint="/api/leads/brigade-granada"
+                source="brigade-granada-inline"
                 requirePhone
               />
             </div>
@@ -683,8 +708,14 @@ export default function BrigadeGranadaPage() {
           scroll listener), so the page stays a zero-JS server component. The
           spacer below keeps it off the last of the footer. */}
       <div className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-4 rounded-full bg-panel/95 px-5 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur lg:hidden">
-        <span className="text-xs text-white/60">
-          From <span className="font-semibold text-white">{price(FROM_PRICE)}</span>
+        {/* Two lines: what's on sale, then what it starts at. The bar used to
+            show only the price, which told a scanner the cost without ever
+            saying what configurations that price bought. */}
+        <span className="min-w-0 flex-1 text-xs leading-tight text-white/60">
+          <span className="block truncate font-semibold text-white">{BHK_SUMMARY}</span>
+          <span className="block">
+            From <span className="font-semibold text-white/90">{price(FROM_PRICE)}</span>
+          </span>
         </span>
         <a
           href="#enquire"

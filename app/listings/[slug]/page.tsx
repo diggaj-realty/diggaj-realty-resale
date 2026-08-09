@@ -9,6 +9,7 @@ import ListingCard from "@/components/listings/ListingCard";
 import Gallery from "@/components/listings/Gallery";
 import GatedPrice, { PriceUnlocked, PriceLocked } from "@/components/listings/GatedPrice";
 import RequestVisitForm from "@/components/listings/RequestVisitForm";
+import LeadForm from "@/components/LeadForm";
 import PropertyActionPanel from "@/components/listings/PropertyActionPanel";
 import ViewTracker from "@/components/listings/ViewTracker";
 import EmiCalculator from "@/components/listings/EmiCalculator";
@@ -423,6 +424,28 @@ export default async function ListingDetail({
               </div>
             </div>
           )}
+
+          {/* Ungated enquiry, deliberately alongside the tour request above.
+              RequestVisitForm redirects anonymous visitors to /login/buyer, so
+              until now an interested stranger on the highest-intent page on
+              the site had no way to say anything without creating an account.
+              Booking a visit still requires one; asking a question doesn't. */}
+          <div className="mt-4 rounded-[28px] bg-cream p-8">
+            <p className="text-sm font-semibold text-ink">Have a question about this home?</p>
+            <p className="mt-1.5 text-xs text-body">
+              Ask an agent directly — no account needed. We usually reply within a couple of
+              hours.
+            </p>
+            <div className="mt-6">
+              <LeadForm
+                compact
+                requirePhone
+                subject={`Listing enquiry: ${l.title}`}
+                source="listing-detail"
+                cta="Ask about this home"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

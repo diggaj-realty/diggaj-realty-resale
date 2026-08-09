@@ -9,6 +9,8 @@ import ExploreMap from "@/components/ExploreMap";
 import ExploreProjects from "@/components/ExploreProjects";
 import Faq from "@/components/Faq";
 import Footer from "@/components/Footer";
+import LeadSection from "@/components/LeadSection";
+import StickyLeadBar from "@/components/StickyLeadBar";
 import HomeFloatingAi from "@/components/ai/HomeFloatingAi";
 
 const ORG_JSON_LD = {
@@ -23,7 +25,12 @@ const ORG_JSON_LD = {
 
 // Page narrative: what it is (Hero) → why it exists (ValueProp) →
 // who it's for (BuySell) → the homes themselves (Showcase + Listings + Popular) →
-// where (ExploreMap) → by project → objections (Faq) → close (Footer CTA).
+// where (ExploreMap) → by project → objections (Faq) → ask (LeadSection) →
+// close (Footer CTA).
+//
+// LeadSection sits after Faq on purpose: the objections are answered by the
+// time the form is put in front of anyone, and it gives the sticky bar an
+// on-page target so the CTA doesn't have to bounce the visitor to /contact.
 export default function Home() {
   return (
     <main className="w-full overflow-clip bg-white">
@@ -41,8 +48,20 @@ export default function Home() {
       <ExploreMap />
       <ExploreProjects />
       <Faq />
+      <LeadSection
+        title="Tell us what you're looking for"
+        lead="Budget, locality, timeline — send it over and an agent will come back with a shortlist that actually fits."
+        subject="Home page enquiry"
+        source="home-inline"
+        cta="Get my shortlist"
+      />
       <Footer />
       <HomeFloatingAi />
+      <StickyLeadBar
+        label="Looking for a home in Bangalore?"
+        cta="Talk to an agent"
+        storageKey="home-sticky-lead-dismissed"
+      />
     </main>
   );
 }

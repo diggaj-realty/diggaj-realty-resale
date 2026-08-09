@@ -8,6 +8,7 @@ type LeadPayload = {
   phone?: string;
   message?: string;
   subject?: string;
+  source?: string;
   page?: string;
   referrer?: string;
 };
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
   const message = String(body.message ?? "").trim();
   const subject = String(body.subject ?? "Myhna Vistara enquiry").trim() || "Myhna Vistara enquiry";
   const page = String(body.page ?? "").trim();
+  const source = String(body.source ?? "").trim();
   const referrer = String(body.referrer ?? "").trim();
 
   if (!name || !email || !phone || !message) {
@@ -65,6 +67,7 @@ export async function POST(req: NextRequest) {
     phone,
     message,
     subject,
+    source,
     project: "Myhna Vistara",
     page,
     referrer,

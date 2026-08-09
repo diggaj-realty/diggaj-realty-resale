@@ -63,6 +63,7 @@ export default function LeadPopup() {
                 subject="Brigade Granada: popup EOI enquiry"
                 cta="Send me the details"
                 endpoint="/api/leads/brigade-granada"
+          source="brigade-granada-popup"
                 requirePhone
               />
             </div>

@@ -26,6 +26,8 @@ export type LeadEmailFields = {
   subject: string;
   /** Set for project microsites; omitted for the general contact form. */
   project?: string;
+  /** Which form/placement this came from, e.g. "listing-detail". */
+  source?: string;
   page?: string;
   referrer?: string;
 };
@@ -98,6 +100,7 @@ export function buildLeadEmail(f: LeadEmailFields): {
   const meta: [string, string][] = [
     ...(project ? ([["Project", project]] as [string, string][]) : []),
     ["Enquiry", f.subject],
+    ...((f.source ?? "").trim() ? ([["Source", f.source!.trim()]] as [string, string][]) : []),
     ["Page", f.page || "—"],
     ["Referrer", f.referrer || "direct / none"],
     ["Received", `${receivedAt} IST`],
@@ -176,7 +179,11 @@ export function buildLeadEmail(f: LeadEmailFields): {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
                 <tr>
                   <td bgcolor="${CREAM}" style="background:${CREAM};border-radius:10px;padding:16px 18px;font-family:${FONT};font-size:15px;line-height:24px;color:${INK};">
-                    ${escapeHtml(message).replace(/\r?\n/g, "<br />")}
+                    ${
+                      message
+                        ? escapeHtml(message).replace(/\r?\n/g, "<br />")
+                        : `<span style="color:${BODY};">No message — submitted from a short form, call or email to qualify.</span>`
+                    }
                   </td>
                 </tr>
               </table>
@@ -220,7 +227,7 @@ export function buildLeadEmail(f: LeadEmailFields): {
     ...(phone ? [`Phone:   ${phone}`] : []),
     "",
     "Message:",
-    message,
+    message || "(none — submitted from a short form)",
     "",
     "---",
     ...meta.map(([k, v]) => `${k}: ${v}`),
