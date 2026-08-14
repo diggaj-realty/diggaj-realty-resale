@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -135,8 +136,15 @@ export default function DashboardShell({
           content height, so the nav never scrolled on its own and the whole page
           scrolled instead. Now the sidebar stays put while <main> scrolls. */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-ink/10 bg-white lg:flex">
-        <Link href="/" className="px-6 pb-2 pt-6 text-lg font-semibold tracking-tight text-ink">
-          Diggaj Realty
+        <Link href="/" className="flex items-center gap-2.5 px-6 pb-2 pt-6 text-lg font-semibold tracking-tight text-ink">
+          <Image
+            src="/logo.png"
+            alt="Diggaj Realty Logo"
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-md object-contain"
+          />
+          <span>Diggaj Realty</span>
         </Link>
         <div className="flex items-center justify-between gap-2 px-6 pb-6">
           <p className="text-xs font-medium uppercase tracking-wide text-body">
@@ -171,7 +179,16 @@ export default function DashboardShell({
           />
           <div className="absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col bg-white p-5 shadow-2xl">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold tracking-tight text-ink">Diggaj Realty</span>
+              <Link href="/" className="flex items-center gap-2.5">
+                <Image
+                  src="/logo.png"
+                  alt="Diggaj Realty Logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 rounded-md object-contain"
+                />
+                <span className="text-lg font-semibold tracking-tight text-ink">Diggaj Realty</span>
+              </Link>
               <button onClick={() => setDrawerOpen(false)} aria-label="Close menu" className="text-ink/50">
                 <CloseIcon />
               </button>

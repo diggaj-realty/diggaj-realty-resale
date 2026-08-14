@@ -1,9 +1,19 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginChooserPage() {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-cream px-8 py-24">
       <div className="mx-auto w-full max-w-xl text-center">
+        <Link href="/" className="inline-flex items-center gap-2 mb-6 transition-transform hover:scale-105">
+          <Image
+            src="/logo.png"
+            alt="Diggaj Realty Logo"
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-xl object-contain shadow-xs"
+          />
+        </Link>
         <p className="text-xs font-medium uppercase tracking-wide text-body">Sign in</p>
         <h1 className="mt-2 text-card-title font-medium tracking-[-0.02em] text-ink">
           How would you like to continue?

@@ -55,9 +55,18 @@ export default function NavMobileMenu({
             className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain bg-panel p-8 text-white md:p-12"
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold tracking-tight">
-                Diggaj Realty
-              </span>
+              <div className="flex items-center gap-2.5">
+                <Image
+                  src="/logo.png"
+                  alt="Diggaj Realty Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-lg object-contain"
+                />
+                <span className="text-lg font-semibold tracking-tight">
+                  Diggaj Realty
+                </span>
+              </div>
               <button
                 onClick={onClose}
                 aria-label="Close menu"

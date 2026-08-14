@@ -56,10 +56,16 @@ export default function Footer() {
 
       {/* footer brand block */}
       <div className="mt-20 px-8 pb-12 md:px-14">
-        <div className="flex items-end gap-4 border-b border-ink/10 pb-6">
-          {/* Deliberately viewport-relative so the wordmark keeps spanning the
-              page, but clamped at both ends — raw 9vw hit 230px on a 2560px
-              monitor. */}
+        <div className="flex items-center gap-3 border-b border-ink/10 pb-6 md:gap-5">
+          <div className="relative h-10 w-10 shrink-0 md:h-16 md:w-16">
+            <Image
+              src="/logo.png"
+              alt="Diggaj Realty Icon"
+              fill
+              sizes="(max-width: 768px) 40px, 64px"
+              className="rounded-xl object-contain shadow-xs md:rounded-2xl"
+            />
+          </div>
           <span className="text-[clamp(2.25rem,11vw,3.75rem)] font-medium leading-[0.9] tracking-[-0.04em] md:text-[clamp(3.5rem,9vw,11rem)]">
             Diggaj Realty
           </span>

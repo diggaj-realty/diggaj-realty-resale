@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { login, register } from "@/lib/api/auth";
@@ -85,6 +86,16 @@ export default function AuthForm({ role }: { role: UserRole }) {
 
   return (
     <div className="mx-auto w-full max-w-md">
+      <Link href="/" className="mb-6 inline-flex items-center gap-2.5">
+        <Image
+          src="/logo.png"
+          alt="Diggaj Realty Logo"
+          width={40}
+          height={40}
+          className="h-10 w-10 rounded-xl object-contain shadow-xs"
+        />
+        <span className="text-base font-semibold tracking-tight text-ink">Diggaj Realty</span>
+      </Link>
       <p className="text-xs font-medium uppercase tracking-wide text-body">{roleLabel} access</p>
       <h1 className="mt-2 text-card-title font-medium tracking-[-0.02em] text-ink">
         {mode === "login" ? `Sign in as a ${roleLabel.toLowerCase()}` : `Create your ${roleLabel.toLowerCase()} account`}

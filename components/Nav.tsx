@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -21,8 +22,15 @@ export default function Nav() {
   return (
     <>
       <nav className="relative z-30 flex items-center justify-between px-5 pt-7 md:px-14">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-ink md:text-xl">
-          Diggaj Realty
+        <Link href="/" className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-ink md:text-xl">
+          <Image
+            src="/logo.png"
+            alt="Diggaj Realty Logo"
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-lg object-contain shadow-xs"
+          />
+          <span>Diggaj Realty</span>
         </Link>
         <div className="flex items-center gap-2 md:gap-3">
           {!loading && user && <NotificationBell />}

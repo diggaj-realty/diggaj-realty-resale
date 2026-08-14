@@ -26,6 +26,13 @@ export const metadata: Metadata = {
     url: SITE_URL,
     images: [{ url: "/img/hero-house.jpg", width: 1200, height: 630, alt: "Diggaj Realty" }],
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
