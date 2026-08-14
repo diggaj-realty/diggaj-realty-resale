@@ -12,6 +12,7 @@ const STATIC_ROUTES: { path: string; priority: number; changeFrequency: Metadata
   { path: "/brigade-granada", priority: 0.7, changeFrequency: "weekly" },
   { path: "/sobha-one-world-hoskote", priority: 0.7, changeFrequency: "weekly" },
   { path: "/myhna-vistara", priority: 0.7, changeFrequency: "weekly" },
+  { path: "/sobha-resale", priority: 0.7, changeFrequency: "weekly" },
   { path: "/contact", priority: 0.5, changeFrequency: "monthly" },
   { path: "/login/buyer", priority: 0.3, changeFrequency: "yearly" },
   { path: "/login/seller", priority: 0.3, changeFrequency: "yearly" },
