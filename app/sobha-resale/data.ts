@@ -43,6 +43,21 @@ export const PAGE = {
   status: "Resale · Secondary market",
 };
 
+/* ── Imagery ──────────────────────────────────────────────────────────────
+ * Every render on this page is sourced from sobharesale.in, an independent
+ * secondary-market consultancy, NOT from Sobha Limited's own domain — the same
+ * provenance situation as the Brigade Granada and Sobha One World microsites,
+ * and captioned as such wherever it appears. Authenticity and rights are
+ * unverified; see the DISCLAIMER block in page.tsx.
+ *
+ * The files are 416–1000px wide at source, which is why there is no full-bleed
+ * hero photograph: stretching a 1000px render across a 1440px+ viewport is
+ * visibly soft. The hero uses a mosaic sized to stay within native resolution
+ * instead, and the cards render at ~420px where these files are comfortable. */
+export const IMAGE_CREDIT = "Renders via sobharesale.in, not Sobha's own site";
+
+const IMG = "/img/sobha-resale";
+
 /** One Sobha community available on the secondary market.
  *
  *  `from` is a rupee integer, not a display string — `price()` renders it and
@@ -53,6 +68,9 @@ export const PAGE = {
 export type Community = {
   name: string;
   locality: string;
+  /** Project render. One per community — no community borrows another's. */
+  image: string;
+  imageAlt: string;
   sector: "East" | "North" | "South";
   status: "Ready to move" | "Under construction";
   configs: string;
@@ -69,6 +87,8 @@ export type Community = {
 export const COMMUNITIES: Community[] = [
   {
     name: "Sobha Dream Acres",
+    image: `${IMG}/sobha-dream-acres.webp`,
+    imageAlt: "Sobha Dream Acres towers above landscaped lawns and the retail plaza",
     locality: "Balagere, Panathur Main Road (off ORR)",
     sector: "East",
     status: "Ready to move",
@@ -80,6 +100,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Windsor",
+    image: `${IMG}/sobha-windsor-1.webp`,
+    imageAlt: "Sobha Windsor's English-manor facades around the pool courtyard",
     locality: "Whitefield",
     sector: "East",
     status: "Ready to move",
@@ -91,6 +113,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Lake Garden",
+    image: `${IMG}/sobha-lake-gardens.webp`,
+    imageAlt: "Sobha Lake Garden towers seen across the water",
     locality: "Bharathi Nagar, KR Puram",
     sector: "East",
     status: "Ready to move",
@@ -103,6 +127,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Neopolis",
+    image: `${IMG}/sobha-neopolis.webp`,
+    imageAlt: "Sobha Neopolis, Greek-island themed towers and clubhouse",
     locality: "Panathur Main Road, off Marathahalli–ORR",
     sector: "East",
     status: "Under construction",
@@ -114,6 +140,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Sentosa",
+    image: `${IMG}/sobha-sentosa.webp`,
+    imageAlt: "Sobha Sentosa's Singapore-themed towers",
     locality: "Panathur Main Road",
     sector: "East",
     status: "Under construction",
@@ -125,6 +153,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Ayana",
+    image: `${IMG}/sobha-ayana.webp`,
+    imageAlt: "Sobha Ayana, modern tropical elevation inside Dream Acres",
     locality: "Panathur Road, within Sobha Dream Acres",
     sector: "East",
     status: "Under construction",
@@ -137,6 +167,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Royal Pavilion",
+    image: `${IMG}/sobha-royal-pavilion.webp`,
+    imageAlt: "Sobha Royal Pavilion's Rajasthani-palace styling",
     locality: "Hadosiddapura, Marathahalli–Sarjapur Road",
     sector: "East",
     status: "Under construction",
@@ -149,6 +181,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha HRC Pristine",
+    image: `${IMG}/sobha-hrc-pristine.webp`,
+    imageAlt: "Sobha HRC Pristine, low-density towers in the Jakkur green belt",
     locality: "Jakkur",
     sector: "North",
     status: "Ready to move",
@@ -161,6 +195,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Victoria Park",
+    image: `${IMG}/sobha-victoria-park.webp`,
+    imageAlt: "Sobha Victoria Park's Victorian-styled apartments and row houses",
     locality: "Off Hennur Main Road",
     sector: "North",
     status: "Under construction",
@@ -174,6 +210,8 @@ export const COMMUNITIES: Community[] = [
   },
   {
     name: "Sobha Dream Gardens",
+    image: `${IMG}/sobha-dream-gardens.webp`,
+    imageAlt: "Sobha Dream Gardens, Zen-themed compact-format towers",
     locality: "Mitganahalli, off Thanisandra Main Road",
     sector: "North",
     status: "Under construction",
@@ -202,6 +240,39 @@ export const TOP_PRICE = Math.max(...PRICED.map((c) => c.from));
 /** e.g. "From ₹82 L to ₹2.3 Cr" — one string, two derived numbers, so the
  *  hero and the sticky bar can never drift apart from the table. */
 export const PRICE_SUMMARY = `${price(FROM_PRICE)} – ${price(TOP_PRICE)}`;
+
+/** Hero mosaic — one wide plate plus two squares, chosen so each renders at or
+ *  below its native width (the sources top out at 1000px, which is why there is
+ *  no single full-bleed hero image). Deliberately three *different* communities
+ *  and all three ready or nearly so: the hero should not imply that one
+ *  project's render represents the whole portfolio. */
+export const HERO_MOSAIC: { src: string; alt: string; label: string }[] = [
+  {
+    src: `${IMG}/sobha-dream-acres-1.webp`,
+    alt: "Completed Sobha Dream Acres towers above the landscaped podium and retail plaza",
+    label: "Dream Acres · Balagere",
+  },
+  {
+    src: `${IMG}/sobha-neopolis-1.webp`,
+    alt: "Sobha Neopolis towers, Greek-island themed elevation",
+    label: "Neopolis · Panathur",
+  },
+  {
+    src: `${IMG}/sobha-sentosa-1.webp`,
+    alt: "Sobha Sentosa towers and pool deck",
+    label: "Sentosa · Panathur",
+  },
+];
+
+/** The south corridor has no community with a published resale indication, so
+ *  its card would otherwise be the only one with nothing to show. Sobha Town
+ *  Park is the project that trades there; the render is captioned to say
+ *  exactly that, rather than implying a listing we do not have. */
+export const SOUTH_IMAGE = {
+  src: `${IMG}/sobha-townpark.webp`,
+  alt: "Sobha Town Park, the south-corridor Sobha community",
+  caption: "Sobha Town Park — the south-corridor community, no resale indication published yet",
+};
 
 export const HERO_POINTS: string[] = [
   "Ten Sobha communities with live resale indications, across east and north Bengaluru",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import LeadForm from "@/components/LeadForm";
@@ -6,6 +7,9 @@ import { price } from "@/lib/listings";
 import {
   PAGE,
   COMMUNITIES,
+  HERO_MOSAIC,
+  SOUTH_IMAGE,
+  IMAGE_CREDIT,
   READY,
   UNDER_CONSTRUCTION,
   FROM_PRICE,
@@ -31,12 +35,14 @@ import LeadPopup from "./LeadPopup";
 // COMMUNITIES in ./data.ts; diagrams are in ./visuals.tsx and this file is
 // layout only.
 //
-// No hero photograph, by choice. The other microsites each have renders for
-// one project; there is no single building to photograph here, and using a
-// render of one Sobha community to head a page covering ten of them would
-// misrepresent nine of them. The hero is typographic on the dark panel
-// instead. Read the DISCLAIMER at the foot of this file before changing how
-// any figure renders.
+// Imagery: one render per community, never shared between them — a page
+// covering ten projects must not head itself with a render of one of them, so
+// the hero is a three-community mosaic rather than a single full-bleed plate.
+// That is also the resolution-honest choice: the source files top out at
+// 1000px wide, and a full-bleed hero would visibly soften past ~1200px. All
+// renders come from sobharesale.in rather than Sobha's own domain, credited
+// wherever they appear. Read the DISCLAIMER at the foot of this file before
+// changing how any figure or image renders.
 
 const JSON_LD = {
   "@context": "https://schema.org",
@@ -135,13 +141,25 @@ const track = (n: number) => TRACK_BY_COUNT[n] ?? "md:grid-cols-2 xl:grid-cols-3
  *  indication say so instead of showing a blank. */
 function CommunityCard({ c }: { c: Community }) {
   return (
-    <article className="flex flex-col rounded-[24px] bg-ink/[0.03] p-7 transition-transform duration-300 hover:-translate-y-0.5">
-      <div className="flex items-start justify-between gap-4">
-        <h3 className="text-subhead font-medium tracking-[-0.01em] text-ink">{c.name}</h3>
-        <span className="mt-1 shrink-0 rounded-full bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/60 shadow-sm">
+    <article className="flex flex-col overflow-hidden rounded-[24px] bg-ink/[0.03] transition-transform duration-300 hover:-translate-y-0.5">
+      {/* Cover sits inside the card's own radius rather than floating above it,
+          and the sector chip moves onto the image — on a card this dense the
+          chip was competing with the community name for the same corner. */}
+      <div className="relative aspect-[16/10] overflow-hidden bg-ink/10">
+        <Image
+          src={c.image}
+          alt={c.imageAlt}
+          fill
+          sizes="(max-width: 768px) 92vw, (max-width: 1280px) 46vw, 30vw"
+          className="object-cover transition-transform duration-500 ease-out hover:scale-[1.03]"
+        />
+        <span className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-ink/70 backdrop-blur">
           {c.sector}
         </span>
       </div>
+
+      <div className="flex flex-1 flex-col p-7">
+      <h3 className="text-subhead font-medium tracking-[-0.01em] text-ink">{c.name}</h3>
 
       <p className="mt-2.5 flex items-start gap-1.5 text-xs text-body">
         <PinIcon className="mt-px h-3.5 w-3.5 shrink-0" />
@@ -216,6 +234,7 @@ function CommunityCard({ c }: { c: Community }) {
           </a>
         </div>
       </div>
+      </div>
     </article>
   );
 }
@@ -230,11 +249,12 @@ export default function SobhaResalePage() {
       <LeadPopup />
 
       {/* ── Hero ─────────────────────────────────────────────────────────
-          Typographic rather than photographic — see the note at the head of
-          this file. The lime wash is a radial gradient rather than an image so
-          the hero has no LCP image to load at all: the largest paint here is
-          the H1 itself. No site Nav, same as the other microsites — this is a
-          standalone lead-capture surface, not a way back into the main site. */}
+          Text left, three-community mosaic right — see the note at the head of
+          this file for why it is a mosaic and not a full-bleed plate. The lime
+          wash behind it is a gradient, not an image, so the only hero download
+          is the mosaic itself. No site Nav, same as the other microsites —
+          this is a standalone lead-capture surface, not a way back into the
+          main site. */}
       <section className="relative flex min-h-[640px] flex-col overflow-clip bg-panel md:min-h-[max(620px,92svh)]">
         <div
           aria-hidden
@@ -248,6 +268,8 @@ export default function SobhaResalePage() {
         />
 
         <div className="relative z-20 flex flex-1 flex-col justify-end px-8 pb-28 pt-20 md:px-14 lg:pb-14">
+          <div className="grid items-end gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-lime px-4 py-2 text-xs font-semibold text-ink">
               {PAGE.status}
@@ -290,7 +312,54 @@ export default function SobhaResalePage() {
               See the communities
             </a>
           </div>
+          </div>
 
+            {/* Mosaic: one wide plate, two squares. Each is captioned with the
+                community it actually shows, so no single render can read as
+                standing for the whole portfolio. */}
+            <figure className="min-w-0">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative col-span-2 aspect-[16/9] overflow-hidden rounded-[24px] ring-1 ring-white/15">
+                  <Image
+                    src={HERO_MOSAIC[0].src}
+                    alt={HERO_MOSAIC[0].alt}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 92vw, 44vw"
+                    className="object-cover"
+                  />
+                  <span className="absolute bottom-3 left-3 rounded-full bg-ink/70 px-3 py-1.5 text-[10px] font-medium text-white/85 backdrop-blur">
+                    {HERO_MOSAIC[0].label}
+                  </span>
+                </div>
+                {HERO_MOSAIC.slice(1).map((m) => (
+                  <div
+                    key={m.src}
+                    className="relative aspect-[4/3] overflow-hidden rounded-[20px] ring-1 ring-white/15"
+                  >
+                    <Image
+                      src={m.src}
+                      alt={m.alt}
+                      fill
+                      sizes="(max-width: 1024px) 46vw, 22vw"
+                      className="object-cover"
+                    />
+                    <span className="absolute bottom-2.5 left-2.5 rounded-full bg-ink/70 px-2.5 py-1 text-[10px] font-medium text-white/85 backdrop-blur">
+                      {m.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <figcaption className="mt-3 text-[10px] tracking-wide text-white/35">
+                {IMAGE_CREDIT}
+              </figcaption>
+            </figure>
+          </div>
+
+          {/* Stats sit below the two-column block, not inside the text column.
+              On a phone that puts the mosaic directly after the CTAs, so the
+              first thing below the fold is the projects themselves rather than
+              four number tiles. */}
           <div className="mt-12 grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-4">
             {HERO_STATS.map((s) => (
               <div
@@ -413,10 +482,26 @@ export default function SobhaResalePage() {
               </div>
               <p className="mt-4 text-lead text-body">{s.blurb}</p>
               {SECTOR_COUNTS[s.key] === 0 && (
-                <p className="mt-3 text-xs font-medium text-ink/50">
-                  Nothing with a published resale indication in this corridor right now — ask and
-                  we&apos;ll check what is actually trading.
-                </p>
+                <>
+                  <figure className="mt-6">
+                    <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-ink/10">
+                      <Image
+                        src={SOUTH_IMAGE.src}
+                        alt={SOUTH_IMAGE.alt}
+                        fill
+                        sizes="(max-width: 1024px) 92vw, 30vw"
+                        className="object-cover"
+                      />
+                    </div>
+                    <figcaption className="mt-2.5 text-[11px] text-ink/50">
+                      {SOUTH_IMAGE.caption}
+                    </figcaption>
+                  </figure>
+                  <p className="mt-4 text-xs font-medium text-ink/50">
+                    Nothing with a published resale indication in this corridor right now — ask and
+                    we&apos;ll check what is actually trading.
+                  </p>
+                </>
               )}
 
               <ul className="mt-7 flex flex-col gap-3">
@@ -638,7 +723,12 @@ export default function SobhaResalePage() {
             transfer and NOC charges, association corpus or maintenance dues, parking, and legal
             and loan processing costs. Possession dates on phased projects vary by tower and wing,
             and a project-level date does not apply to every unit within it. The corridor diagram
-            is a schematic drawn for orientation, not a map, a survey or a planning document.
+            is a schematic drawn for orientation, not a map, a survey or a planning document. All
+            project images on this page are marketing renders and photographs sourced from
+            sobharesale.in, an independent secondary-market consultancy, rather than from Sobha
+            Limited&apos;s own website; their authenticity and rights have not been verified, they
+            show the community as a whole rather than any unit offered for sale, and no image here
+            depicts the specific flat you would be buying.
             Nothing on this page is an offer, an invitation to offer, or a contract, and none of
             it is investment advice. Verify the RERA registration number, phase, title chain,
             encumbrance position and all approvals directly with the seller, the developer and the
