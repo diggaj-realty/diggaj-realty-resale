@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: SITE_TITLE, template: "%s | Diggaj Realty" },
   description: SITE_DESCRIPTION,
+  verification: {
+    google: "B9xKsgEwmCdwWO-yqD-2WITe7UFLG2yq2RbeVxfAEZE",
+  },
   openGraph: {
     type: "website",
     siteName: "Diggaj Realty",
