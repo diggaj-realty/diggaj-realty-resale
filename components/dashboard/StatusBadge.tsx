@@ -36,7 +36,7 @@ const MAP: Record<string, { tone: keyof typeof TONE; label: string }> = {
   // property interests (CLOSED/CANCELLED already covered above)
   NEW: { tone: "gold", label: "New" },
   CONTACT_REQUESTED: { tone: "gold", label: "Contact requested" },
-  AGENT_ASSIGNED: { tone: "blue", label: "Agent assigned" },
+  AGENT_ASSIGNED: { tone: "blue", label: "Advisor assigned" },
   CONTACT_IN_PROGRESS: { tone: "blue", label: "Contact in progress" },
   SITE_VISIT_REQUESTED: { tone: "gold", label: "Visit requested" },
   SITE_VISIT_SCHEDULED: { tone: "blue", label: "Visit scheduled" },
@@ -46,7 +46,7 @@ const MAP: Record<string, { tone: keyof typeof TONE; label: string }> = {
   NEGOTIATION_IN_PROGRESS: { tone: "blue", label: "Negotiating" },
   CONVERTED_TO_DEAL: { tone: "green", label: "Deal created" },
   // document requests (REJECTED/COMPLETED/CANCELLED already covered above)
-  PENDING_AGENT_REVIEW: { tone: "gold", label: "Awaiting agent review" },
+  PENDING_AGENT_REVIEW: { tone: "gold", label: "Awaiting advisor review" },
   FORWARDED_TO_OWNER: { tone: "blue", label: "Forwarded for upload" },
   EXISTING_DOCUMENT_SHARED: { tone: "green", label: "Shared" },
   OWNER_UPLOADED: { tone: "blue", label: "Uploaded" },

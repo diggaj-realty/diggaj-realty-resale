@@ -1,4 +1,4 @@
-export type PropertyType = "RESIDENTIAL" | "PLOT" | "COMMERCIAL";
+export type PropertyType = "RESIDENTIAL";
 export type PropertyStatus =
   | "DRAFT"
   | "PENDING_VERIFICATION"
@@ -8,7 +8,7 @@ export type PropertyStatus =
   | "CLOSED";
 export type PropertyPlan = "BASIC" | "ELITE";
 export type Furnishing = "UNFURNISHED" | "SEMI_FURNISHED" | "FULLY_FURNISHED";
-export type Facing = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
+export type Facing = "N" | "E" | "W";
 export type PossessionStatus = "READY_TO_MOVE" | "UNDER_CONSTRUCTION";
 export type OwnershipType =
   | "FREEHOLD"
@@ -104,8 +104,14 @@ export type GetPropertiesParams = {
   maxPrice?: number;
   minBhk?: number;
   city?: string;
+  /** Single-locality substring match — one request only. The backend accepts
+   *  just one; multi-locality (OR) filtering is done client-side by issuing
+   *  one request per locality and merging (see `localities`). */
   locality?: string;
-  pincode?: string;
+  /** Frontend-only: the buyer's selected areas for OR filtering. Persisted in
+   *  the URL / saved searches as a comma-joined `locality` param, then fanned
+   *  out into one `locality` request each and merged in the browser. */
+  localities?: string[];
   minBathrooms?: number;
   minArea?: number;
   maxArea?: number;
@@ -115,7 +121,6 @@ export type GetPropertiesParams = {
   maxAgeYears?: number;
   parking?: boolean;
   ownershipType?: OwnershipType;
-  amenities?: string[];
   eliteOnly?: boolean;
   sort?: SortOrder;
   page?: number;

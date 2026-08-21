@@ -40,13 +40,6 @@ export default function LocationStep({
           onChange={(v) => update({ locality: v })}
           placeholder="Whitefield"
         />
-        <TextField
-          label="Pincode"
-          optional
-          value={value.pincode}
-          onChange={(v) => update({ pincode: v })}
-          placeholder="560066"
-        />
       </div>
 
       <div>

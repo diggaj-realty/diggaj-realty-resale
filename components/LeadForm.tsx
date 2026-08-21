@@ -129,7 +129,7 @@ export default function LeadForm({
               Message sent
             </p>
             <p className={`mt-2 max-w-xs text-sm ${dark ? "text-white/60" : "text-body"}`}>
-              An agent will get back to you within a few hours. Keep an eye on
+              An advisor will get back to you within a few hours. Keep an eye on
               your inbox.
             </p>
             <button

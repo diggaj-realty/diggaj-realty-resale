@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { price } from "@/lib/listings";
 import { propertyHref } from "@/lib/slug";
 import { badgeFor, isElite } from "@/lib/badge";
+import { FACING_LABEL } from "@/lib/propertyEnums";
 import { useAuth } from "@/lib/auth/AuthContext";
 import GatedPrice from "@/components/listings/GatedPrice";
 import ShortlistButton from "@/components/listings/ShortlistButton";
@@ -99,7 +100,7 @@ export default function ListingCard({
         : `${property.ageYears} yr${property.ageYears === 1 ? "" : "s"} old`;
   const factTags = [
     property.furnishing ? FURNISHING_LABEL[property.furnishing] : null,
-    property.facing ? `Facing ${property.facing}` : null,
+    property.facing ? `Facing ${FACING_LABEL[property.facing]}` : null,
     ageLabel,
     hasParking ? "Parking" : null,
     property.ownershipType ? OWNERSHIP_LABEL[property.ownershipType] : null,

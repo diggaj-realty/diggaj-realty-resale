@@ -12,8 +12,11 @@ export function buildFilterQueryString(params: GetPropertiesParams): string {
   if (params.maxPrice != null) search.set("maxPrice", String(params.maxPrice));
   if (params.minBhk != null) search.set("minBhk", String(params.minBhk));
   if (params.city) search.set("city", params.city);
-  if (params.locality) search.set("locality", params.locality);
-  if (params.pincode) search.set("pincode", params.pincode);
+  // Multiple selected areas share one comma-joined `locality` URL param (kept
+  // shareable/bookmarkable); a lone single `locality` still works for old
+  // saved-search deep links.
+  if (params.localities?.length) search.set("locality", params.localities.join(","));
+  else if (params.locality) search.set("locality", params.locality);
   if (params.minBathrooms != null) search.set("minBathrooms", String(params.minBathrooms));
   if (params.minArea != null) search.set("minArea", String(params.minArea));
   if (params.maxArea != null) search.set("maxArea", String(params.maxArea));
@@ -23,7 +26,6 @@ export function buildFilterQueryString(params: GetPropertiesParams): string {
   if (params.maxAgeYears != null) search.set("maxAgeYears", String(params.maxAgeYears));
   if (params.parking) search.set("parking", "true");
   if (params.ownershipType) search.set("ownershipType", params.ownershipType);
-  if (params.amenities?.length) search.set("amenities", params.amenities.join(","));
   if (params.eliteOnly) search.set("eliteOnly", "true");
   if (params.sort) search.set("sort", params.sort);
   if (params.page) search.set("page", String(params.page));
@@ -43,8 +45,12 @@ export function parseFilterSearchParams(sp: URLSearchParams): GetPropertiesParam
     maxPrice: num(sp.get("maxPrice")),
     minBhk: num(sp.get("minBhk")),
     city: sp.get("city") ?? undefined,
-    locality: sp.get("locality") ?? undefined,
-    pincode: sp.get("pincode") ?? undefined,
+    // A single or comma-joined `locality` param → the selected-areas array.
+    localities: sp
+      .get("locality")
+      ?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
     minBathrooms: num(sp.get("minBathrooms")),
     minArea: num(sp.get("minArea")),
     maxArea: num(sp.get("maxArea")),
@@ -54,7 +60,6 @@ export function parseFilterSearchParams(sp: URLSearchParams): GetPropertiesParam
     maxAgeYears: num(sp.get("maxAgeYears")),
     parking: bool(sp.get("parking")) || undefined,
     ownershipType: (sp.get("ownershipType") as GetPropertiesParams["ownershipType"]) ?? undefined,
-    amenities: sp.get("amenities")?.split(",").filter(Boolean),
     eliteOnly: bool(sp.get("eliteOnly")) || undefined,
     sort: (sp.get("sort") as GetPropertiesParams["sort"]) ?? undefined,
   };

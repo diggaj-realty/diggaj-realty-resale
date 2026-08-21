@@ -656,7 +656,7 @@ export default function SobhaResalePage() {
                 </Link>{" "}
                 or{" "}
                 <Link href="/contact" className="text-lime underline underline-offset-4">
-                  talk to an agent
+                  talk to an advisor
                 </Link>{" "}
                 about what else fits the same budget.
               </p>
@@ -711,7 +711,7 @@ export default function SobhaResalePage() {
           <h2 className="text-sm font-semibold text-ink">Disclaimer</h2>
           <p className="mt-3 text-xs leading-relaxed text-body">
             Diggaj Realty is an independent resale advisory and is not the builder, developer or
-            promoter of any project named on this page, nor an agent of Sobha Limited. Sobha, and
+            promoter of any project named on this page, nor an advisor of Sobha Limited. Sobha, and
             each project name used here, are the property of their respective owners and are
             referenced for identification only. Every figure on this page — indicative resale
             prices, unit sizes, land areas, unit counts, configurations, possession status,

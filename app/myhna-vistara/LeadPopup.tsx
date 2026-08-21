@@ -53,7 +53,7 @@ export default function LeadPopup() {
               Get the Myhna Vistara price sheet
             </h2>
             <p className="mt-3 text-sm text-white/60">
-              Leave your details and an agent will send configurations, pricing and whether the
+              Leave your details and an advisor will send configurations, pricing and whether the
               first-51-bookings offer is still open.
             </p>
 

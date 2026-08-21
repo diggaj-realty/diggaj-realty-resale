@@ -7,11 +7,11 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Nav from "@/components/Nav";
 import EliteStripSection from "@/components/listings/EliteStripSection";
-import { price } from "@/lib/listings";
 import { getProperties } from "@/lib/api/properties";
 import { propertyHref } from "@/lib/slug";
-import { isElite } from "@/lib/badge";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { supabaseThumb, isSupabasePublic } from "@/lib/image";
+import { buildFilterQueryString } from "@/lib/filters";
+import { CANONICAL_CITIES } from "@/lib/cities";
 import type { Property } from "@/types/api";
 
 const rise = {
@@ -23,6 +23,21 @@ const rise = {
   }),
 };
 
+// Compact quick-filters for the hero — a subset of the full listings filters,
+// enough to pre-narrow before landing on /listings (where the rest live).
+const HERO_BEDS = [
+  { label: "Any beds", minBhk: undefined as number | undefined },
+  { label: "3+", minBhk: 3 },
+  { label: "4+", minBhk: 4 },
+  { label: "5+", minBhk: 5 },
+];
+const HERO_PRICE = [
+  { label: "Any price", min: undefined as number | undefined, max: undefined as number | undefined },
+  { label: "Under ₹3 Cr", min: undefined, max: 30000000 },
+  { label: "₹3 – 6 Cr", min: 30000000, max: 60000000 },
+  { label: "₹6 Cr+", min: 60000000, max: undefined },
+];
+
 export default function HeroSection({
   popularCities,
   eliteHomes,
@@ -31,9 +46,30 @@ export default function HeroSection({
   eliteHomes: Property[];
 }) {
   const router = useRouter();
-  const { user } = useAuth();
   const [q, setQ] = useState("");
   const [focused, setFocused] = useState(false);
+
+  // Quick-filter popover (the circular button next to Search)
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [city, setCity] = useState("");
+  const [bedsIdx, setBedsIdx] = useState(0);
+  const [priceIdx, setPriceIdx] = useState(0);
+  const activeFilterCount =
+    (city ? 1 : 0) + (bedsIdx > 0 ? 1 : 0) + (priceIdx > 0 ? 1 : 0);
+
+  // Everything the hero can set → the same /listings query the full browser
+  // reads on load, so the landing page opens pre-filtered.
+  function runSearch() {
+    const price = HERO_PRICE[priceIdx];
+    const qs = buildFilterQueryString({
+      q: q.trim() || undefined,
+      city: city || undefined,
+      minBhk: HERO_BEDS[bedsIdx].minBhk,
+      minPrice: price.min,
+      maxPrice: price.max,
+    });
+    router.push(qs ? `/listings?${qs}` : "/listings");
+  }
 
   const query = q.trim().toLowerCase();
 
@@ -107,11 +143,14 @@ export default function HeroSection({
         <Nav />
       </motion.div>
 
-      {/* click-away layer for suggestions */}
-      {focused && hasSuggestions && (
+      {/* click-away layer for suggestions and the quick-filter popover */}
+      {((focused && hasSuggestions) || filtersOpen) && (
         <button
-          aria-label="Close suggestions"
-          onClick={() => setFocused(false)}
+          aria-label="Close"
+          onClick={() => {
+            setFocused(false);
+            setFiltersOpen(false);
+          }}
           className="absolute inset-0 z-10 cursor-default"
         />
       )}
@@ -146,18 +185,18 @@ export default function HeroSection({
           custom={2}
           className="mt-6 max-w-lg text-lg text-white/85 md:text-xl"
         >
-          One platform from search to closing, with a dedicated agent for every
+          One platform from search to closing, with a dedicated advisor for every
           home you buy through Diggaj Realty.
         </motion.p>
 
         {/* working search with live autocomplete */}
-        <motion.div variants={rise} initial="hidden" animate="show" custom={3} className="relative mt-7 max-w-md">
+        <motion.div variants={rise} initial="hidden" animate="show" custom={3} className="relative mt-7 max-w-2xl">
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              router.push(q.trim() ? `/listings?q=${encodeURIComponent(q.trim())}` : "/listings");
+              runSearch();
             }}
-            className="flex w-full items-center rounded-full bg-white/95 p-1.5 shadow-2xl backdrop-blur transition-shadow focus-within:ring-2 focus-within:ring-lime"
+            className="flex w-full items-center gap-1.5 rounded-full bg-white/95 p-1.5 shadow-2xl backdrop-blur transition-shadow focus-within:ring-2 focus-within:ring-lime"
           >
             <input
               value={q}
@@ -166,6 +205,35 @@ export default function HeroSection({
               placeholder="Search city, address, or home…"
               className="min-w-0 flex-1 bg-transparent px-4 text-base text-ink placeholder:text-ink/40 focus:outline-none"
             />
+            {/* circular quick-filter toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                setFiltersOpen((o) => !o);
+                setFocused(false);
+              }}
+              aria-label="Filters"
+              aria-expanded={filtersOpen}
+              className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors ${
+                filtersOpen || activeFilterCount > 0
+                  ? "bg-panel text-lime"
+                  : "bg-ink/5 text-ink/70 hover:bg-ink/10"
+              }`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+                <circle cx="9" cy="6" r="2" fill="currentColor" />
+                <circle cx="15" cy="12" r="2" fill="currentColor" />
+                <circle cx="9" cy="18" r="2" fill="currentColor" />
+              </svg>
+              {activeFilterCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-lime text-[10px] font-semibold text-ink ring-2 ring-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
             <button type="submit" className="shrink-0 rounded-full bg-panel px-6 py-3.5 text-base text-white">
               Search
             </button>
@@ -189,20 +257,35 @@ export default function HeroSection({
                   >
                     <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-xl bg-cream">
                       {p.photos[0]?.url && (
-                        <Image src={p.photos[0].url} alt="" fill sizes="64px" className="object-cover" />
+                        // Serve a pre-sized ~3KB thumbnail directly from
+                        // Supabase's CDN (unoptimized) instead of routing every
+                        // keystroke-swapped image through Next's on-demand
+                        // optimizer, which stalls the dropdown thumbnails in dev.
+                        // Eager (not lazy) since it's already in view when shown.
+                        <Image
+                          src={supabaseThumb(p.photos[0].url, 128)}
+                          alt=""
+                          fill
+                          sizes="64px"
+                          loading="eager"
+                          unoptimized={isSupabasePublic(p.photos[0].url)}
+                          className="object-cover"
+                        />
                       )}
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-ink">{p.title}</p>
+                      {/* Deliberately no price here — the hero suggestion shows
+                          location + specs only; price is revealed on the detail
+                          page (gated via GatedPrice for Elite/logged-out). */}
                       <p className="truncate text-xs text-body">
-                        {p.location} ·{" "}
-                        {isElite(p) && !user ? (
-                          <span className="select-none tracking-widest" aria-hidden>
-                            ₹ •• •• •••
-                          </span>
-                        ) : (
-                          price(p.askingPrice)
-                        )}
+                        {[
+                          p.location,
+                          p.bhk != null ? `${p.bhk} BHK` : null,
+                          p.areaSqft > 0 ? `${p.areaSqft.toLocaleString("en-IN")} sqft` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                     </div>
                     <span className="ml-auto pr-2 text-ink/40">↗</span>
@@ -220,6 +303,97 @@ export default function HeroSection({
                     </p>
                   </Link>
                 ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* quick-filter popover (from the circular filter button) */}
+          <AnimatePresence>
+            {filtersOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-x-0 top-full z-40 mt-2 rounded-3xl bg-white p-4 text-ink shadow-2xl"
+              >
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-ink">City</p>
+                    <select
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="mt-2 w-full appearance-none rounded-xl border border-ink/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-ink/30"
+                    >
+                      <option value="">Any city</option>
+                      {CANONICAL_CITIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-ink">Bedrooms</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {HERO_BEDS.map((b, i) => (
+                        <button
+                          key={b.label}
+                          type="button"
+                          onClick={() => setBedsIdx(i)}
+                          className={`rounded-full px-4 py-2 text-xs font-medium transition-colors ${
+                            bedsIdx === i ? "bg-panel text-white" : "bg-ink/5 text-ink/70 hover:bg-ink/10"
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-ink">Price</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {HERO_PRICE.map((p, i) => (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => setPriceIdx(i)}
+                          className={`rounded-full px-4 py-2 text-xs font-medium transition-colors ${
+                            priceIdx === i ? "bg-panel text-white" : "bg-ink/5 text-ink/70 hover:bg-ink/10"
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCity("");
+                        setBedsIdx(0);
+                        setPriceIdx(0);
+                      }}
+                      className="text-xs font-medium text-ink/50 hover:text-ink"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFiltersOpen(false);
+                        runSearch();
+                      }}
+                      className="rounded-full bg-lime px-5 py-2.5 text-sm font-semibold text-ink transition-transform hover:-translate-y-px"
+                    >
+                      Show homes →
+                    </button>
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

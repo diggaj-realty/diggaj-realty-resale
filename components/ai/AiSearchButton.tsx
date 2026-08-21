@@ -86,14 +86,14 @@ export default function AiSearchButton({
                   <>
                     <p className="text-sm font-medium text-white">Want the highlights?</p>
                     <p className="mt-1 text-xs leading-relaxed text-white/60">
-                      Our AI can summarize this home in a few seconds.
+                      Ask our smart assistant anything about this home — it answers in seconds. Powered by AI.
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-sm font-medium text-white">Let AI find your home</p>
+                    <p className="text-sm font-medium text-white">Need help finding a home?</p>
                     <p className="mt-1 text-xs leading-relaxed text-white/60">
-                      Tell it a city, budget, or vibe, and it searches real listings instantly.
+                      Just tell us your city and budget — our smart assistant finds real listings in seconds. Powered by AI.
                     </p>
                   </>
                 )}
@@ -107,19 +107,39 @@ export default function AiSearchButton({
       )}
       <button
         onClick={openPanel}
-        aria-label="AI Search"
+        aria-label={floating ? "Get help finding a home" : "AI Search"}
         className={
           floating
-            // Same dark-panel + lime + ring treatment as the Elite badge
-            // (ListingCard), circular rather than a pill.
-            ? "fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-panel text-lime shadow-2xl ring-1 ring-lime/30 transition-transform hover:-translate-y-1"
+            // A labelled pill, not a bare icon: a lone sparkle reads as an ad
+            // to dismiss for users with no AI mental model. Words ("Get help")
+            // say what it does; the dark-panel + lime + ring echoes the Elite
+            // badge (ListingCard). No `relative` here — `fixed` itself is the
+            // containing block for the absolute attention dot, and adding
+            // `relative` would override `fixed` (Tailwind orders it later),
+            // dropping the button out of the floating layer into page flow.
+            ? "fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-panel px-5 py-3.5 text-sm font-semibold text-lime shadow-2xl ring-1 ring-lime/30 transition-transform hover:-translate-y-1"
             : // Quiet tertiary, full width. This was a solid dark pill, which
               // read as a third primary action next to "Make an offer" and gave
               // the stack no hierarchy at all.
               "w-full rounded-full bg-ink/5 px-5 py-3 text-sm font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-ink/10"
         }
       >
-        {floating ? <SparkleIcon className="h-6 w-6" /> : propertyContext ? "✦ Ask AI about this home" : "✦ AI Search"}
+        {floating ? (
+          <>
+            {/* Gentle attention cue — a quiet pulsing dot, not a timed popup.
+                Stops animating under prefers-reduced-motion. */}
+            <span className="pointer-events-none absolute -right-1 -top-1 flex h-3 w-3">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime opacity-75 motion-reduce:hidden" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-lime ring-2 ring-panel" />
+            </span>
+            <SparkleIcon className="h-5 w-5" />
+            Get help
+          </>
+        ) : propertyContext ? (
+          "✦ Ask AI about this home"
+        ) : (
+          "✦ AI Search"
+        )}
       </button>
       {open && <AiSearchPanel onClose={() => setOpen(false)} propertyContext={propertyContext} />}
     </div>

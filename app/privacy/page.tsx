@@ -11,7 +11,7 @@ const SECTIONS = [
   },
   {
     h: "How we use it",
-    p: "Your information is used to match you with agents and listings, and keep you updated on your transaction. We never sell your personal data to third parties.",
+    p: "Your information is used to match you with advisors and listings, and keep you updated on your transaction. We never sell your personal data to third parties.",
   },
   {
     h: "Data retention",

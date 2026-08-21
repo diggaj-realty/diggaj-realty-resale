@@ -1,36 +1,18 @@
 import { price } from "@/lib/listings";
+import { FACING_LABEL } from "@/lib/propertyEnums";
 import type {
-  Facing,
   Furnishing,
   OwnershipType,
   PossessionStatus,
   Property,
-  PropertyType,
 } from "@/types/api";
 
 export const sqft = (n: number) => `${n.toLocaleString("en-IN")} sq ft`;
-
-const TYPE_LABEL: Record<PropertyType, string> = {
-  RESIDENTIAL: "Residential",
-  PLOT: "Plot",
-  COMMERCIAL: "Commercial",
-};
 
 const FURNISHING_LABEL: Record<Furnishing, string> = {
   UNFURNISHED: "Unfurnished",
   SEMI_FURNISHED: "Semi-furnished",
   FULLY_FURNISHED: "Fully furnished",
-};
-
-const FACING_LABEL: Record<Facing, string> = {
-  N: "North",
-  S: "South",
-  E: "East",
-  W: "West",
-  NE: "North-East",
-  NW: "North-West",
-  SE: "South-East",
-  SW: "South-West",
 };
 
 const POSSESSION_LABEL: Record<PossessionStatus, string> = {
@@ -45,7 +27,6 @@ const OWNERSHIP_LABEL: Record<OwnershipType, string> = {
   CO_OPERATIVE: "Co-operative",
 };
 
-export const propertyTypeLabel = (t: PropertyType) => TYPE_LABEL[t];
 
 const age = (yrs: number) =>
   yrs <= 0 ? "New construction" : `${yrs} ${yrs === 1 ? "year" : "years"} old`;
@@ -69,7 +50,6 @@ export function buildSpecs(p: Property): Spec[] {
       : null;
 
   const rows: Array<[string, string | null | undefined]> = [
-    ["Property type", TYPE_LABEL[p.type]],
     [
       "Units available",
       p.unitsAvailable != null

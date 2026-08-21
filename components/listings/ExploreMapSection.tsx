@@ -51,7 +51,7 @@ export default function ExploreMapSection({ places }: { places: CityGroup[] }) {
             className="mt-3 max-w-sm text-lead text-body"
           >
             Browse active listings in the places buyers love most, every home
-            verified and backed by a dedicated agent.
+            verified and backed by a dedicated advisor.
           </motion.p>
         </div>
         <motion.div

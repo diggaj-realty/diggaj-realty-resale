@@ -2,7 +2,7 @@
 
 import { NumberField, SelectField } from "../fields";
 import type { ListingFormState } from "../formState";
-import { FURNISHING, FACING } from "@/lib/propertyEnums";
+import { FURNISHING, FACING, FACING_LABEL } from "@/lib/propertyEnums";
 
 export default function AreaConfigStep({
   value,
@@ -67,7 +67,7 @@ export default function AreaConfigStep({
             optional
             value={value.facing}
             onChange={(v) => update({ facing: v })}
-            options={FACING.map((f) => ({ value: f, label: f }))}
+            options={FACING.map((f) => ({ value: f, label: FACING_LABEL[f] }))}
           />
           <NumberField
             label="Floor number"

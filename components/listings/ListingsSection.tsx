@@ -17,7 +17,7 @@ const rise = {
 export default function ListingsSection({
   items,
   title = "Featured Listings",
-  subtitle = "Hand-picked homes on the market right now, every one verified and agent-supported.",
+  subtitle = "Hand-picked homes on the market right now, every one verified and advisor-supported.",
 }: {
   items: Property[];
   title?: string;

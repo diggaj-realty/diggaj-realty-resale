@@ -121,10 +121,10 @@ export default function NavMobileMenu({
               className="mt-auto flex items-center gap-3 rounded-2xl bg-white/5 p-4 ring-1 ring-white/10"
             >
               <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full">
-                <Image src="/img/agent-avatar.jpg" alt="Agent" fill sizes="44px" className="object-cover" />
+                <Image src="/img/agent-avatar.jpg" alt="Advisor" fill sizes="44px" className="object-cover" />
               </div>
               <div>
-                <p className="text-sm font-medium">Talk to an agent</p>
+                <p className="text-sm font-medium">Talk to an advisor</p>
                 <p className="text-xs text-white/50">Replies within a few hours</p>
               </div>
               <Link

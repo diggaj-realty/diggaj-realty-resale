@@ -3,7 +3,7 @@ import type { DealProgress as DealProgressData, ProgressSource } from "@/types/t
 
 const SOURCE_LABEL: Record<ProgressSource, string> = {
   DERIVED: "Confirmed by the platform",
-  DECLARED: "Updated by your agent",
+  DECLARED: "Updated by your advisor",
 };
 
 /** DERIVED is a fact the platform observed from its own records; DECLARED is

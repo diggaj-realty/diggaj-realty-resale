@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { price } from "@/lib/listings";
+import { FACING_LABEL } from "@/lib/propertyEnums";
 import type { ListingFormState } from "../formState";
 
 function Row({ label, value }: { label: string; value: string | number | null | undefined }) {
@@ -39,7 +40,7 @@ export default function ReviewStep({ value }: { value: ListingFormState }) {
         <Row label="City" value={value.city} />
         <Row label="Locality" value={value.locality} />
         <Row label="Furnishing" value={value.furnishing} />
-        <Row label="Facing" value={value.facing} />
+        <Row label="Facing" value={value.facing ? FACING_LABEL[value.facing] : ""} />
         <Row label="Possession" value={value.possessionStatus} />
         <Row label="Ownership" value={value.ownershipType} />
         <Row label="RERA ID" value={value.reraId} />

@@ -53,7 +53,6 @@ export type CreatePropertyInput = {
 
   city?: string;
   locality?: string;
-  pincode?: string;
   latitude?: number;
   longitude?: number;
 

@@ -147,8 +147,8 @@ export function VisitsPanel() {
             {v.buyerName && <p>Buyer: {v.buyerName}</p>}
             <p>Requested for {fmtDate(v.requestedDate)}</p>
             {v.scheduledDate && <p>Scheduled for {fmtDate(v.scheduledDate)}</p>}
-            {v.agentName && <p>Agent: {v.agentName}</p>}
-            {v.feedback && <p className="text-ink/70">Agent feedback: “{v.feedback}”</p>}
+            {v.agentName && <p>Advisor: {v.agentName}</p>}
+            {v.feedback && <p className="text-ink/70">Advisor feedback: “{v.feedback}”</p>}
           </div>
         </div>
       ))}
@@ -240,7 +240,7 @@ export function DealsPanel() {
 function SellerInterestCard({ interest }: { interest: PropertyInterest }) {
   // Wrapped in a Link: /dashboard/seller/interests/[id] existed but nothing
   // anywhere linked to it, so the whole seller interest detail page — assigned
-  // agent, site visits, offline negotiation — was reachable only by typing the
+  // advisor, site visits, offline negotiation — was reachable only by typing the
   // URL. The buyer equivalent has always been a link.
   return (
     <Link
@@ -255,7 +255,7 @@ function SellerInterestCard({ interest }: { interest: PropertyInterest }) {
         <StatusBadge status={interest.status} />
       </div>
       <div className="mt-3 flex items-center justify-between gap-3 text-xs text-body">
-        <span>{interest.agentName ? `Agent: ${interest.agentName}` : "Awaiting agent assignment"}</span>
+        <span>{interest.agentName ? `Advisor: ${interest.agentName}` : "Awaiting advisor assignment"}</span>
         <span className="text-ink/40">{fmtDate(interest.createdAt)}</span>
       </div>
     </Link>

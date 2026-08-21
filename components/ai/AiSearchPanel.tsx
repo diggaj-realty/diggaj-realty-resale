@@ -15,15 +15,25 @@ type ChatEntry = AiMessage & { properties?: Property[]; requiresLogin?: boolean 
 
 const GENERIC_GREETING: ChatEntry = {
   role: "assistant",
-  content: "Hey! What kind of place are you after? Toss me a city, a budget, whatever you've got, and I'll go dig up some real listings.",
+  content:
+    "Hi! I can help you find a home. Just tell me a city and your budget, and I'll pull up real listings for you. Not sure where to start? Tap an example below.",
 };
 
 function greetingFor(propertyContext?: AiPropertyContext): ChatEntry {
   if (!propertyContext) return GENERIC_GREETING;
   return {
     role: "assistant",
-    content: `Hey! Want me to summarize "${propertyContext.title}" for you, or is there something specific about it you're wondering about?`,
+    content: `Hi! I can help with "${propertyContext.title}". Want a quick summary, or is there something specific you'd like to know? Tap an example below.`,
   };
+}
+
+// Tappable starter questions shown under the greeting — for visitors who
+// aren't sure what to type, one tap both teaches what the assistant can do
+// and returns a real result, which lands far better than any explanation.
+function examplePromptsFor(propertyContext?: AiPropertyContext): string[] {
+  return propertyContext
+    ? ["Summarize this home", "How is the location?", "What is the price per sqft?"]
+    : ["3 BHK in Pune under ₹80 L", "Homes near Whitefield, Bangalore", "Best value 2 BHK for a family"];
 }
 
 export default function AiSearchPanel({
@@ -73,8 +83,10 @@ export default function AiSearchPanel({
     setError(null);
   }
 
-  async function send() {
-    const text = input.trim();
+  const examplePrompts = examplePromptsFor(propertyContext);
+
+  async function send(preset?: string) {
+    const text = (preset ?? input).trim();
     if (!text || sending || loginRequired) return;
     setInput("");
     setError(null);
@@ -116,8 +128,8 @@ export default function AiSearchPanel({
       >
         <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
           <div>
-            <p className="text-sm font-semibold text-ink">✦ AI Search</p>
-            <p className="text-xs text-body">Find your next home by chatting</p>
+            <p className="text-sm font-semibold text-ink">✦ Get help</p>
+            <p className="text-xs text-body">Chat with our assistant — powered by AI</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {/* The chat now survives closing the panel, so there has to be a way
@@ -175,6 +187,22 @@ export default function AiSearchPanel({
                 )}
               </div>
             ))}
+            {messages.length === 1 && !sending && !loginRequired && (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-medium text-ink/50">Try one of these:</p>
+                <div className="flex flex-wrap gap-2">
+                  {examplePrompts.map((ex) => (
+                    <button
+                      key={ex}
+                      onClick={() => send(ex)}
+                      className="rounded-full bg-ink/5 px-3.5 py-2 text-left text-xs font-medium text-ink ring-1 ring-ink/10 transition-colors hover:bg-limepale hover:ring-lime/40"
+                    >
+                      {ex}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {sending && (
               <div className="flex justify-start">
                 <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-cream px-4 py-2.5 text-sm text-body">

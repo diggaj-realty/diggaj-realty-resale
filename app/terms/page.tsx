@@ -10,12 +10,12 @@ const SECTIONS = [
     p: "By using our platform you agree to provide accurate information and use the service for personal, non-commercial real estate transactions. Listings are provided for informational purposes and are subject to change.",
   },
   {
-    h: "Agent services",
-    p: "Every transaction is supported by a dedicated Diggaj Realty agent, from your first site visit through negotiation, documentation, and closing. Service terms and applicable fees are confirmed with your agent before you commit to a transaction.",
+    h: "Advisor services",
+    p: "Every transaction is supported by a dedicated Diggaj Realty advisor, from your first site visit through negotiation, documentation, and closing. Service terms and applicable fees are confirmed with your advisor before you commit to a transaction.",
   },
   {
     h: "No warranty",
-    p: "Property information is sourced from listing agents and public records. We work to keep it accurate but make no guarantees; always verify details independently before making an offer.",
+    p: "Property information is sourced from listing advisors and public records. We work to keep it accurate but make no guarantees; always verify details independently before making an offer.",
   },
   {
     h: "Changes to these terms",

@@ -13,7 +13,6 @@ export type ListingFormState = {
   // location detail
   city: string;
   locality: string;
-  pincode: string;
   latitude: number | null;
   longitude: number | null;
   // area breakdown
@@ -58,7 +57,6 @@ export const INITIAL_FORM_STATE: ListingFormState = {
   askingPrice: "",
   city: "",
   locality: "",
-  pincode: "",
   latitude: null,
   longitude: null,
   carpetAreaSqft: "",
@@ -101,13 +99,12 @@ export function toCreatePayload(f: ListingFormState): CreatePropertyInput {
     location: f.location.trim(),
     type: f.type,
     areaSqft: Number(f.areaSqft),
-    bhk: f.type === "PLOT" ? null : numOrUndef(f.bhk) ?? null,
+    bhk: numOrUndef(f.bhk) ?? null,
     askingPrice: Number(f.askingPrice),
     photoUrls: f.photoUrls,
 
     city: f.city || undefined,
     locality: f.locality.trim() || undefined,
-    pincode: f.pincode.trim() || undefined,
     latitude: f.latitude ?? undefined,
     longitude: f.longitude ?? undefined,
 
@@ -147,7 +144,7 @@ export function validateStep(step: number, f: ListingFormState): string | null {
     if (!f.location.trim()) return "Location is required";
     if (!f.areaSqft || Number(f.areaSqft) <= 0) return "Area (sq ft) is required";
     if (!f.askingPrice || Number(f.askingPrice) <= 0) return "Asking price is required";
-    if (f.type !== "PLOT" && !f.bhk) return "Configuration (BHK) is required";
+    if (!f.bhk) return "Configuration (BHK) is required";
   }
   return null;
 }

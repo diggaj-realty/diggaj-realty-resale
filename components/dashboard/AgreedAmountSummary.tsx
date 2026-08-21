@@ -31,7 +31,7 @@ export default function AgreedAmountSummary({
         <p className="mt-1 text-xs text-white/60">
           {latestOffline.bothConfirmed
             ? `Confirmed by both parties on ${fmtDate(latestOffline.updatedAt)}`
-            : "Recorded by your agent — awaiting confirmation from both parties"}
+            : "Recorded by your advisor — awaiting confirmation from both parties"}
         </p>
       )}
 

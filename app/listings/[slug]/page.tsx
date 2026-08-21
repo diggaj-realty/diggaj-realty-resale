@@ -7,6 +7,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ListingCard from "@/components/listings/ListingCard";
 import Gallery from "@/components/listings/Gallery";
+import GatedVideo from "@/components/listings/GatedVideo";
 import GatedPrice, { PriceUnlocked, PriceLocked } from "@/components/listings/GatedPrice";
 import RequestVisitForm from "@/components/listings/RequestVisitForm";
 import LeadForm from "@/components/LeadForm";
@@ -166,7 +167,7 @@ export default async function ListingDetail({
     datePosted: l.createdAt,
     image: photos.map((p) => p.url),
     about: {
-      "@type": l.type === "PLOT" ? "LandForm" : l.type === "COMMERCIAL" ? "Place" : "Apartment",
+      "@type": "Apartment",
       name: l.title,
       address: {
         "@type": "PostalAddress",
@@ -272,21 +273,10 @@ export default async function ListingDetail({
       {/* gallery */}
       <Gallery photos={photos} title={l.title} />
 
-      {/* video tour */}
+      {/* video tour — 3s preview for anonymous visitors, then login-gated */}
       {l.videoUrl && (
         <div className="px-3 pt-3">
-          <div className="relative overflow-hidden rounded-[24px] bg-black">
-            <span className="absolute left-4 top-4 z-10 rounded-full bg-black/55 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur">
-              ▶ Video tour
-            </span>
-            <video
-              controls
-              poster={photos[0]?.url}
-              className="aspect-video w-full"
-            >
-              <source src={l.videoUrl} />
-            </video>
-          </div>
+          <GatedVideo src={l.videoUrl} poster={photos[0]?.url} />
         </div>
       )}
 
@@ -377,7 +367,7 @@ export default async function ListingDetail({
               <div>
                 <p className="text-lg font-medium tracking-[-0.01em] text-white">Why buy this home with Diggaj Realty</p>
                 <p className="mt-2 max-w-sm text-xs leading-relaxed text-white/50">
-                  A dedicated agent guides you from site visit to closing, every listing is verified before it goes
+                  A dedicated advisor guides you from site visit to closing, every listing is verified before it goes
                   live, and your documents, negotiation, and paperwork are all tracked in one place.
                 </p>
               </div>
@@ -412,7 +402,7 @@ export default async function ListingDetail({
             <div className="mt-4 rounded-[28px] bg-panel p-8 text-white">
               <div className="flex items-center gap-3">
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15">
-                  <Image src="/img/agent-avatar.jpg" alt="Listing agent" fill sizes="48px" className="object-cover" />
+                  <Image src="/img/agent-avatar.jpg" alt="Listing advisor" fill sizes="48px" className="object-cover" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Request a tour</p>
@@ -433,7 +423,7 @@ export default async function ListingDetail({
           <div className="mt-4 rounded-[28px] bg-cream p-8">
             <p className="text-sm font-semibold text-ink">Have a question about this home?</p>
             <p className="mt-1.5 text-xs text-body">
-              Ask an agent directly — no account needed. We usually reply within a couple of
+              Ask an advisor directly — no account needed. We usually reply within a couple of
               hours.
             </p>
             <div className="mt-6">

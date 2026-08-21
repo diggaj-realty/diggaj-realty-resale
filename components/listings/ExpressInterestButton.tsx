@@ -15,7 +15,7 @@ import { savePendingIntent, peekPendingIntent, clearPendingIntent, loginHrefWith
 import type { PropertyInterest } from "@/types/transaction";
 
 /** The primary, low-friction entry point on a property page: "I'm
- *  interested" — no amount, no commitment, just a lead the assigned agent
+ *  interested" — no amount, no commitment, just a lead the assigned advisor
  *  can follow up on (call, site visit, offline negotiation). Distinct from
  *  MakeOfferModal (an online offer). Also shortlists the property, so there is
  *  no separate save button.
@@ -144,7 +144,7 @@ export default function ExpressInterestButton({
               </button>
             </div>
             <p className="mt-1 text-xs text-body">
-              We&apos;ll connect you with the assigned agent and save this home to your
+              We&apos;ll connect you with the assigned advisor and save this home to your
               properties. No offer or commitment yet.
             </p>
 
@@ -160,7 +160,7 @@ export default function ExpressInterestButton({
             ) : (
               <form onSubmit={handleFormSubmit}>
                 <label className="mt-5 flex flex-col gap-1.5 text-sm text-ink">
-                  Anything the agent should know? <span className="font-normal text-body">(optional)</span>
+                  Anything the advisor should know? <span className="font-normal text-body">(optional)</span>
                   <textarea
                     rows={3}
                     value={note}

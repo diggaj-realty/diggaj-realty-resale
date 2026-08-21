@@ -630,7 +630,7 @@ export default function MyhnaVistaraPage() {
               <p className="mt-10 text-xs text-white/40">
                 Prefer to talk it through?{" "}
                 <Link href="/contact" className="text-lime underline underline-offset-4">
-                  Contact an agent
+                  Contact an advisor
                 </Link>{" "}
                 or browse{" "}
                 <Link href="/listings" className="text-lime underline underline-offset-4">

@@ -10,7 +10,7 @@ import type { NegotiationEventType, NegotiationSession } from "@/types/transacti
 const EVENT_LABEL: Record<NegotiationEventType, string> = {
   BUYER_POSITION: "Buyer's position",
   SELLER_POSITION: "Seller's position",
-  AGENT_NOTE: "Agent note",
+  AGENT_NOTE: "Advisor note",
   BUYER_COUNTER: "Buyer countered",
   SELLER_COUNTER: "Seller countered",
   PRICE_PROPOSED: "Price proposed",
@@ -32,9 +32,9 @@ const fmtDateTime = (iso: string) =>
 
 const ENDED_STATUSES = ["AGREED", "FAILED", "CANCELLED"];
 
-/** Agent-assisted (phone/in-person/offline) negotiation. Read-only besides
+/** Advisor-assisted (phone/in-person/offline) negotiation. Read-only besides
  *  one action: confirming the currently-proposed amount as your own side —
- *  recording positions/counters and creating the session are agent/staff-
+ *  recording positions/counters and creating the session are advisor/staff-
  *  only, and converting an agreed session into a Deal is too. */
 export default function NegotiationSessionView({
   session,

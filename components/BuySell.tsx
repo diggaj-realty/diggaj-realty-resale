@@ -66,7 +66,7 @@ export default function BuySell() {
           className="mx-auto mt-4 max-w-md text-lead text-body"
         >
           Whether you&apos;re finding your next home or selling your current
-          one, Diggaj Realty backs you with the same smart tools and dedicated agent support.
+          one, Diggaj Realty backs you with the same smart tools and dedicated advisor support.
         </motion.p>
       </div>
 
@@ -91,7 +91,7 @@ export default function BuySell() {
               items={[
                 "Verified resale listings, priced against real comps",
                 "Book a site visit in one tap, no phone tag",
-                "A dedicated agent with you through closing",
+                "A dedicated advisor with you through closing",
               ]}
             />
             <div className="mt-auto pt-8">

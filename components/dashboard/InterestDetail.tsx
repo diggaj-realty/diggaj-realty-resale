@@ -103,7 +103,7 @@ export default function InterestDetail({ interestId, viewerRole }: { interestId:
           )}
 
           <section>
-            <h2 className="mb-3 text-sm font-medium text-ink">Assigned agent</h2>
+            <h2 className="mb-3 text-sm font-medium text-ink">Assigned advisor</h2>
             {interest.agentName ? (
               <div className="flex items-center justify-between gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ink/5">
                 <div className="min-w-0">
@@ -119,7 +119,7 @@ export default function InterestDetail({ interestId, viewerRole }: { interestId:
                 />
               </div>
             ) : (
-              <p className="text-sm text-body">No agent assigned yet. One will be assigned shortly.</p>
+              <p className="text-sm text-body">No advisor assigned yet. One will be assigned shortly.</p>
             )}
           </section>
 

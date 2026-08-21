@@ -1,5 +1,4 @@
 import { getBuilderProfile } from "@/lib/builders";
-import { propertyTypeLabel } from "@/lib/property";
 import type { Property } from "@/types/api";
 
 const POSSESSION: Record<string, string> = {
@@ -21,7 +20,6 @@ export default function ProjectInfo({ property: p }: { property: Property }) {
   const facts: { label: string; value: string }[] = [];
   if (p.projectName) facts.push({ label: "Project", value: p.projectName });
   if (p.builderName) facts.push({ label: "Builder", value: p.builderName });
-  facts.push({ label: "Property type", value: propertyTypeLabel(p.type) });
   if (p.unitsAvailable != null)
     facts.push({
       label: "Units available",

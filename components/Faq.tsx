@@ -7,8 +7,8 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const FAQS = [
   {
-    q: "How does the agent-assisted process work?",
-    a: "Express interest in a home, and a dedicated local agent reaches out to arrange a site visit and handle negotiation on your behalf, whether that's online or in person. Once a price is agreed, we track documentation, verification, and signing until the deal closes.",
+    q: "How does the advisor-assisted process work?",
+    a: "Express interest in a home, and a dedicated local advisor reaches out to arrange a site visit and handle negotiation on your behalf, whether that's online or in person. Once a price is agreed, we track documentation, verification, and signing until the deal closes.",
   },
   {
     q: "Is there any cost to use Diggaj Realty?",
@@ -16,19 +16,19 @@ const FAQS = [
   },
   {
     q: "How are my documents and identity handled?",
-    a: "Every deal has its own document checklist and identity verification step, tracked from your dashboard. Documents are only ever shared with the other party once your agent has reviewed and approved the request.",
+    a: "Every deal has its own document checklist and identity verification step, tracked from your dashboard. Documents are only ever shared with the other party once your advisor has reviewed and approved the request.",
   },
   {
-    q: "Can I use my own agent or lender?",
-    a: "Absolutely. Diggaj Realty works great end-to-end, but you're always free to bring your own agent, lender, or title company for any part of the transaction.",
+    q: "Can I use my own advisor or lender?",
+    a: "Absolutely. Diggaj Realty works great end-to-end, but you're always free to bring your own advisor, lender, or title company for any part of the transaction.",
   },
   {
     q: "Which cities are supported?",
-    a: "We currently operate across major Indian metros and are expanding every quarter. Search any city or locality on our listings page, and if we're live there, you'll see verified resale listings and a dedicated agent instantly.",
+    a: "We currently operate across major Indian metros and are expanding every quarter. Search any city or locality on our listings page, and if we're live there, you'll see verified resale listings and a dedicated advisor instantly.",
   },
   {
     q: "How do I get started?",
-    a: "Create a free account, tell us what you're looking for, and we'll match you with a top local agent and lender. From tour to close, everything happens in one place.",
+    a: "Create a free account, tell us what you're looking for, and we'll match you with a top local advisor and lender. From tour to close, everything happens in one place.",
   },
 ];
 
@@ -136,7 +136,7 @@ export default function Faq() {
               with Diggaj Realty.
             </motion.p>
 
-            {/* floating tilted agent card, echoes ValueProp / HowItWorks pins */}
+            {/* floating tilted advisor card, echoes ValueProp / HowItWorks pins */}
             <motion.div
               initial={{ opacity: 0, y: 24, rotate: -4 }}
               whileInView={{ opacity: 1, y: 0, rotate: -4 }}
@@ -147,7 +147,7 @@ export default function Faq() {
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full">
                 <Image
                   src="/img/agent-avatar.jpg"
-                  alt="Support agent"
+                  alt="Support advisor"
                   fill
                   sizes="48px"
                   className="object-cover"
@@ -155,7 +155,7 @@ export default function Faq() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-ink">
-                  Still stuck? Ask a human.
+                  Still stuck? Ask an advisor.
                 </p>
                 <p className="text-[11px] text-ink/50">Replies in a few hours</p>
               </div>

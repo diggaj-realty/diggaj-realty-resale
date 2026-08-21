@@ -157,7 +157,7 @@ function TransactionBody({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <PartyCard role="Buyer" party={data.buyer} />
         <PartyCard role="Seller" party={data.seller} />
-        <PartyCard role="Assigned agent" party={data.agent} />
+        <PartyCard role="Assigned advisor" party={data.agent} />
       </div>
 
       {/* Transaction stage */}

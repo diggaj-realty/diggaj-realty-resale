@@ -46,7 +46,7 @@ export default function LeadSection({
 
             <ul className="mt-9 flex flex-col gap-3">
               {[
-                "A real agent reads every message",
+                "A real advisor reads every message",
                 "Typical reply within 2 hours",
                 "No obligation, no call-center scripts",
               ].map((p) => (

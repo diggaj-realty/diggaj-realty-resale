@@ -157,8 +157,8 @@ export function OffersPanel() {
 }
 
 // ── Site visits ───────────────────────────────────────────────
-// Mutual date agreement lives between buyer and agent only (sellers just
-// watch, read-only). When the agent proposes/re-proposes a time, this card
+// Mutual date agreement lives between buyer and advisor only (sellers just
+// watch, read-only). When the advisor proposes/re-proposes a time, this card
 // shows accept/decline; a buyer can also always propose their own time.
 function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (updated: SiteVisit) => void }) {
   const { token } = useAuth();
@@ -227,7 +227,7 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
         <p>Requested for {fmtDate(visit.requestedDate)}</p>
         {visit.proposedDate && (
           <p>
-            {visit.proposedBy === "BUYER" ? "You proposed" : "Agent proposed"} {fmtDate(visit.proposedDate)}
+            {visit.proposedBy === "BUYER" ? "You proposed" : "Advisor proposed"} {fmtDate(visit.proposedDate)}
             {awaitingBuyer && " — awaiting your response"}
           </p>
         )}
@@ -241,9 +241,9 @@ function SiteVisitCard({ visit, onChanged }: { visit: SiteVisit; onChanged: (upd
             )}
           </p>
         )}
-        {visit.agentName && <p>Agent: {visit.agentName}</p>}
+        {visit.agentName && <p>Advisor: {visit.agentName}</p>}
         {visit.buyerNote && <p className="text-ink/70">Your note: “{visit.buyerNote}”</p>}
-        {visit.feedback && <p className="text-ink/70">Agent feedback: “{visit.feedback}”</p>}
+        {visit.feedback && <p className="text-ink/70">Advisor feedback: “{visit.feedback}”</p>}
       </div>
 
       {error && <p className="mt-3 text-xs text-red-700">{error}</p>}
@@ -384,7 +384,8 @@ function filtersSummary(f: SavedSearchFilters): string {
   if (f.q) parts.push(`“${f.q}”`);
   if (f.type) parts.push(f.type.charAt(0) + f.type.slice(1).toLowerCase());
   if (f.city) parts.push(f.city);
-  if (f.locality) parts.push(f.locality);
+  if (f.localities?.length) parts.push(f.localities.join(", "));
+  else if (f.locality) parts.push(f.locality);
   if (f.minBhk) parts.push(`${f.minBhk}+ BHK`);
   if (f.minBathrooms) parts.push(`${f.minBathrooms}+ bath`);
   if (f.minPrice || f.maxPrice) {
@@ -399,7 +400,6 @@ function filtersSummary(f: SavedSearchFilters): string {
   if (f.furnishing) parts.push(f.furnishing.replace(/_/g, " ").toLowerCase());
   if (f.possessionStatus) parts.push(f.possessionStatus === "READY_TO_MOVE" ? "Ready to move" : "Under construction");
   if (f.eliteOnly) parts.push("Elite only");
-  if (f.amenities?.length) parts.push(`${f.amenities.length} amenities`);
   return parts.length ? parts.join(" · ") : "All properties";
 }
 
@@ -578,7 +578,7 @@ function InterestCard({ interest }: { interest: PropertyInterest }) {
         <StatusBadge status={interest.status} />
       </div>
       <div className="mt-3 flex items-center justify-between gap-3 text-xs text-body">
-        <span>{active ? (interest.agentName ? `Agent: ${interest.agentName}` : "Awaiting agent assignment") : "Closed out"}</span>
+        <span>{active ? (interest.agentName ? `Advisor: ${interest.agentName}` : "Awaiting advisor assignment") : "Closed out"}</span>
         <span className="text-ink/40">{fmtDate(interest.createdAt)}</span>
       </div>
     </Link>
@@ -597,7 +597,7 @@ export function InterestsPanel() {
       loading={items === null && !error}
       error={error}
       empty={items?.length === 0}
-      emptyText="No interests yet. Tap “Interested in this property” on any listing to get connected with an agent."
+      emptyText="No interests yet. Tap “Interested in this property” on any listing to get connected with an advisor."
     >
       {items?.map((i) => (
         <InterestCard key={i.id} interest={i} />

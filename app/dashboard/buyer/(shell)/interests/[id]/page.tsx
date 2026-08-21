@@ -9,7 +9,7 @@ export default async function BuyerInterestDetailPage({ params }: { params: Prom
         ← Back to Interests
       </Link>
       <h1 className="mt-3 text-2xl font-medium tracking-[-0.02em] text-ink">Interest</h1>
-      <p className="mt-1 text-sm text-body">Agent, site visits, and negotiation progress for this lead.</p>
+      <p className="mt-1 text-sm text-body">Advisor, site visits, and negotiation progress for this lead.</p>
       <div className="mt-6">
         <InterestDetail interestId={id} viewerRole="BUYER" />
       </div>

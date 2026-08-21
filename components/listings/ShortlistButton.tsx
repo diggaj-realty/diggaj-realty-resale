@@ -37,7 +37,7 @@ export default function ShortlistButton({
   const [stale, setStale] = useState(false);
   const resumedRef = useRef(false);
 
-  // Post-save "want an agent to call you?" prompt — the only path that turns
+  // Post-save "want an advisor to call you?" prompt — the only path that turns
   // a silent bookmark into an actionable lead. Not shown in compact mode.
   const [showContactPrompt, setShowContactPrompt] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
@@ -96,7 +96,7 @@ export default function ShortlistButton({
     if (buyerPhone) setContactPhoneError(null);
     try {
       const interest = await expressInterest(token, propertyId, { source: "CONTACT_REQUEST", buyerPhone });
-      setContactMessage(agentAssignedMessage(interest) ?? "An agent will be in touch.");
+      setContactMessage(agentAssignedMessage(interest) ?? "An advisor will be in touch.");
       setContactPhonePrompt(null);
     } catch (err) {
       if (isBuyerPhoneRequired(err)) {
@@ -107,7 +107,7 @@ export default function ShortlistButton({
         setContactPhoneError(err.message);
         return;
       }
-      setContactMessage(err instanceof ApiError ? err.message : "Couldn't reach an agent right now.");
+      setContactMessage(err instanceof ApiError ? err.message : "Couldn't reach an advisor right now.");
     } finally {
       setContactSubmitting(false);
     }
@@ -196,7 +196,7 @@ export default function ShortlistButton({
             />
           ) : (
             <>
-              <p className="text-sm text-ink">Saved. Want an agent to call you about this one?</p>
+              <p className="text-sm text-ink">Saved. Want an advisor to call you about this one?</p>
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => requestContact()}

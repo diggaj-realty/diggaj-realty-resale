@@ -112,7 +112,7 @@ export default function ValueProp() {
           className="max-w-xs text-lead text-body"
         >
           Every listing is verified against real market comps and backed by
-          a dedicated agent, with no juggling providers and no hidden fees at close.
+          a dedicated advisor, with no juggling providers and no hidden fees at close.
         </motion.p>
       </div>
     </section>

@@ -19,9 +19,9 @@ export default function SiteVisitSummary({ siteVisit }: { siteVisit: SiteVisit |
       <div className="mt-3 space-y-1 text-xs text-body">
         <p>Requested for {fmtDate(siteVisit.requestedDate)}</p>
         {siteVisit.scheduledDate && <p>Scheduled for {fmtDate(siteVisit.scheduledDate)}</p>}
-        {siteVisit.agentName && <p>Agent: {siteVisit.agentName}</p>}
+        {siteVisit.agentName && <p>Advisor: {siteVisit.agentName}</p>}
         {siteVisit.buyerNote && <p className="text-ink/70">Buyer&apos;s note: &ldquo;{siteVisit.buyerNote}&rdquo;</p>}
-        {siteVisit.feedback && <p className="text-ink/70">Agent feedback: &ldquo;{siteVisit.feedback}&rdquo;</p>}
+        {siteVisit.feedback && <p className="text-ink/70">Advisor feedback: &ldquo;{siteVisit.feedback}&rdquo;</p>}
       </div>
 
       <div className="mt-3 border-t border-ink/5 pt-3 text-xs">

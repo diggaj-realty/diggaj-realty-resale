@@ -109,7 +109,7 @@ export default function AuthForm({ role }: { role: UserRole }) {
       {pendingGoogleUser ? (
         <div className="mt-8">
           <p className="text-sm text-ink">
-            One more thing — we need a number an agent can reach you on.
+            One more thing — we need a number an advisor can reach you on.
           </p>
           <div className="mt-4">
             <InlinePhoneCapture

@@ -139,7 +139,7 @@ export default function ComparePage() {
       <LeadSection
         eyebrow="Still deciding?"
         title="Get a second opinion before you commit"
-        lead="Send us the shortlist and an agent will talk you through the trade-offs — pricing, locality, resale, and what the listing doesn't say."
+        lead="Send us the shortlist and an advisor will talk you through the trade-offs — pricing, locality, resale, and what the listing doesn't say."
         subject="Compare page enquiry"
         source="compare"
         cta="Talk it through"

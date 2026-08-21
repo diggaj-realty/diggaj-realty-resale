@@ -19,7 +19,7 @@ const ORG_JSON_LD = {
   name: "Diggaj Realty",
   url: "https://diggajrealty.com",
   description:
-    "All-in-one resale property platform with verified listings and a dedicated agent to help you buy or sell.",
+    "All-in-one resale property platform with verified listings and a dedicated advisor to help you buy or sell.",
   areaServed: "IN",
 };
 
@@ -50,7 +50,7 @@ export default function Home() {
       <Faq />
       <LeadSection
         title="Tell us what you're looking for"
-        lead="Budget, locality, timeline — send it over and an agent will come back with a shortlist that actually fits."
+        lead="Budget, locality, timeline — send it over and an advisor will come back with a shortlist that actually fits."
         subject="Home page enquiry"
         source="home-inline"
         cta="Get my shortlist"
@@ -59,7 +59,7 @@ export default function Home() {
       <HomeFloatingAi />
       <StickyLeadBar
         label="Looking for a home in Bangalore?"
-        cta="Talk to an agent"
+        cta="Talk to an advisor"
         storageKey="home-sticky-lead-dismissed"
       />
     </main>

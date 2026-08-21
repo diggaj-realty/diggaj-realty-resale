@@ -4,11 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { getProperties } from "@/lib/api/properties";
-import { getAmenities, FALLBACK_AMENITIES } from "@/lib/api/amenities";
 import { createSavedSearch } from "@/lib/api/buyer";
 import { buildFilterQueryString, parseFilterSearchParams } from "@/lib/filters";
 import { CANONICAL_CITIES } from "@/lib/cities";
-import { FURNISHING, FACING, POSSESSION_STATUS, OWNERSHIP_TYPE } from "@/lib/propertyEnums";
+import { FURNISHING, FACING, FACING_LABEL, POSSESSION_STATUS, OWNERSHIP_TYPE } from "@/lib/propertyEnums";
 import { price } from "@/lib/listings";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { hasRole } from "@/lib/auth/roles";
@@ -21,21 +20,10 @@ import type {
   Paginated,
   PossessionStatus,
   Property,
-  PropertyType,
   SortOrder,
 } from "@/types/api";
 import ListingCard from "@/components/listings/ListingCard";
 import { ListingGridSkeleton } from "@/components/Skeleton";
-
-const TYPE_OPTIONS: { label: string; value: "" | PropertyType }[] = [
-  { label: "All types", value: "" },
-  { label: "Residential", value: "RESIDENTIAL" },
-  { label: "Plot", value: "PLOT" },
-  { label: "Commercial", value: "COMMERCIAL" },
-];
-
-// Property types that never carry a BHK — the beds filter is meaningless here.
-const TYPES_WITHOUT_BHK: PropertyType[] = ["PLOT", "COMMERCIAL"];
 
 const PRICE_PRESETS = [
   { label: "Any price", min: undefined, max: undefined },
@@ -77,6 +65,32 @@ const SORT_OPTIONS: { label: string; value: SortOrder }[] = [
 
 export const PAGE_SIZE = 9;
 const CR = 10000000; // one crore in rupees — custom range inputs are entered in ₹ Cr
+// How many to pull per area when merging multiple localities client-side. The
+// backend can't OR localities, so each is fetched separately; this caps each
+// leg so a broad multi-area search can't fan out into huge requests.
+const MULTI_FETCH_SIZE = 60;
+
+// Client-side ordering for the merged multi-area result set — mirrors the
+// backend's `sort` options so switching sort behaves the same whether one area
+// (server-sorted) or several (merged here) are selected.
+function sortProperties(list: Property[], sort: SortOrder): Property[] {
+  const arr = [...list];
+  switch (sort) {
+    case "price_asc":
+      return arr.sort((a, b) => a.askingPrice - b.askingPrice);
+    case "price_desc":
+      return arr.sort((a, b) => b.askingPrice - a.askingPrice);
+    case "area_asc":
+      return arr.sort((a, b) => a.areaSqft - b.areaSqft);
+    case "area_desc":
+      return arr.sort((a, b) => b.areaSqft - a.areaSqft);
+    case "most_viewed":
+      return arr.sort((a, b) => b.viewCount - a.viewCount);
+    case "newest":
+    default:
+      return arr.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+}
 
 const chip = (active: boolean) =>
   `rounded-full px-4 py-2 text-xs font-medium transition-colors ${
@@ -116,7 +130,6 @@ export default function ListingsBrowser({
   // ── Tier 1 (always visible) ──
   const [q, setQ] = useState(initial.q ?? "");
   const [debouncedQ, setDebouncedQ] = useState(q);
-  const [type, setType] = useState<"" | PropertyType>(initial.type ?? "");
   const [minPrice, setMinPrice] = useState<number | undefined>(initial.minPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(initial.maxPrice);
   const [beds, setBeds] = useState(initialBedsIndex);
@@ -130,10 +143,11 @@ export default function ListingsBrowser({
 
   // ── Tier 2 (More filters drawer) ──
   const [moreOpen, setMoreOpen] = useState(false);
-  const [locality, setLocality] = useState(initial.locality ?? "");
-  const [debouncedLocality, setDebouncedLocality] = useState(locality);
-  const [pincode, setPincode] = useState(initial.pincode ?? "");
-  const [debouncedPincode, setDebouncedPincode] = useState(pincode);
+  // Multiple selectable areas (OR). The backend matches only one locality per
+  // request, so 2+ areas are fanned out into one request each and merged
+  // client-side (see the fetch effect). `localityInput` is the in-progress tag.
+  const [localities, setLocalities] = useState<string[]>(initial.localities ?? []);
+  const [localityInput, setLocalityInput] = useState("");
   const [minBathrooms, setMinBathrooms] = useState<number | undefined>(initial.minBathrooms);
   const [minAreaInput, setMinAreaInput] = useState(initial.minArea != null ? String(initial.minArea) : "");
   const [maxAreaInput, setMaxAreaInput] = useState(initial.maxArea != null ? String(initial.maxArea) : "");
@@ -145,9 +159,7 @@ export default function ListingsBrowser({
   const [maxAgeYears, setMaxAgeYears] = useState<number | undefined>(initial.maxAgeYears);
   const [parking, setParking] = useState(!!initial.parking);
   const [ownershipType, setOwnershipType] = useState<OwnershipType | "">(initial.ownershipType ?? "");
-  const [amenities, setAmenities] = useState<string[]>(initial.amenities ?? []);
   const [eliteOnly, setEliteOnly] = useState(!!initial.eliteOnly);
-  const [amenityOptions, setAmenityOptions] = useState<string[] | null>(null);
 
   // ── Save this search ──
   const [savingOpen, setSavingOpen] = useState(false);
@@ -166,39 +178,27 @@ export default function ListingsBrowser({
   // Skip exactly one client fetch — the one that would otherwise duplicate
   // the server-fetched initialData on first mount.
   const skipNextFetchRef = useRef(!!initialData);
+  // Holds the full merged result set when 2+ areas are selected, so "Load more"
+  // can paginate it in-memory without refetching. Null on the single/no-area
+  // (server-paginated) path.
+  const multiAllRef = useRef<Property[] | null>(null);
 
-  const bedsDisabled = type !== "" && TYPES_WITHOUT_BHK.includes(type);
-  const effectiveBeds = bedsDisabled ? 0 : beds;
+  const effectiveBeds = beds;
 
-  useEffect(() => {
-    getAmenities()
-      .then((list) => setAmenityOptions(list.length > 0 ? list.map((a) => a.name) : FALLBACK_AMENITIES))
-      .catch(() => setAmenityOptions(FALLBACK_AMENITIES));
-  }, []);
-
-  // debounce the free-text search / locality / pincode inputs
+  // debounce the free-text search input
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q), 350);
     return () => clearTimeout(t);
   }, [q]);
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedLocality(locality), 350);
-    return () => clearTimeout(t);
-  }, [locality]);
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedPincode(pincode), 350);
-    return () => clearTimeout(t);
-  }, [pincode]);
-
+  // Base filters WITHOUT locality — the locality dimension is applied
+  // separately (single request, or fanned out per area and merged) since the
+  // backend only accepts one locality at a time.
   function buildFilters(): GetPropertiesParams {
     return {
       q: debouncedQ.trim() || undefined,
-      type: type || undefined,
       city: city || undefined,
-      locality: debouncedLocality.trim() || undefined,
-      pincode: debouncedPincode.trim() || undefined,
+      localities: localities.length ? localities : undefined,
       minPrice,
       maxPrice,
       minBhk: BED_OPTIONS[effectiveBeds].minBhk,
@@ -211,7 +211,6 @@ export default function ListingsBrowser({
       maxAgeYears,
       parking: parking || undefined,
       ownershipType: ownershipType || undefined,
-      amenities: amenities.length > 0 ? amenities : undefined,
       eliteOnly: eliteOnly || undefined,
       sort,
     };
@@ -241,28 +240,68 @@ export default function ListingsBrowser({
     const qs = buildFilterQueryString(filters);
     router.replace(qs ? `/listings?${qs}` : "/listings", { scroll: false });
 
-    getProperties({ ...filters, page: 1, pageSize: PAGE_SIZE }, { signal: controller.signal })
-      .then((res) => {
-        if (controller.signal.aborted) return;
-        setItems(res.items);
-        setTotal(res.total);
-        setPage(res.page);
-        setTotalPages(res.totalPages);
+    // Base filters minus the locality dimension — applied per request below.
+    const { localities: locs, ...base } = filters;
+
+    const run = async () => {
+      try {
+        if (locs && locs.length > 1) {
+          // OR across areas: one request per locality, then merge + dedupe +
+          // sort + paginate client-side (the backend accepts only one at once).
+          const pages = await Promise.all(
+            locs.map((l) =>
+              getProperties(
+                { ...base, locality: l, pageSize: MULTI_FETCH_SIZE },
+                { signal: controller.signal }
+              )
+            )
+          );
+          if (controller.signal.aborted) return;
+          const byId = new Map<string, Property>();
+          for (const pg of pages) for (const p of pg.items) byId.set(p.id, p);
+          const merged = sortProperties([...byId.values()], sort);
+          multiAllRef.current = merged;
+          setItems(merged.slice(0, PAGE_SIZE));
+          setTotal(merged.length);
+          setPage(1);
+          setTotalPages(Math.max(1, Math.ceil(merged.length / PAGE_SIZE)));
+        } else {
+          multiAllRef.current = null;
+          const res = await getProperties(
+            { ...base, locality: locs?.[0], page: 1, pageSize: PAGE_SIZE },
+            { signal: controller.signal }
+          );
+          if (controller.signal.aborted) return;
+          setItems(res.items);
+          setTotal(res.total);
+          setPage(res.page);
+          setTotalPages(res.totalPages);
+        }
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (controller.signal.aborted) return;
         setError(err instanceof Error ? err.message : "Failed to load listings");
         setLoading(false);
-      });
+      }
+    };
+    run();
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey]);
 
   async function loadMore() {
+    // Multi-area path: the full result set is already in memory — just reveal
+    // the next slice, no network call.
+    if (multiAllRef.current) {
+      const next = page + 1;
+      setItems(multiAllRef.current.slice(0, next * PAGE_SIZE));
+      setPage(next);
+      return;
+    }
     setLoadingMore(true);
     try {
-      const res = await getProperties({ ...buildFilters(), page: page + 1, pageSize: PAGE_SIZE });
+      const { localities: locs, ...base } = buildFilters();
+      const res = await getProperties({ ...base, locality: locs?.[0], page: page + 1, pageSize: PAGE_SIZE });
       setItems((prev) => [...prev, ...res.items]);
       setPage(res.page);
       setTotalPages(res.totalPages);
@@ -271,6 +310,22 @@ export default function ListingsBrowser({
     } finally {
       setLoadingMore(false);
     }
+  }
+
+  function addLocality(raw: string) {
+    const name = raw.trim();
+    if (!name) return;
+    // case-insensitive dedupe so "Whitefield" and "whitefield" don't both stick
+    if (localities.some((l) => l.toLowerCase() === name.toLowerCase())) {
+      setLocalityInput("");
+      return;
+    }
+    setLocalities((prev) => [...prev, name]);
+    setLocalityInput("");
+  }
+
+  function removeLocality(name: string) {
+    setLocalities((prev) => prev.filter((l) => l !== name));
   }
 
   function applyPreset(min?: number, max?: number) {
@@ -295,14 +350,9 @@ export default function ListingsBrowser({
     setMaxArea(Number.isFinite(max as number) ? max : undefined);
   }
 
-  function toggleAmenity(name: string) {
-    setAmenities((prev) => (prev.includes(name) ? prev.filter((a) => a !== name) : [...prev, name]));
-  }
-
   const priceActive = minPrice != null || maxPrice != null;
   const moreActiveCount = [
-    locality.trim() !== "",
-    pincode.trim() !== "",
+    localities.length > 0,
     minBathrooms != null,
     minArea != null,
     maxArea != null,
@@ -312,25 +362,23 @@ export default function ListingsBrowser({
     maxAgeYears != null,
     parking,
     !!ownershipType,
-    amenities.length > 0,
     eliteOnly,
   ].filter(Boolean).length;
   const anyFilterActive =
-    q.trim() !== "" || type !== "" || priceActive || beds !== 0 || city !== "" || moreActiveCount > 0;
-  // On mobile the Tier-1 pill row (city/type/price/beds) is folded into the
+    q.trim() !== "" || priceActive || beds !== 0 || city !== "" || moreActiveCount > 0;
+  // On mobile the Tier-1 pill row (city/price/beds) is folded into the
   // same drawer as "More filters", so its one "Filters" button needs the
   // combined count across both tiers.
-  const tier1ActiveCount = [type !== "", priceActive, beds !== 0, city !== ""].filter(Boolean).length;
+  const tier1ActiveCount = [priceActive, beds !== 0, city !== ""].filter(Boolean).length;
   const totalActiveCount = tier1ActiveCount + moreActiveCount;
 
   function clearAll() {
     setQ("");
-    setType("");
     applyPreset(undefined, undefined);
     setBeds(0);
     setCity("");
-    setLocality("");
-    setPincode("");
+    setLocalities([]);
+    setLocalityInput("");
     setMinBathrooms(undefined);
     setMinAreaInput("");
     setMaxAreaInput("");
@@ -342,7 +390,6 @@ export default function ListingsBrowser({
     setMaxAgeYears(undefined);
     setParking(false);
     setOwnershipType("");
-    setAmenities([]);
     setEliteOnly(false);
   }
 
@@ -471,19 +518,6 @@ export default function ListingsBrowser({
 
           <span className="mx-1 h-5 w-px bg-ink/10" />
 
-          {/* property type */}
-          {TYPE_OPTIONS.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setType(t.value)}
-              className={chip(type === t.value)}
-            >
-              {t.label}
-            </button>
-          ))}
-
-          <span className="mx-1 h-5 w-px bg-ink/10" />
-
           {/* price (presets + custom range) */}
           <div className="relative">
             <button
@@ -568,17 +602,13 @@ export default function ListingsBrowser({
             )}
           </div>
 
-          {/* beds — hidden for Plot / Commercial */}
-          {!bedsDisabled && (
-            <>
-              <span className="mx-1 h-5 w-px bg-ink/10" />
-              {BED_OPTIONS.map((b, i) => (
-                <button key={b.label} onClick={() => setBeds(i)} className={chip(beds === i)}>
-                  {b.label}
-                </button>
-              ))}
-            </>
-          )}
+          {/* beds */}
+          <span className="mx-1 h-5 w-px bg-ink/10" />
+          {BED_OPTIONS.map((b, i) => (
+            <button key={b.label} onClick={() => setBeds(i)} className={chip(beds === i)}>
+              {b.label}
+            </button>
+          ))}
 
           <span className="mx-1 h-5 w-px bg-ink/10" />
 
@@ -663,17 +693,6 @@ export default function ListingsBrowser({
               </div>
 
               <div>
-                <p className="text-xs font-medium text-ink">Property type</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {TYPE_OPTIONS.map((t) => (
-                    <button key={t.value} onClick={() => setType(t.value)} className={chip(type === t.value)}>
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <p className="text-xs font-medium text-ink">Price range</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {PRICE_PRESETS.map((p) => {
@@ -714,42 +733,67 @@ export default function ListingsBrowser({
                 </div>
               </div>
 
-              {!bedsDisabled && (
-                <div>
-                  <p className="text-xs font-medium text-ink">Bedrooms</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {BED_OPTIONS.map((b, i) => (
-                      <button key={b.label} onClick={() => setBeds(i)} className={chip(beds === i)}>
-                        {b.label}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <p className="text-xs font-medium text-ink">Bedrooms</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {BED_OPTIONS.map((b, i) => (
+                    <button key={b.label} onClick={() => setBeds(i)} className={chip(beds === i)}>
+                      {b.label}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <p className="text-xs font-medium text-ink">Locality</p>
+                <p className="text-xs font-medium text-ink">
+                  Areas
+                  <span className="ml-1 font-normal text-body">
+                    {localities.length > 0 ? "(showing any of these)" : "(add one or more)"}
+                  </span>
+                </p>
                 <input
                   type="text"
-                  value={locality}
-                  onChange={(e) => setLocality(e.target.value)}
-                  placeholder="e.g. Whitefield"
+                  value={localityInput}
+                  onChange={(e) => setLocalityInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Enter or comma turns what's typed into an area chip.
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      addLocality(localityInput);
+                    } else if (e.key === "Backspace" && !localityInput && localities.length) {
+                      // Backspace on an empty box removes the last chip.
+                      removeLocality(localities[localities.length - 1]);
+                    }
+                  }}
+                  onBlur={() => addLocality(localityInput)}
+                  placeholder="e.g. Whitefield, Varthur…"
                   className="mt-2 w-full rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm outline-none focus:border-ink/30"
                 />
-              </div>
-
-              <div>
-                <p className="text-xs font-medium text-ink">Pincode</p>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                  placeholder="e.g. 560066"
-                  className="mt-2 w-full rounded-xl border border-ink/10 bg-white px-3 py-2 text-sm outline-none focus:border-ink/30"
-                />
+                <p className="mt-1.5 text-[11px] text-body">
+                  Type an area and press Enter. Add several to see homes across all of them.
+                </p>
+                {localities.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {localities.map((l) => (
+                      <span
+                        key={l}
+                        className="inline-flex items-center gap-1 rounded-full bg-panel px-2.5 py-1 text-xs font-medium text-white"
+                      >
+                        {l}
+                        <button
+                          type="button"
+                          onClick={() => removeLocality(l)}
+                          aria-label={`Remove ${l}`}
+                          className="text-white/60 hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -816,7 +860,7 @@ export default function ListingsBrowser({
                   <option value="">Any</option>
                   {FACING.map((f) => (
                     <option key={f} value={f}>
-                      {f}
+                      {FACING_LABEL[f]}
                     </option>
                   ))}
                 </select>
@@ -891,38 +935,6 @@ export default function ListingsBrowser({
                   ✦ Elite listings only
                 </label>
               </div>
-            </div>
-
-            <div className="mt-5 border-t border-ink/10 pt-5">
-              <p className="text-xs font-medium text-ink">
-                Amenities
-                {amenities.length > 0 && (
-                  <span className="ml-1 font-normal text-body">
-                    (matches homes with <strong>all</strong> selected; fewer results the more you pick)
-                  </span>
-                )}
-              </p>
-              {amenityOptions === null ? (
-                <p className="mt-2 text-xs text-body">Loading…</p>
-              ) : (
-                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
-                  {amenityOptions.map((name) => {
-                    const active = amenities.includes(name);
-                    return (
-                      <button
-                        key={name}
-                        onClick={() => toggleAmenity(name)}
-                        className={`rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
-                          active ? "bg-panel text-white" : "bg-white text-ink/70 hover:bg-ink/5"
-                        }`}
-                      >
-                        {active ? "✓ " : ""}
-                        {name}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
         )}

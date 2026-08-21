@@ -11,9 +11,9 @@ import type { UserRole } from "@/types/auth";
 const OPEN_STATUSES = ["PENDING_AGENT_REVIEW", "FORWARDED_TO_OWNER"];
 
 /** Cross-party document requests — never a direct buyer↔seller channel;
- *  every request lands on the deal's agent first. This side of the app can
+ *  every request lands on the deal's advisor first. This side of the app can
  *  only request a document and, while still open, withdraw one it made
- *  itself — reviewing (reject/forward/share) is agent-only. Once an agent
+ *  itself — reviewing (reject/forward/share) is advisor-only. Once an advisor
  *  shares an existing approved document, it simply appears in the document
  *  checklist above (access-grant aware) — no separate viewer here. */
 export default function DocumentRequestPanel({
@@ -88,7 +88,7 @@ export default function DocumentRequestPanel({
             </div>
             {r.reason && <p className="mt-2 text-xs text-body">&ldquo;{r.reason}&rdquo;</p>}
             {r.status === "REJECTED" && r.reviewRemarks && (
-              <p className="mt-2 text-xs text-red-800">Agent note: {r.reviewRemarks}</p>
+              <p className="mt-2 text-xs text-red-800">Advisor note: {r.reviewRemarks}</p>
             )}
             <p className="mt-2 text-[11px] text-ink/40">{fmtDate(r.createdAt)}</p>
             {cancellable && (

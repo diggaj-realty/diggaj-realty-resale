@@ -13,7 +13,7 @@ import type { Paginated, Property } from "@/types/api";
 export const metadata: Metadata = {
   title: "Homes for Sale | Diggaj Realty",
   description:
-    "Browse every home on Diggaj Realty. Filter by city, price, and bedrooms, every listing verified and agent-supported.",
+    "Browse every home on Diggaj Realty. Filter by city, price, and bedrooms, every listing verified and advisor-supported.",
 };
 
 // Fetches page 1 for whatever filters are in the URL so the first paint
@@ -52,7 +52,7 @@ export default async function ListingsPage({
             Homes for sale
           </h1>
           <p className="mt-5 max-w-md text-lead text-ink/70">
-            Every listing below is verified and backed by a dedicated agent, from your first
+            Every listing below is verified and backed by a dedicated advisor, from your first
             visit through closing.
           </p>
         </div>

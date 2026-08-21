@@ -8,7 +8,10 @@ export async function getProperties(
   params: GetPropertiesParams = {},
   opts: FetchOpts = {}
 ): Promise<Paginated<Property>> {
-  const qs = buildFilterQueryString(params);
+  // The platform deals only in residential property — every list fetch is
+  // pinned to RESIDENTIAL so plot/commercial inventory (should the backend
+  // ever hold any) never surfaces on the storefront, search, or AI results.
+  const qs = buildFilterQueryString({ ...params, type: "RESIDENTIAL" });
   return api<Paginated<Property>>(`/properties${qs ? `?${qs}` : ""}`, opts);
 }
 
