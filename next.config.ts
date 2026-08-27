@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["recharts", "framer-motion"],
   },
+  // Ad creatives (RCS/paid campaigns) point at /myhna-vistara-gunjur, which was
+  // never a real route. 308 it onto the canonical microsite instead of serving
+  // those clicks a 404; Next carries the query string (?source=RCSAd) over on
+  // its own, so campaign attribution survives the hop.
+  async redirects() {
+    return [
+      { source: "/myhna-vistara-gunjur", destination: "/myhna-vistara", permanent: true },
+    ];
+  },
   images: {
     // Next's default deviceSizes jump 1200 → 1920, and it always rounds UP. So a
     // 1440px laptop (and the 1536 `2xl` breakpoint) downloaded the 1920-wide
