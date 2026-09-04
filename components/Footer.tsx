@@ -18,8 +18,8 @@ const links = [
   { label: "Buy", href: "/#buy-sell" },
   { label: "Sell", href: "/#buy-sell" },
   { label: "Contact", href: "/contact" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Terms of Service", href: "/terms" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms of Service", href: "/terms-and-condition" },
 ];
 
 export default function Footer() {

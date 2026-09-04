@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/myhna-vistara-gunjur", destination: "/myhna-vistara", permanent: true },
+      // The legal pages moved to keyword-matching slugs; keep the old paths alive
+      // for anything already indexed or linked externally.
+      { source: "/terms", destination: "/terms-and-condition", permanent: true },
+      { source: "/privacy", destination: "/privacy-policy", permanent: true },
     ];
   },
   images: {
