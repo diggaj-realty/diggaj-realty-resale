@@ -19,7 +19,7 @@ const links = [
   { label: "Sell", href: "/#buy-sell" },
   { label: "Contact", href: "/contact" },
   { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Terms of Service", href: "/terms-and-condition" },
+  { label: "Terms of Service", href: "/terms-and-conditions" },
 ];
 
 export default function Footer() {
