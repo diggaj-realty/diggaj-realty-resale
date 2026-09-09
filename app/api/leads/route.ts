@@ -7,6 +7,7 @@ type LeadPayload = {
   email?: string;
   phone?: string;
   message?: string;
+  promoConsent?: boolean;
   subject?: string;
   source?: string;
   page?: string;
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
   const phone = String(body.phone ?? "").trim();
   const message = String(body.message ?? "").trim();
   const subject = String(body.subject ?? "General inquiry").trim() || "General inquiry";
+  const promoConsent = typeof body.promoConsent === "boolean" ? body.promoConsent : undefined;
   const source = String(body.source ?? "").trim();
   const page = String(body.page ?? "").trim();
   const referrer = String(body.referrer ?? "").trim();
@@ -59,7 +61,7 @@ export async function POST(req: NextRequest) {
   const from = process.env.LEAD_FROM_EMAIL || "Diggaj Realty <onboarding@resend.dev>";
   const to = process.env.LEAD_TO_EMAIL || "hello@diggajrealty.com";
 
-  const mail = buildLeadEmail({ name, email, phone, message, subject, source, page, referrer });
+  const mail = buildLeadEmail({ name, email, phone, message, promoConsent, subject, source, page, referrer });
 
   const resend = new Resend(apiKey);
   try {

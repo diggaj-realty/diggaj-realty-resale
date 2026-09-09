@@ -32,6 +32,7 @@ export default function LeadForm({
   requirePhone = false,
   compact = false,
   card = false,
+  consent = false,
   source,
 }: {
   dark?: boolean;
@@ -44,6 +45,11 @@ export default function LeadForm({
   /** Wrap the form in its own panel. Off by default — the microsites already
    *  sit inside a dark panel and would otherwise be double-framed. */
   card?: boolean;
+  /** Show the promotional-messaging opt-in (WhatsApp/RCS/SMS). Off by default:
+   *  under the DPDP Act / TRAI DLT rules the consent has to be a deliberate,
+   *  unticked choice on a surface where it's been explained, not something
+   *  every sticky bar and popup collects in passing. */
+  consent?: boolean;
   /** Which surface this form is — reported to the lead email so placements
    *  can be compared against each other. */
   source?: string;
@@ -92,6 +98,7 @@ export default function LeadForm({
       email: String(form.get("email") ?? "").trim(),
       phone: String(form.get("phone") ?? "").trim() || undefined,
       message: String(form.get("message") ?? "").trim(),
+      promoConsent: consent ? form.get("promoConsent") === "on" : undefined,
       subject,
       source,
       page: typeof window !== "undefined" ? window.location.href : undefined,
@@ -245,6 +252,40 @@ export default function LeadForm({
                   className={`${field} resize-none`}
                 />
               </div>
+            )}
+
+            {consent && (
+              <label
+                htmlFor={`${uid}-consent`}
+                className={`mt-1 flex cursor-pointer items-start gap-3 text-xs leading-relaxed ${
+                  dark ? "text-white/70" : "text-ink/70"
+                }`}
+              >
+                <input
+                  id={`${uid}-consent`}
+                  name="promoConsent"
+                  type="checkbox"
+                  defaultChecked={lastInput?.promoConsent ?? false}
+                  className={`mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded-[5px] accent-lime focus:outline-none focus:ring-2 focus:ring-lime ${
+                    dark ? "ring-1 ring-white/25" : "ring-1 ring-ink/20"
+                  }`}
+                />
+                <span>
+                  I agree to receive promotional messages through
+                  WhatsApp/RCS/SMS.{" "}
+                  <a
+                    href="/terms-and-conditions"
+                    className="underline underline-offset-2"
+                  >
+                    T&amp;C
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy-policy" className="underline underline-offset-2">
+                    Privacy Policy
+                  </a>
+                  .
+                </span>
+              </label>
             )}
 
             <button

@@ -4,6 +4,9 @@ export type LeadInput = {
   phone?: string;
   /** Optional: the compact form variant has no message field. */
   message: string;
+  /** Promotional WhatsApp/RCS/SMS opt-in. `undefined` on forms that never
+   *  asked — which is not the same as a "no", and is reported separately. */
+  promoConsent?: boolean;
   subject?: string;
   /** Which surface the form was on ("home-inline", "sticky-bar", …), so
    *  placements can be compared rather than guessed at. */

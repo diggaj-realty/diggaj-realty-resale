@@ -39,7 +39,7 @@ export default function ContactPage() {
             <p className="text-xl font-medium tracking-[-0.01em]">Send us a message</p>
             <p className="mt-1.5 text-sm text-white/50">We&apos;ll route it to the right advisor.</p>
             <div className="mt-7">
-              <LeadForm dark subject="Contact page inquiry" source="contact-page" />
+              <LeadForm dark consent subject="Contact page inquiry" source="contact-page" />
             </div>
           </div>
         </div>

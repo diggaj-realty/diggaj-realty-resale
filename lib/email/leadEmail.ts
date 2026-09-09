@@ -22,6 +22,9 @@ export type LeadEmailFields = {
   email: string;
   phone?: string;
   message: string;
+  /** Promotional WhatsApp/RCS/SMS opt-in, when the form asked. Recorded so
+   *  there's a per-lead audit trail of the consent, not just a UI checkbox. */
+  promoConsent?: boolean;
   /** What the visitor was looking at — the form's own subject, e.g. a layout. */
   subject: string;
   /** Set for project microsites; omitted for the general contact form. */
@@ -101,6 +104,9 @@ export function buildLeadEmail(f: LeadEmailFields): {
     ...(project ? ([["Project", project]] as [string, string][]) : []),
     ["Enquiry", f.subject],
     ...((f.source ?? "").trim() ? ([["Source", f.source!.trim()]] as [string, string][]) : []),
+    ...(f.promoConsent === undefined
+      ? []
+      : ([["Promo consent", f.promoConsent ? "Yes — WhatsApp/RCS/SMS" : "No"]] as [string, string][])),
     ["Page", f.page || "—"],
     ["Referrer", f.referrer || "direct / none"],
     ["Received", `${receivedAt} IST`],
